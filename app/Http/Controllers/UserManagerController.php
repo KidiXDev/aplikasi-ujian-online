@@ -22,7 +22,7 @@ class UserManagerController extends Controller
         return Inertia::render(
             'user-management/user-manager',
             [
-                'users' => $usersQuery->paginate((int)$pages)->withQueryString(),
+                'data' => $usersQuery->paginate((int)$pages)->withQueryString(),
                 'filters' => [
                     'search' => $search,
                     'pages' => $pages,

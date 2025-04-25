@@ -57,3 +57,40 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface Role {
+    id: number;
+    name: string;
+    guard_name: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PaginatedResponse<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
+}
+
+export interface FlashProps {
+    success?: string;
+    error?: string;
+}
+
+export interface PageFilter {
+    search: string;
+    pages: number;
+}
+
+export type PageProps<T> = {
+    data: PaginatedResponse<T>;
+    filters: PageFilter;
+    flash: FlashProps;
+};

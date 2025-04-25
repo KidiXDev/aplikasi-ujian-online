@@ -7,7 +7,7 @@ export default function AppLogo() {
                 <AppLogoIcon className="items-center" />
             </div>
             <div className="ml-1 flex items-center text-left text-2xl font-semibold">
-                <span className="truncate">UM-KPN</span>
+                <span className="truncate">UJIAN</span>
             </div>
         </>
     );

@@ -3,6 +3,7 @@
 use App\Http\Controllers\MatkulController;
 use App\Http\Controllers\UserManagerController;
 use App\Http\Controllers\UserManagerEditController;
+use App\Http\Controllers\UserManagerCreateController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -69,10 +70,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 return redirect()->route('dashboard');
             })->name('index');
 
-            Route::get('user', [UserManagerController::class, 'index'])->name('user.manager');
-            Route::get('/user/{id}/edit', [UserManagerEditController::class, 'edit'])->name('user.edit');
-            Route::put('/user/{id}', [UserManagerEditController::class, 'update'])->name('user.update');
-            Route::delete('user/{user}', [UserManagerController::class, 'delete'])->name('user.destroy');
+            Route::prefix('user')->name('user.')->group(function () {
+                Route::get('/', [UserManagerController::class, 'index'])->name('manager');
+                Route::get('{id}/edit', [UserManagerEditController::class, 'edit'])->name('edit');
+                Route::put('{id}', [UserManagerEditController::class, 'update'])->name('update');
+                Route::delete('{user}', [UserManagerController::class, 'delete'])->name('destroy');
+                Route::get('create', [UserManagerEditController::class, 'create'])->name('create');
+                Route::post('/', [UserManagerEditController::class, 'store'])->name('store');
+            });
 
 
             Route::get('roles', function () {
