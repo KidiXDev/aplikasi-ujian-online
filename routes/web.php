@@ -53,8 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('peserta');
 
         Route::get('jenis-ujian', function () {
-            return Inertia::render('peserta');
-        })->name('peserta');
+            return Inertia::render('jenis-ujian');
+        })->name('jenis.ujian');
 
         Route::get('soal', function () {
             return Inertia::render('peserta');
