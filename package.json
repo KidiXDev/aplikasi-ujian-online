@@ -5,12 +5,7 @@
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
-<<<<<<< HEAD
         "start": "npm run dev", 
-=======
-        "serve": "php artisan serve",
-        "start": "concurrently \"npm run serve\" \"npm run dev\"",
->>>>>>> 40a87cb93c9102bca1dcfe6285d2bb107ce9a7ee
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
