@@ -18,7 +18,7 @@ class JenisUjianEditController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kode' => 'required|string|max:10|unique:m_bidang,kode',
+
             'nama' => 'required|string|max:255',
             'type' => 'required|string|max:100',
         ]);
