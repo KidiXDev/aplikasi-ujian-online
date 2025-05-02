@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ExamSchedule extends Model
 {
+     protected $connection = 'data_db';
      // Nama tabel (kalau tidak mengikuti konvensi Laravel)
      protected $table = 't_penjadwalan';
 
