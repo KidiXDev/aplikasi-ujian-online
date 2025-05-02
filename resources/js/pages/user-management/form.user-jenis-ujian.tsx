@@ -15,18 +15,16 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-// Schema validation sesuai dengan kolom di model MBidang
+// Schema validation
 const formSchema = z.object({
-    kode: z.string().min(1, { message: 'Kode wajib diisi.' }).max(10),
+    type: z.string().min(1, { message: 'Kategori Ujian wajib dipilih.' }),
     nama: z.string().min(2, { message: 'Nama minimal 2 karakter.' }).max(255),
 });
 
 export default function FormJenisUjian() {
-    const { data } = usePage<{
-        data: { kode?: string; nama?: string } | null;
-    }>().props;
+    const { user } = usePage<{ user: { kode?: string; nama?: string; type?: string } | null }>().props;
 
-    const isEdit = !!data;
+    const isEdit = !!user;
 
     const breadcrumbs = [
         { title: 'Jenis Ujian', href: '/master-data/jenis-ujian' },
@@ -36,22 +34,29 @@ export default function FormJenisUjian() {
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            kode: data?.kode ?? '',
-            nama: data?.nama ?? '',
+            type: user?.type ?? '',
+            nama: user?.nama ?? '',
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        if (isEdit && data?.kode) {
+        if (isEdit && user?.kode) {
             router.put(
-                route('master-data.jenis-ujian.update', data.kode),
+                route('master-data.jenis-ujian.update', user.kode),
                 values,
                 {
                     preserveScroll: true,
                     onSuccess: () => toast.success('Data berhasil diubah!'),
-                    onError: (errors) => {
-                        Object.values(errors).forEach((err: any) => toast.error(err));
+                    onError: (errors: Record<string, string | string[]>) => {
+                        Object.values(errors).forEach((err) => {
+                            if (Array.isArray(err)) {
+                                err.forEach((e) => toast.error(e));
+                            } else {
+                                toast.error(err);
+                            }
+                        });
                     },
+                    
                 }
             );
         } else {
@@ -61,9 +66,16 @@ export default function FormJenisUjian() {
                 {
                     preserveScroll: true,
                     onSuccess: () => toast.success('Data berhasil ditambahkan!'),
-                    onError: (errors) => {
-                        Object.values(errors).forEach((err: any) => toast.error(err));
+                    onError: (errors: Record<string, string | string[]>) => {
+                        Object.values(errors).forEach((err) => {
+                            if (Array.isArray(err)) {
+                                err.forEach((e) => toast.error(e));
+                            } else {
+                                toast.error(err);
+                            }
+                        });
                     },
+                    
                 }
             );
         }
@@ -87,7 +99,7 @@ export default function FormJenisUjian() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
                             control={form.control}
-                            name="kode"
+                            name="type"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Kategori Ujian</FormLabel>

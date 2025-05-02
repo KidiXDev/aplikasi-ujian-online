@@ -42,7 +42,10 @@ class JenisUjianController extends Controller
             'type' => 'required|string|max:100',
         ]);
 
-        $user->update($data);
+        $user->update([
+        'type' => $data['type'],
+        'nama' => $data['type'] . ' - ' . $data['nama'],
+    ]);
 
         return redirect()->back()->with('success', 'Data berhasil diperbarui');
     }

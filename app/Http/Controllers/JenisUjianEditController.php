@@ -23,7 +23,15 @@ class JenisUjianEditController extends Controller
             'type' => 'required|string|max:100',
         ]);
 
-        MBidang::create($data);
+        // Generate kode otomatis
+        $last = MBidang::orderBy('kode', 'desc')->first();
+        $newKode = $last ? ((int)$last->kode + 1) : 10001;
+
+        MBidang::create([
+            'kode' => $newKode,
+            'type' => $data['type'],
+            'nama' => $data['type'] . ' - ' . $data['nama'], // Gabungan
+        ]);
 
         return redirect()->route('master-data.jenis-ujian.manager')->with('success', 'Data berhasil ditambahkan');
     }
@@ -32,10 +40,13 @@ class JenisUjianEditController extends Controller
     {
         $user = MBidang::findOrFail($kode);
 
+        // Hapus prefix "type - " dari nama
+        $namaWithoutPrefix = preg_replace('/^' . preg_quote($user->type . ' - ', '/') . '/', '', $user->nama);
+
         return Inertia::render('user-management/form.user-jenis-ujian', [
             'user' => [
                 'kode' => $user->kode,
-                'nama' => $user->nama,
+                'nama' => $namaWithoutPrefix, // hanya nama jenis ujiannya
                 'type' => $user->type,
             ],
         ]);
@@ -45,11 +56,14 @@ class JenisUjianEditController extends Controller
     {
         $data = $request->validate([
             'nama' => 'required|string|max:255',
-            'type' => 'required|string|max:100',
+            'type' => 'required|string|max:100', 
         ]);
 
         $user = MBidang::findOrFail($kode);
-        $user->update($data);
+        $user->update([
+            'type' => $data['type'],
+            'nama' => $data['type'] . ' - ' . $data['nama'], // Gabungan
+        ]);
 
         return redirect()->route('master-data.jenis-ujian.manager')->with('success', 'Data berhasil diperbarui');
     }
