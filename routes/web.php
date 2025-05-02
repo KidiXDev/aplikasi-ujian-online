@@ -6,7 +6,6 @@ use App\Http\Controllers\UserManagerEditController;
 use App\Http\Controllers\BankSoalController;
 use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\ExamScheduleController;
-use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\JenisUjianEditController;// Ensure this controller exists in the specified namespace
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
