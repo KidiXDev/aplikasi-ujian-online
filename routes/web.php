@@ -7,6 +7,7 @@ use App\Http\Controllers\BankSoalController;
 use App\Http\Controllers\BankSoalControllerCheckbox;
 use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\ExamScheduleController;
+use App\Http\Controllers\JenisUjianEditController;// Ensure this controller exists in the specified namespace
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Matakuliah;
@@ -66,8 +67,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('peserta');
 
         Route::get('jenis-ujian', function () {
-            return Inertia::render('peserta');
-        })->name('peserta');
+            return Inertia::render('jenis-ujian');
+        })->name('jenis.ujian');
 
         Route::get('jenisujian', [JenisUjianController::class, 'index']);
 
@@ -103,6 +104,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{matakuliah}/edit', [MatkulController::class, 'edit'])->name('edit');
             Route::put('/{matakuliah}', [MatkulController::class, 'update'])->name('update');
             Route::delete('/{matakuliah}', [MatkulController::class, 'destroy'])->name('destroy');
+        });
+        
+        Route::prefix('jenis-ujian')->name('jenis-ujian.')->group(function () {
+            Route::get('/', [JenisUjianController::class, 'index'])->name('manager');
+            Route::get('{id}/edit', [JenisUjianEditController::class, 'edit'])->name('edit'); // Ensure the controller and method exist
+            Route::put('{id}', [JenisUjianEditController::class, 'update'])->name('update');
+            Route::delete('{user}', [JenisUjianController::class, 'delete'])->name('destroy');
+            Route::get('create', [JenisUjianEditController::class, 'create'])->name('create');
+            Route::post('/', [JenisUjianEditController::class, 'store'])->name('store');
         });
     });
 
