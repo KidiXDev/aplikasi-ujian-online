@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\BankSoalController;
+use App\Http\Controllers\DosenManagerController;
+use App\Http\Controllers\DosenManagerEditController;
+use App\Http\Controllers\ExamScheduleController;
+use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\MatkulController;
 use App\Http\Controllers\UserManagerController;
+use App\Http\Controllers\UserManagerCreateController;
 use App\Http\Controllers\UserManagerEditController;
-use App\Http\Controllers\BankSoalController;
-use App\Http\Controllers\BankSoalControllerCheckbox;
-use App\Http\Controllers\JenisUjianController;
-use App\Http\Controllers\ExamScheduleController;
+use App\Http\Controllers\DosenImportController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JenisUjianEditController;
 use Inertia\Inertia;
@@ -70,14 +73,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('peserta');
         })->name('peserta');
 
-        Route::get('jenisujian', [JenisUjianController::class, 'index']);
-
-        Route::get('paket-soal', function () {
+        Route::get('soal', function () {
             return Inertia::render('peserta');
         })->name('peserta');
 
-        // Route untuk bank soal checkbox
-        Route::get('banksoalcheckbox', [BankSoalControllerCheckbox::class, 'index'])->name('banksoalcheckbox');
+
+        Route::prefix('dosen')->name('dosen.')->group(function () {
+            Route::get('/', [DosenManagerController::class, 'index'])->name('manager');
+            Route::get('{id}/edit', [DosenManagerEditController::class, 'edit'])->name('edit');
+            Route::put('{id}', [DosenManagerEditController::class, 'update'])->name('update');
+            Route::delete('{user}', [DosenManagerController::class, 'delete'])->name('destroy');
+            Route::get('create', [DosenManagerEditController::class, 'create'])->name('create');
+            Route::post('import', [DosenManagerController::class, 'import'])->name('import');
+            Route::post('/', [DosenManagerEditController::class, 'store'])->name('store');
+            Route::post('import', [DosenImportController::class, 'import'])->name('import');
+        });
+        
+        Route::prefix('import')->name('import.')->group(function () {
+            Route::get('/', [DosenImportController::class, 'importView'])->name('view');
+        });
 
         // Route show bank soal
         Route::get('bank-soal', [BankSoalController::class, 'index'])->name('bank.soal');
@@ -130,6 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('create', [UserManagerEditController::class, 'create'])->name('create');
                 Route::post('/', [UserManagerEditController::class, 'store'])->name('store');
             });
+
 
             Route::get('roles', function () {
                 return Inertia::render('user-management/role-manager');
