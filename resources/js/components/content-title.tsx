@@ -9,6 +9,7 @@ interface ContentTitleProps {
     buttonType?: 'primary' | 'danger';
     showButton?: boolean;
     onButtonClick?: () => void;
+    extraButtons?: React.ReactNode;
 }
 
 export function ContentTitle({
@@ -18,18 +19,22 @@ export function ContentTitle({
     buttonType = 'primary',
     showButton = true,
     onButtonClick,
+    extraButtons,
 }: ContentTitleProps) {
     return (
         <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">{title}</h1>
-            {showButton && (
-                <CButton type={buttonType} onClick={onButtonClick}>
-                    <div className="flex items-center gap-1">
-                        {buttonIcon}
-                        {buttonText && <span>{buttonText}</span>}
-                    </div>
-                </CButton>
-            )}
+            <div className="flex items-center gap-2">
+                {extraButtons} {/* Render tombol tambahan */}
+                {showButton && (
+                    <CButton type={buttonType} onClick={onButtonClick}>
+                        <div className="flex items-center gap-1 px-2">
+                            {buttonIcon}
+                            {buttonText && <span>{buttonText}</span>}
+                        </div>
+                    </CButton>
+                )}
+            </div>
         </div>
     );
 }

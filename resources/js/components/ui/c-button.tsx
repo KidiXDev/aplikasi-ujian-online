@@ -2,24 +2,68 @@ import { LucideIcon } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "./button";
 
-export function CButton(props: {
-    type?: "primary" | "danger" | "submit";
+type CButtonProps = {
+    type?: "primary" | "danger" | "success" | "submit" | "button";
     className?: string;
     children: React.ReactNode;
     onClick?: () => void;
-}) {
+    disabled?: boolean;
+    href?: string;
+    download?: boolean;
+};
+
+export function CButton(props: CButtonProps) {
+    const {
+        type,
+        className,
+        children,
+        onClick,
+        disabled,
+        href,
+        download,
+        ...rest
+    } = props;
+
+    const baseClass = clsx(
+        type === "danger"
+            ? "bg-button-danger hover:bg-[#720508] bg-sidebar-ring2 cursor-pointer text-white shadow transition-colors rounded p-2"
+            : type === "success"
+            ? "bg-green-600 hover:bg-green-700 cursor-pointer text-white shadow transition-colors rounded p-2"
+            : "bg-button-primary cursor-pointer text-white shadow hover:bg-[#475873] transition-colors rounded p-2",
+        className
+    );
+
+    // Jika ada href, render <a> agar bisa untuk download/link
+    if (href) {
+        return (
+            <a
+                href={href}
+                download={download}
+                className={baseClass}
+                style={{ display: "inline-block", textDecoration: "none" }}
+                {...rest}
+            >
+                {children}
+            </a>
+        );
+    }
+
+    // Default: render <Button>
     return (
         <Button
-            type={props.type === "submit" ? "submit" : "button"}
-            onClick={props.type === "submit" ? undefined : props.onClick}
-            className={clsx(
-                props.type === "danger"
-                    ? "bg-button-danger hover:bg-[#720508] bg-sidebar-ring2 cursor-pointer text-white shadow transition-colors"
-                    : "bg-button-primary cursor-pointer text-white shadow hover:bg-[#475873] transition-colors",
-                props.className
-            )}
+            type={
+                type === "submit"
+                    ? "submit"
+                    : type === "button"
+                    ? "button"
+                    : "button"
+            }
+            onClick={onClick}
+            disabled={disabled}
+            className={baseClass}
+            {...rest}
         >
-            {props.children}
+            {children}
         </Button>
     );
 }
