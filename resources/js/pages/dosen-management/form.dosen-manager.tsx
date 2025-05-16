@@ -11,8 +11,20 @@ import { CButton } from '@/components/ui/c-button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, Role, User } from '@/types';
+import { type BreadcrumbItem, Role } from '@/types';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    roles: string[];
+    dosen?: {
+        nip: string;
+        aktif: boolean;
+    };
+}
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -32,6 +44,14 @@ const formSchema = z.object({
         .optional()
         .refine((val) => !val || val.length >= 8, { message: 'Password must be at least 8 characters.' }),
     roles: z.array(z.string()).nonempty('Please select at least one item'),
+    nip: z.string().min(2, {
+        message: 'NIP must be at least 2 characters.',
+    }),
+    aktif: z.boolean(),
+    dosen: z.object({
+        nip: z.string(),
+        aktif: z.boolean(),
+    }),
 });
 
 export default function Dashboard() {
@@ -40,8 +60,8 @@ export default function Dashboard() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'User Manager',
-            href: '/user-management/user',
+            title: 'Dosen Manager',
+            href: '/user-management/dosen',
         },
         {
             title: isEdit ? 'Edit' : 'Create',
@@ -56,19 +76,24 @@ export default function Dashboard() {
             email: user?.email ?? '',
             password: '',
             roles: user?.roles?.length ? user.roles : [],
-            
+            dosen: {
+                nip: user?.dosen?.nip ?? '',
+                aktif: user?.dosen?.aktif ?? false,
+            },
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+        console.log('Form Values:', values); // Debugging
         if (isEdit) {
             router.put(
-                route('user-management.user.update', user.id),
+                route('master-data.dosen.update', user.id),
                 {
                     name: values.username,
                     email: values.email,
                     roles: values.roles,
+                    nip: values.nip,
+                    aktif: values.aktif,
                 },
                 {
                     preserveScroll: true,
@@ -85,12 +110,14 @@ export default function Dashboard() {
             );
         } else {
             router.post(
-                route('user-management.user.store'),
+                route('master-data.dosen.store'),
                 {
                     name: values.username,
                     email: values.email,
                     password: values.password,
                     roles: values.roles,
+                    nip: values.nip,
+                    aktif: values.aktif,
                 },
                 {
                     preserveScroll: true,
@@ -118,7 +145,7 @@ export default function Dashboard() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="space-between flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} User</h1>
-                    <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('user-management.user.manager'))}>
+                    <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('master-data.dosen.manager'))}>
                         Back
                     </CButton>
                 </div>
@@ -188,6 +215,43 @@ export default function Dashboard() {
                                         </MultiSelector>
                                     </FormControl>
                                     <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="nip"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>NIP</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter your NIP" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="aktif"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Aktif</FormLabel>
+                                <FormControl>
+                                    <Select
+                                    value={field.value ? "true" : "false"}
+                                    onValueChange={(value: string) => field.onChange(value === "true")}
+                                    >
+                                    <SelectTrigger className="w-[200px]">
+                                        <SelectValue placeholder="Pilih status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="true">Aktif</SelectItem>
+                                        <SelectItem value="false">Tidak Aktif</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
                                 </FormItem>
                             )}
                         />
