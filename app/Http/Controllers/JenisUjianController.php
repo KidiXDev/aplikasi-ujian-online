@@ -4,24 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bidang;
-use Illuminate\Http\JsonResponse;
-
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\MBidang;
 
 class JenisUjianController extends Controller
 {
-
     public function index(Request $request)
     {
-        // Jika ingin response JSON (misalnya dari API)
         if ($request->wantsJson()) {
             $data = Bidang::select('kode', 'nama')->get();
             return response()->json($data);
         }
 
-        // Jika response biasa (Inertia page)
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 
@@ -43,7 +38,6 @@ class JenisUjianController extends Controller
     public function delete(MBidang $user)
     {
         $user->delete();
-
         return redirect()->back()->with('success', 'Data berhasil dihapus');
     }
 
@@ -55,9 +49,9 @@ class JenisUjianController extends Controller
         ]);
 
         $user->update([
-        'type' => $data['type'],
-        'nama' => $data['type'] . ' - ' . $data['nama'],
-    ]);
+            'type' => $data['type'],
+            'nama' => $data['type'] . ' - ' . $data['nama'],
+        ]);
 
         return redirect()->back()->with('success', 'Data berhasil diperbarui');
     }
