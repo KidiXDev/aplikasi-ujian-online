@@ -9,23 +9,31 @@ import {
     AlertDialogTitle,
 } from './ui/alert-dialog';
 
-export function CAlertDialog(props: { open: boolean; setOpen: (open: boolean) => void; onContinue: () => void; onCancel?: () => void }) {
+export function CAlertDialog(props: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    onContinue: () => void;
+    onCancel?: () => void;
+    title?: string;
+    description?: string;
+}) {
     return (
         <AlertDialog open={props.open} onOpenChange={props.setOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{props.title || 'Are you sure?'}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the selected user and remove the data from our servers.
+                        {props.description ||
+                            'This action cannot be undone. This will permanently delete the selected user and remove the data from our servers.'}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel className="cursor-pointer" onClick={props.onCancel}>
-                        Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction className="bg-button-danger cursor-pointer" onClick={props.onContinue}>
-                        Continue
+                    <AlertDialogAction className="bg-button-primary hover:bg-[#475873] hover:text-white shadow transition-colors cursor-pointer" onClick={props.onContinue}>
+                        Iya
                     </AlertDialogAction>
+                    <AlertDialogCancel className="bg-button-danger hover:bg-[#720508] hover:text-white text-white shadow transition-colors cursor-pointer" onClick={props.onCancel}>
+                        Tidak
+                    </AlertDialogCancel>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

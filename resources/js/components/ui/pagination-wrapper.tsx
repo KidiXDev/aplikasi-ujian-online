@@ -63,7 +63,7 @@ export function PaginationWrapper({
                   displayPages.push(
                     <PaginationItem key={`page-${i}`}>
                       <PaginationLink
-                        className={`cursor-pointer select-none ${currentPage === i ? 'bg-button-primary hover:bg-button-primary/90 text-white' : ''}`}
+                        className={`cursor-pointer select-none ${currentPage === i ? 'bg-button-primary hover:bg-[#475873] hover:text-white text-white' : ''}`}
                         onClick={e => {
                           e.preventDefault();
                           onNavigate(i);
@@ -83,7 +83,7 @@ export function PaginationWrapper({
                       <PaginationLink
                         onClick={e => e.preventDefault()}
                         isActive={true}
-                        className="bg-button-primary hover:bg-button-primary/90 text-white select-none"
+                        className="bg-button-primary hover:bg-[#475873] hover:text-white text-white select-none"
                       >
                         1
                       </PaginationLink>
@@ -123,7 +123,7 @@ export function PaginationWrapper({
                       <PaginationLink
                         onClick={e => e.preventDefault()}
                         isActive={true}
-                        className="bg-button-primary hover:bg-button-primary/90 cursor-pointer text-white select-none"
+                        className="bg-button-primary hover:bg-[#475873] cursor-pointer hover:text-white text-white select-none"
                       >
                         {lastPage}
                       </PaginationLink>
@@ -147,7 +147,7 @@ export function PaginationWrapper({
                       <PaginationLink
                         onClick={e => e.preventDefault()}
                         isActive={true}
-                        className="bg-button-primary hover:bg-button-primary/90 cursor-pointer text-white select-none"
+                        className="bg-button-primary hover:bg-[#475873] cursor-pointer hover:text-white text-white select-none"
                       >
                         {currentPage}
                       </PaginationLink>

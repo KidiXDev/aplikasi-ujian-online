@@ -31,7 +31,7 @@ class ExamScheduleController extends Controller
 
     public function create()
     {
-        return Inertia::render('ExamSchedule/Create');
+        return Inertia::render('exam-schedule/form.exam-manager');
     }
 
     public function store(Request $request)
@@ -54,8 +54,8 @@ class ExamScheduleController extends Controller
 
     public function edit(ExamSchedule $examSchedule)
     {
-        return Inertia::render('ExamSchedule/Edit', [
-            'data' => $examSchedule
+        return Inertia::render('exam-schedule/form.exam-manager', [
+            'examSchedule' => $examSchedule
         ]);
     }
 

@@ -44,7 +44,7 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'Peserta',
-                href: '/master-data/peserta',
+                href: '/master-data/test',
                 icon: UserRound,
             },
             {
@@ -64,7 +64,7 @@ const items: MainNavItem[] = [
             },
             {
                 title: 'Paket Soal',
-                href: '/master-data/paket-soal', 
+                href: '/master-data/paket-soal',
                 icon: Book,
             },
             {
@@ -76,6 +76,11 @@ const items: MainNavItem[] = [
                 title: 'Matakuliah',
                 icon: BookA,
                 href: '/master-data/matakuliah',
+            },
+            {
+                title: 'Event',
+                icon: BookA,
+                href: '/master-data/event',
             },
             {
                 title: 'Bank Soal Checkbox',
