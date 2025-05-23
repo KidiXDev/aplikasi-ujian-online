@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Matakuliah;
 use App\Models\PaketSoal;
+use App\Http\Controllers\DosenManagerController;
+use App\Http\Controllers\DosenManagerEditController;
+use App\Http\Controllers\DosenImportController;
 
 // Custom route binding untuk Matakuliah model
 Route::bind('matakuliah', function ($value) {
@@ -86,6 +89,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('paket-soal', function () {
             return Inertia::render('paket-soal');
         })->name('paket.soal');
+
+        Route::prefix('dosen')->name('dosen.')->group(function () {
+            Route::get('/', [DosenManagerController::class, 'index'])->name('manager');
+            Route::get('{id}/edit', [DosenManagerEditController::class, 'edit'])->name('edit');
+            Route::put('{id}', [DosenManagerEditController::class, 'update'])->name('update');
+            Route::delete('{user}', [DosenManagerController::class, 'delete'])->name('destroy');
+            Route::get('create', [DosenManagerEditController::class, 'create'])->name('create');
+            Route::post('/', [DosenManagerEditController::class, 'store'])->name('store');
+            Route::post('import', [DosenImportController::class, 'import'])->name('import');
+        });
+
+        // Route import dosen (halaman form import dosen)
+        Route::get('import-dosen', [DosenImportController::class, 'importViewDosen'])->name('import-dosen.view');
 
         Route::prefix('peserta')->name('peserta.')->group(function () {
             Route::get('/', [PesertaManagerController::class, 'index'])->name('manager');

@@ -16,24 +16,20 @@ import { SearchInputMenu } from '@/components/ui/search-input-menu';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dosen Manager',
-        href: '/user-management/dosen'
+        title: 'User Manager',
+        href: '/user-management/user',
     },
 ];
 
-interface Dosen{
+interface User {
     id: number;
     name: string;
     email: string;
     roles: { name: string }[];
-    dosen: {
-        nip: string;
-        aktif: boolean;
-    };
 }
 
 export default function UserManager() {
-    const { data: userData, filters, flash } = usePage<PageProps<Dosen>>().props;
+    const { data: userData, filters, flash } = usePage<PageProps<User>>().props;
 
     useEffect(() => {
         if (flash.success) toast.success(flash.success);
@@ -42,30 +38,13 @@ export default function UserManager() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dosen Manager" />
+            <Head title="User Manager" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-  <ContentTitle title="Data Dosen" showButton={false} />
-  <div className="flex gap-2">
-            <button
-            onClick={() => router.visit(route('master-data.import-dosen.view'))}
-            className="rounded bg-green-600 px-4 py-2 text-white shadow hover:bg-green-700"
-            >
-            Import
-            </button>
-            <button
-            onClick={() => router.visit(route('master-data.dosen.create'))}
-            className="rounded bg-[#6A86B6] px-4 py-2 text-white shadow hover:bg-gray-700"
-            >
-            + Add
-            </button>
-        </div>
-        </div>
-
+                <ContentTitle title="User Manager" showButton onButtonClick={() => router.visit(route('user-management.user.create'))} />
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector currentValue={userData.per_page} options={[10, 12, 25, 50, 100]} routeName="master-data.dosen.manager" />
-                    <SearchInputMenu defaultValue={filters.search} routeName="master-data.dosen.manager" />
+                    <EntriesSelector currentValue={userData.per_page} options={[10, 12, 25, 50, 100]} routeName="user-management.user.manager" />
+                    <SearchInputMenu defaultValue={filters.search} routeName="user-management.user.manager" />
                 </div>
                 <UserTable data={userData} pageFilters={filters} />
             </div>
@@ -73,22 +52,18 @@ export default function UserManager() {
     );
 }
 
-const baseClass = "inline-block w-[90px] rounded px-2 py-1 text-center text-white text-xs shadow";
-
 const RoleDecorator: React.FC<{ role: string }> = ({ role }) => {
     switch (role) {
         case 'super_admin':
-            return <span className={`${baseClass} bg-red-700`}>{role}</span>;
+            return <span className="bg-button-danger mr-2 rounded p-2 text-white shadow">{role}</span>;
         case 'admin':
-            return <span className={`${baseClass} bg-yellow-500`}>{role}</span>;
-        case 'dosen':
-            return <span className={`${baseClass} bg-pink-500`}>{role}</span>;
+            return <span className="mr-2 rounded bg-yellow-500 p-2 text-white shadow">{role}</span>;
         default:
-            return <span className={`${baseClass} bg-gray-400`}>{role}</span>;
+            return <span className="mr-2 text-white">{role}</span>;
     }
 };
 
-function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedResponse<Dosen>; pageFilters: PageFilter }) {
+function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedResponse<User>; pageFilters: PageFilter }) {
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
 
@@ -100,7 +75,7 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
     const confirmDelete = async () => {
         try {
             if (targetId !== null) {
-                router.delete(route('master-data.dosen.destroy', targetId), {
+                router.delete(route('user-management.user.destroy', targetId), {
                     preserveState: true,
                     preserveScroll: true,
                 });
@@ -114,7 +89,7 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
 
     // Helper function to navigate with preserved search parameters
     const navigateToPage = (page: number) => {
-        router.visit(route('master-data.dosen.manager'), {
+        router.visit(route('user-management.user.manager'), {
             data: {
                 page: page,
                 search: filters.search,
@@ -128,43 +103,21 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
         {
             label: 'ID',
             className: 'w-[100px] text-center',
-            render: (user: Dosen) => <div className="text-center font-medium">{user.id}</div>,
-        },
-        {
-            label: 'NIP',
-            render: (user: Dosen) => user.dosen?.nip,
+            render: (user: User) => <div className="text-center font-medium">{user.id}</div>,
         },
         {
             label: 'Name',
             className: 'w-[400px]',
-            render: (user: Dosen) => user.name,
+            render: (user: User) => user.name,
         },
         {
             label: 'Email',
             className: 'w-[400px]',
-            render: (user: Dosen) => user.email,
-        },
-        {
-            label: 'Status',
-            className: 'w-[100px] text-center',
-            render: (user: Dosen) => (
-                <div className="flex justify-center">
-                    {user.dosen?.aktif ? (
-                        <span className="inline-block w-[80px] rounded bg-green-500 px-2 py-1 text-center text-white text-xs shadow">
-                            Active
-                        </span>
-                    ) : (
-                        <span className="inline-block w-[80px] rounded bg-red-500 px-2 py-1 text-center text-white text-xs shadow">
-                            Non Active
-                        </span>
-                    )}
-                </div>
-            ),
+            render: (user: User) => user.email,
         },
         {
             label: 'Roles',
-            className: 'w-[100px] text-center',
-            render: (user: Dosen) => (
+            render: (user: User) => (
                 <div className="flex flex-wrap gap-1">
                     {user.roles.map((r) => (
                         <RoleDecorator key={r.name} role={r.name} />
@@ -172,17 +125,16 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
                 </div>
             ),
         },
-        
         {
             label: 'Action',
-                className: 'w-[100px] text-center',
-                render: (user: Dosen) => (
-                    <div className="flex justify-center gap-2">
-                        <CButtonIcon icon={Pencil} onClick={() => router.visit(route('master-data.dosen.edit', user.id))} />
-                        <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(user.id)} />
-                    </div>
-                ),
-            },
+            className: 'w-[100px] text-center',
+            render: (user: User) => (
+                <div className="flex justify-center gap-2">
+                    <CButtonIcon icon={Pencil} onClick={() => router.visit(route('user-management.user.edit', user.id))} />
+                    <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(user.id)} />
+                </div>
+            ),
+        },
     ];
 
     return (

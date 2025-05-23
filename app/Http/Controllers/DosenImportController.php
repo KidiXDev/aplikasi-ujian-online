@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;  // Import log
 
 class DosenImportController extends Controller
 {
-    public function importView()
+    public function importViewDosen()
     {
         Log::debug('Navigating to import view');  // Debugging ketika mengakses view
         return Inertia::render('dosen-management/ImportDosen');
