@@ -42,6 +42,8 @@ const Dropdown = ({ label, value, onChange, options }: {
 
 interface SoalForm {
     kategori_soal: string;
+    jenis_soal: string;
+    kd_mapel: string;  // Add this for storing jenis ujian code
     suara: string;
     header_soal: string;
     body_soal: string;
@@ -55,9 +57,21 @@ interface SoalForm {
     [key: string]: string | File | null;
 }
 
+// Update the interface for bidang options
+interface BidangOption {
+    kode: string;
+    nama: string;
+}
+
+interface KategoriSoalOption {
+    kategori: string;
+}
+
 export default function BankSoalCreate() {
     const { data, setData, processing } = useForm<SoalForm>({
         kategori_soal: '',
+        kd_mapel: '',    // Add this
+        jenis_soal: '',
         suara: 'tidak',
         header_soal: '',
         body_soal: '',
@@ -70,9 +84,12 @@ export default function BankSoalCreate() {
         file: null,
     });
 
-    const [bidangOptions, setBidangOptions] = useState<{ nama: string }[]>([]);
+    // Update the state type
+    const [bidangOptions, setBidangOptions] = useState<BidangOption[]>([]);
+    const [kategoriOptions, setKategoriOptions] = useState<KategoriSoalOption[]>([]);
     const [showUpload, setShowUpload] = useState(false);
 
+    // Update the useEffect that fetches bidang options
     useEffect(() => {
         const fetchBidangOptions = async () => {
             try {
@@ -83,6 +100,20 @@ export default function BankSoalCreate() {
             }
         };
         fetchBidangOptions();
+    }, []);
+
+    // Fetch kategori options
+    useEffect(() => {
+        const fetchKategoriOptions = async () => {
+            try {
+                const res = await axios.get('/master-data/kategorisoal');
+                console.log('Kategori Soal response:', res.data); // Tambahkan logging
+                setKategoriOptions(res.data);
+            } catch (error) {
+                console.error('Failed to fetch kategori options:', error);
+            }
+        };
+        fetchKategoriOptions();
     }, []);
 
     const handleSubmit = async (e: FormEvent) => {
@@ -115,18 +146,44 @@ export default function BankSoalCreate() {
             <div className="flex flex-1 flex-col gap-4 rounded-xl p-4">
                 <h1 className="text-2xl font-bold mb-4">Tambah Soal</h1>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Kategori Soal Dropdown */}
                     <Dropdown
-                        label="Jenis Ujian"
+                        label="Kategori Soal"
                         value={data.kategori_soal}
                         onChange={(e) => setData('kategori_soal', e.target.value)}
                         options={[
-                            { value: '', label: 'Pilih Jenis Ujian' },
-                            ...(bidangOptions?.map((item) => ({
-                                value: item.nama,
-                                label: item.nama,
+                            { value: '', label: 'Pilih Kategori Soal' },
+                            ...(kategoriOptions?.map((item) => ({
+                                value: item.kategori,
+                                label: item.kategori
                             })) || []),
                         ]}
                     />
+
+                    <Dropdown
+                        label="Jenis Ujian"
+                        value={data.kd_mapel}  // Changed from kategori_soal to kd_mapel
+                        onChange={(e) => setData('kd_mapel', e.target.value)}
+                        options={[
+                            { value: '', label: 'Pilih Jenis Ujian' },
+                            ...(bidangOptions?.map((item) => ({
+                                value: item.kode,
+                                label: `${item.kode} - ${item.nama}`
+                            })) || []),
+                        ]}
+                    />
+
+                    {/* Add Kode Soal input */}
+                    <div>
+                        <label className="block mb-2">Kode Soal</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.jenis_soal}
+                            onChange={(e) => setData('jenis_soal', e.target.value)}
+                            placeholder="Masukkan kode soal"
+                        />
+                    </div>
 
                     <Dropdown
                         label="Tambah Audio"

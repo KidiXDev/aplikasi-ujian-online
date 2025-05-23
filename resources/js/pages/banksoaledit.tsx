@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
+import { useEffect, useState, ChangeEvent, FormEvent, useLayoutEffect } from 'react';
 import axios from 'axios';
 import AppLayout from '@/layouts/app-layout';
 import { toast } from 'sonner';
@@ -32,6 +32,7 @@ const Dropdown = ({ label, value, onChange, options }: {
 interface SoalForm {
     ids: string;
     kategori_soal: string;
+    jenis_soal: string;
     suara: string;
     header_soal: string;
     body_soal: string;
@@ -45,10 +46,23 @@ interface SoalForm {
     [key: string]: string | File | null;
 }
 
+// Use the same interface and state updates as in create form
+interface BidangOption {
+    kode: string;
+    nama: string;
+}
+
+// Tambahkan interface KategoriSoalOption
+interface KategoriSoalOption {
+    kategori: string; 
+}
+
 export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
     const { data, setData, processing } = useForm<SoalForm>({
         ids: soal.ids,
         kategori_soal: soal.kategori_soal,
+        kd_mapel: soal.kd_mapel,
+        jenis_soal: soal.jenis_soal,
         suara: 'tidak',
         header_soal: soal.header_soal,
         body_soal: soal.body_soal,
@@ -61,7 +75,38 @@ export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
         file: null,
     });
 
-    const [bidangOptions, setBidangOptions] = useState<{ nama: string }[]>([]);
+    // Add multiple scroll reset approaches
+    useEffect(() => {
+        // Approach 1: Immediate scroll
+        window.scrollTo(0, 0);
+        
+        // Approach 2: Delayed scroll
+        setTimeout(() => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'instant'
+            });
+        }, 100);
+
+        // Approach 3: Force document position
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        
+        // Approach 4: Scroll with smooth behavior as fallback
+        window.scroll({
+            top: 0,
+            left: 0,
+            behavior: 'instant'
+        });
+    }, []);
+
+    // Move this before other useEffects
+    useLayoutEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    const [bidangOptions, setBidangOptions] = useState<BidangOption[]>([]);
+    const [kategoriOptions, setKategoriOptions] = useState<KategoriSoalOption[]>([]);
     const [showUpload, setShowUpload] = useState(false);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [deleteAudio, setDeleteAudio] = useState(false);
@@ -79,6 +124,7 @@ export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
     }, [soal.body_soal]);    
 
     useEffect(() => {
+        // Existing bidang options fetch
         const fetchBidangOptions = async () => {
             try {
                 const res = await axios.get('/master-data/jenisujian');
@@ -88,8 +134,21 @@ export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
             }
         };
 
-        fetchBidangOptions();
+        // Add new fetch for kategori options
+        const fetchKategoriOptions = async () => {
+            try {
+                const res = await axios.get('/master-data/kategorisoal');
+                console.log('Kategori Soal response:', res.data);
+                setKategoriOptions(res.data);
+            } catch (error) {
+                console.error('Failed to fetch kategori options:', error);
+            }
+        };
 
+        fetchBidangOptions();
+        fetchKategoriOptions();
+
+        // Keep the audio handling code
         const adaSuara = Boolean(soal.suara && soal.suara !== '');
         const url = adaSuara ? `/storage/${soal.suara}` : null;
 
@@ -190,15 +249,45 @@ export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
             <div className="flex flex-1 flex-col gap-4 rounded-xl p-4">
                 <h1 className="text-2xl font-bold mb-4">Edit Soal</h1>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Update Kategori Soal Dropdown */}
                     <Dropdown
-                        label="Jenis Ujian"
+                        label="Kategori Soal"
                         value={data.kategori_soal}
                         onChange={(e) => setData('kategori_soal', e.target.value)}
-                        options={[{ value: '', label: 'Pilih Jenis Ujian' }, ...(bidangOptions?.map((item) => ({
-                            value: item.nama,
-                            label: item.nama,
-                        })) || [])]}
+                        options={[
+                            { value: '', label: 'Pilih Kategori Soal' },
+                            ...(kategoriOptions?.map((item) => ({
+                                value: item.kategori,
+                                label: item.kategori
+                            })) || []),
+                        ]}
                     />
+
+                    {/* Update Jenis Ujian Dropdown */}
+                    <Dropdown
+                        label="Jenis Ujian"
+                        value={data.kd_mapel}
+                        onChange={(e) => setData('kd_mapel', e.target.value)}
+                        options={[
+                            { value: '', label: 'Pilih Jenis Ujian' },
+                            ...(bidangOptions?.map((item) => ({
+                                value: item.kode,
+                                label: `${item.kode} - ${item.nama}`
+                            })) || []),
+                        ]}
+                    />
+
+                    {/* Add Kode Soal input */}
+                    <div>
+                        <label className="block mb-2">Kode Soal</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.jenis_soal}
+                            onChange={(e) => setData('jenis_soal', e.target.value)}
+                            placeholder="Masukkan kode soal"
+                        />
+                    </div>
 
                     <Dropdown
                         label="Tambah Audio"

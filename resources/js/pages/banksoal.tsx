@@ -22,6 +22,7 @@ interface BreadcrumbItem {
 interface PageFilter {
     order: string;
     search?: string;
+    kd_mapel?: string; // Tambahkan filter kd_mapel
 }
 
 interface PaginatedResponse<T> {
@@ -35,6 +36,7 @@ interface PaginatedResponse<T> {
 interface PageProps {
     dataSoal: PaginatedResponse<Soal>;
     filters: PageFilter;
+    kdMapelOptions: Array<{ kode: string; nama: string }>; // Tambahkan ini
     flash?: {
         success?: string;
         error?: string;
@@ -52,6 +54,7 @@ interface Soal {
     jw_3: string;
     jw_4: string;
     jw_fix: number;
+    jenis_soal: string | null; // Add this line
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -105,59 +108,123 @@ function detectMimeType(base64: string): string {
     return 'image/jpeg';
 }
 
+// Modifikasi options untuk dropdown filter
 const options = [
     { label: 'Terlama', value: 'asc' },
     { label: 'Terbaru', value: 'desc' },
 ];
 
+// Tambahkan state untuk menyimpan opsi jenis ujian
 function OrderFilter({ defaultValue }: { defaultValue: string }) {
     const props = usePage().props as unknown as PageProps;
     const filters = props.filters || {};
     const perPage = props.dataSoal?.per_page || 10;
+    const kdMapelOptions = props.kdMapelOptions || []; // Ambil opsi dari props
 
     const [order, setOrder] = useState(defaultValue);
+    const [selectedKdMapel, setSelectedKdMapel] = useState(filters.kd_mapel || '');
 
     const handleChange = (selected: string) => {
         setOrder(selected);
         router.visit(route('master-data.bank.soal'), {
             data: {
-            order: selected,
-            search: filters.search || '',
-            pages: perPage,
-        },
-        preserveState: true,
-        preserveScroll: true,
+                order: selected,
+                search: filters.search || '',
+                pages: perPage,
+                kd_mapel: selectedKdMapel,
+            },
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleKdMapelChange = (selected: string) => {
+        setSelectedKdMapel(selected);
+        router.visit(route('master-data.bank.soal'), {
+            data: {
+                order: order,
+                search: filters.search || '',
+                pages: perPage,
+                kd_mapel: selected,
+            },
+            preserveState: true,
+            preserveScroll: true,
         });
     };
 
     return (
-        <div className="relative w-[150px]">
-            <Listbox value={order} onChange={handleChange}>
-            <div className="relative">
-                <Listbox.Button className="w-[100px] rounded-lg border border-gray-300 py-2 px-3 text-sm text-gray-700 text-left">
-                {options.find((o) => o.value === order)?.label}
-                <span className="absolute inset-y-0 right-15 flex items-center pointer-events-none">
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                </span>
-                </Listbox.Button>
+        <div className="flex gap-4">
+            {/* Order Filter */}
+            <div className="relative w-[150px]">
+                <Listbox value={order} onChange={handleChange}>
+                    <div className="relative">
+                        <Listbox.Button className="w-[100px] rounded-lg border border-gray-300 py-2 px-3 text-sm text-gray-700 text-left">
+                            {options.find((o) => o.value === order)?.label}
+                            <span className="absolute inset-y-0 right-15 flex items-center pointer-events-none">
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                            </span>
+                        </Listbox.Button>
 
-            <Listbox.Options className="absolute z-10 mt-1 w-[100px] rounded-lg bg-white shadow border border-gray-200">
-                {options.map((option) => (
-                    <Listbox.Option
-                        key={option.value}
-                        value={option.value}
-                        className={({ active }) =>
-                        `cursor-pointer px-4 py-2 text-sm ${
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                        }`
-                    }
-                >
-                        {option.label}
-                        </Listbox.Option>
-                    ))}
-                </Listbox.Options>
+                        <Listbox.Options className="absolute z-10 mt-1 w-[100px] rounded-lg bg-white shadow border border-gray-200">
+                            {options.map((option) => (
+                                <Listbox.Option
+                                    key={option.value}
+                                    value={option.value}
+                                    className={({ active }) =>
+                                        `cursor-pointer px-4 py-2 text-sm ${
+                                            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                        }`
+                                    }
+                                >
+                                    {option.label}
+                                </Listbox.Option>
+                            ))}
+                        </Listbox.Options>
+                    </div>
+                </Listbox>
             </div>
-            </Listbox>
+
+            {/* Kd Mapel Filter */}
+            <div className="relative w-[250px] left-[-50px]">
+                <Listbox value={selectedKdMapel} onChange={handleKdMapelChange}>
+                    <div className="relative">
+                        <Listbox.Button className="w-full rounded-lg border border-gray-300 py-2 px-3 text-sm text-gray-700 text-left">
+                            {selectedKdMapel ? 
+                                kdMapelOptions.find(o => o.kode === selectedKdMapel)?.nama || 'Semua Jenis Ujian' 
+                                : 'Semua Jenis Ujian'}
+                            <span className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                            </span>
+                        </Listbox.Button>
+
+                        <Listbox.Options className="absolute z-10 mt-1 w-full rounded-lg bg-white shadow border border-gray-200 max-h-60 overflow-auto">
+                            <Listbox.Option
+                                value=""
+                                className={({ active }) =>
+                                    `cursor-pointer px-4 py-2 text-sm ${
+                                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                    }`
+                                }
+                            >
+                                Semua Jenis Ujian
+                            </Listbox.Option>
+                            {kdMapelOptions.map((option) => (
+                                <Listbox.Option
+                                    key={option.kode}
+                                    value={option.kode}
+                                    className={({ active }) =>
+                                        `cursor-pointer px-4 py-2 text-sm ${
+                                            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                                        }`
+                                    }
+                                >
+                                    {`${option.kode} - ${option.nama}`}
+                                </Listbox.Option>
+                            ))}
+                        </Listbox.Options>
+                    </div>
+                </Listbox>
+            </div>
         </div>
     );
 }
@@ -221,6 +288,13 @@ function BankSoalTable({ data, pageFilters }: { data: PaginatedResponse<Soal>; p
             label: 'No',
             className: 'w-[60px] text-center',
             render: (item: Soal) => <div className="text-center">{item.ids}</div>,
+        },
+        {
+            label: 'Kode Soal', 
+            className: 'w-[100px]',
+            render: (item: Soal) => (
+                <div className="text-center">{item.jenis_soal || '-'}</div>
+            ),
         },
         {
             label: 'Soal',
