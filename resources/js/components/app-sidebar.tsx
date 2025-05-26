@@ -113,7 +113,7 @@ const items: MainNavItem[] = [
     {
         title: 'Jadwal Ujian',
         icon: CalendarClock,
-        href: '/jadwal-ujian',
+        href: '/penjadwalan',
     },
     {
         title: 'Monitoring',

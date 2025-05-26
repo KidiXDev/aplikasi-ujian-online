@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ExamSchedule;
+use App\Models\Penjadwalan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class ExamScheduleController extends Controller
+class PenjadwalanController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
 
-        $query = ExamSchedule::query();
+        $query = Penjadwalan::query();
 
         if ($search) {
             $query->where('kode_jadwal', 'like', "%{$search}%")
@@ -23,7 +23,7 @@ class ExamScheduleController extends Controller
             ->paginate($request->input('per_page', 10))
             ->withQueryString();
 
-        return Inertia::render('exam-schedule/exam-manager', [
+        return Inertia::render('penjadwalan/penjadwalan-manager', [
             'data' => $data,
             'filters' => $request->only(['search']),
         ]);
@@ -31,7 +31,7 @@ class ExamScheduleController extends Controller
 
     public function create()
     {
-        return Inertia::render('exam-schedule/form.exam-manager');
+        return Inertia::render('penjadwalan/form.penjadwalan-manager');
     }
 
     public function store(Request $request)
@@ -44,22 +44,22 @@ class ExamScheduleController extends Controller
             'waktu_selesai' => 'required',
             'kuota' => 'required|integer',
             'jenis_ujian' => 'required|integer',
-            'kode_jadwal' => 'required|string|max:255',
+            // 'kode_jadwal' => 'required|string|max:255', // not in Penjadwalan
         ]);
 
-        ExamSchedule::create($validated);
+        Penjadwalan::create($validated);
 
-        return redirect()->route('exam-schedule.index')->with('success', 'Jadwal ujian berhasil ditambahkan.');
+        return redirect()->route('penjadwalan.index')->with('success', 'Jadwal ujian berhasil ditambahkan.');
     }
 
-    public function edit(ExamSchedule $examSchedule)
+    public function edit(Penjadwalan $penjadwalan)
     {
-        return Inertia::render('exam-schedule/form.exam-manager', [
-            'examSchedule' => $examSchedule
+        return Inertia::render('penjadwalan/form.penjadwalan-manager', [
+            'penjadwalan' => $penjadwalan
         ]);
     }
 
-    public function update(Request $request, ExamSchedule $examSchedule)
+    public function update(Request $request, Penjadwalan $penjadwalan)
     {
         $validated = $request->validate([
             'id_paket_ujian' => 'required|integer',
@@ -69,17 +69,17 @@ class ExamScheduleController extends Controller
             'waktu_selesai' => 'required',
             'kuota' => 'required|integer',
             'jenis_ujian' => 'required|integer',
-            'kode_jadwal' => 'required|string|max:255',
+            // 'kode_jadwal' => 'required|string|max:255', // not in Penjadwalan
         ]);
 
-        $examSchedule->update($validated);
+        $penjadwalan->update($validated);
 
-        return redirect()->route('exam-schedule.index')->with('success', 'Jadwal ujian berhasil diperbarui.');
+        return redirect()->route('penjadwalan.index')->with('success', 'Jadwal ujian berhasil diperbarui.');
     }
 
-    public function destroy(ExamSchedule $examSchedule)
+    public function destroy(Penjadwalan $penjadwalan)
     {
-        $examSchedule->delete();
+        $penjadwalan->delete();
 
         return redirect()->back()->with('success', 'Jadwal ujian berhasil dihapus.');
     }
