@@ -92,11 +92,11 @@ function JenisUjianTable({ data: jenisUjianData, pageFilters: filters }: { data:
         {
             label: 'No',
             className: 'w-[100px] text-center',
-    render: (jenisUjian: JenisUjian) => {
-        const index = jenisUjianData.data.indexOf(jenisUjian);
-        const no = (jenisUjianData.current_page - 1) * jenisUjianData.per_page + (index + 1);
-        return <div className="text-center font-medium">{no}</div>;
-    },
+            render: (jenisUjian: JenisUjian) => {
+                const index = jenisUjianData.data.indexOf(jenisUjian);
+                const no = (jenisUjianData.current_page - 1) * jenisUjianData.per_page + (index + 1);
+                return <div className="text-center font-medium">{no}</div>;
+            },
         },
         {
             label: 'Nama Jenis Ujian',

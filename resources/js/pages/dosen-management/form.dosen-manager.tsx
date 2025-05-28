@@ -10,8 +10,14 @@ import {
 import { CButton } from '@/components/ui/c-button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, Role } from '@/types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 interface User {
     id: number;
@@ -23,12 +29,6 @@ interface User {
         aktif: boolean;
     };
 }
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
 
 interface UserWithPassword extends User {
     password: string;
@@ -226,22 +226,22 @@ export default function Dashboard() {
                             name="aktif"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Aktif</FormLabel>
-                                <FormControl>
-                                    <Select
-                                    value={field.value ? "true" : "false"}
-                                    onValueChange={(value: string) => field.onChange(value === "true")}
-                                    >
-                                    <SelectTrigger className="w-[200px]">
-                                        <SelectValue placeholder="Pilih status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="true">Aktif</SelectItem>
-                                        <SelectItem value="false">Tidak Aktif</SelectItem>
-                                    </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
+                                    <FormLabel>Aktif</FormLabel>
+                                    <FormControl>
+                                        <Select
+                                            value={field.value ? 'true' : 'false'}
+                                            onValueChange={(value: string) => field.onChange(value === 'true')}
+                                        >
+                                            <SelectTrigger className="w-[200px]">
+                                                <SelectValue placeholder="Pilih status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="true">Aktif</SelectItem>
+                                                <SelectItem value="false">Tidak Aktif</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />

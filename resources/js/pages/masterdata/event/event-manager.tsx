@@ -46,21 +46,10 @@ export default function EventManager() {
             <Head title="Event Manager" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <ContentTitle 
-                    title="Event Manager" 
-                    showButton 
-                    onButtonClick={() => router.visit(route('master-data.event.create'))} 
-                />
+                <ContentTitle title="Event Manager" showButton onButtonClick={() => router.visit(route('master-data.event.create'))} />
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector 
-                        currentValue={eventData.per_page} 
-                        options={[10, 25, 50, 100]} 
-                        routeName="master-data.event.index" 
-                    />
-                    <SearchInputMenu 
-                        defaultValue={filters.search} 
-                        routeName="master-data.event.index" 
-                    />
+                    <EntriesSelector currentValue={eventData.per_page} options={[10, 25, 50, 100]} routeName="master-data.event.index" />
+                    <SearchInputMenu defaultValue={filters.search} routeName="master-data.event.index" />
                 </div>
                 <EventTable data={eventData} pageFilters={filters} />
             </div>
@@ -122,22 +111,15 @@ function EventTable({ data: eventData, pageFilters: filters }: { data: Paginated
         },
         {
             label: 'Status',
-            render: (event: Event) => event.status === 1 ? 'Aktif' : 'Tidak Aktif',
+            render: (event: Event) => (event.status === 1 ? 'Aktif' : 'Tidak Aktif'),
         },
         {
             label: 'Aksi',
             className: 'w-[100px] text-center',
             render: (event: Event) => (
                 <div className="flex justify-center gap-2">
-                    <CButtonIcon 
-                        icon={Pencil} 
-                        onClick={() => router.visit(route('master-data.event.edit', event.id_event))} 
-                    />
-                    <CButtonIcon 
-                        icon={Trash2} 
-                        type="danger" 
-                        onClick={() => handleDelete(event.id_event)} 
-                    />
+                    <CButtonIcon icon={Pencil} onClick={() => router.visit(route('master-data.event.edit', event.id_event))} />
+                    <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(event.id_event)} />
                 </div>
             ),
         },

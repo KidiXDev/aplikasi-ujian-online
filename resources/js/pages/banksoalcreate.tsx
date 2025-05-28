@@ -1,11 +1,10 @@
-import { useForm } from '@inertiajs/react';
-import { Head, router } from '@inertiajs/react';
-import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
-import axios from 'axios';
-import AppLayout from '@/layouts/app-layout';
-import { toast } from 'sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import Editor from '@/components/editor/textrich';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import AppLayout from '@/layouts/app-layout';
+import { Head, router, useForm } from '@inertiajs/react';
+import axios from 'axios';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs = [
     {
@@ -18,7 +17,12 @@ const breadcrumbs = [
     },
 ];
 
-const Dropdown = ({ label, value, onChange, options }: {
+const Dropdown = ({
+    label,
+    value,
+    onChange,
+    options,
+}: {
     label: string;
     value: string;
     onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
@@ -26,11 +30,7 @@ const Dropdown = ({ label, value, onChange, options }: {
 }) => (
     <div>
         <label className="block">{label}</label>
-        <select
-            className="w-full border rounded px-3 py-2"
-            value={value}
-            onChange={onChange}
-        >
+        <select className="w-full rounded border px-3 py-2" value={value} onChange={onChange}>
             {options.map((option) => (
                 <option key={option.value} value={option.value}>
                     {option.label}
@@ -42,6 +42,8 @@ const Dropdown = ({ label, value, onChange, options }: {
 
 interface SoalForm {
     kategori_soal: string;
+    jenis_soal: string;
+    kd_mapel: string; // Add this for storing jenis ujian code
     suara: string;
     header_soal: string;
     body_soal: string;
@@ -55,9 +57,21 @@ interface SoalForm {
     [key: string]: string | File | null;
 }
 
+// Update the interface for bidang options
+interface BidangOption {
+    kode: string;
+    nama: string;
+}
+
+interface KategoriSoalOption {
+    kategori: string;
+}
+
 export default function BankSoalCreate() {
     const { data, setData, processing } = useForm<SoalForm>({
         kategori_soal: '',
+        kd_mapel: '', // Add this
+        jenis_soal: '',
         suara: 'tidak',
         header_soal: '',
         body_soal: '',
@@ -70,9 +84,12 @@ export default function BankSoalCreate() {
         file: null,
     });
 
-    const [bidangOptions, setBidangOptions] = useState<{ nama: string }[]>([]);
+    // Update the state type
+    const [bidangOptions, setBidangOptions] = useState<BidangOption[]>([]);
+    const [kategoriOptions, setKategoriOptions] = useState<KategoriSoalOption[]>([]);
     const [showUpload, setShowUpload] = useState(false);
 
+    // Update the useEffect that fetches bidang options
     useEffect(() => {
         const fetchBidangOptions = async () => {
             try {
@@ -83,6 +100,20 @@ export default function BankSoalCreate() {
             }
         };
         fetchBidangOptions();
+    }, []);
+
+    // Fetch kategori options
+    useEffect(() => {
+        const fetchKategoriOptions = async () => {
+            try {
+                const res = await axios.get('/master-data/kategorisoal');
+                console.log('Kategori Soal response:', res.data); // Tambahkan logging
+                setKategoriOptions(res.data);
+            } catch (error) {
+                console.error('Failed to fetch kategori options:', error);
+            }
+        };
+        fetchKategoriOptions();
     }, []);
 
     const handleSubmit = async (e: FormEvent) => {
@@ -105,7 +136,7 @@ export default function BankSoalCreate() {
             onError: (errors) => {
                 toast.error('Terjadi kesalahan saat menyimpan');
                 console.error(errors);
-            }
+            },
         });
     };
 
@@ -113,20 +144,46 @@ export default function BankSoalCreate() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Soal" />
             <div className="flex flex-1 flex-col gap-4 rounded-xl p-4">
-                <h1 className="text-2xl font-bold mb-4">Tambah Soal</h1>
+                <h1 className="mb-4 text-2xl font-bold">Tambah Soal</h1>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Kategori Soal Dropdown */}
                     <Dropdown
-                        label="Jenis Ujian"
+                        label="Kategori Soal"
                         value={data.kategori_soal}
                         onChange={(e) => setData('kategori_soal', e.target.value)}
                         options={[
-                            { value: '', label: 'Pilih Jenis Ujian' },
-                            ...(bidangOptions?.map((item) => ({
-                                value: item.nama,
-                                label: item.nama,
+                            { value: '', label: 'Pilih Kategori Soal' },
+                            ...(kategoriOptions?.map((item) => ({
+                                value: item.kategori,
+                                label: item.kategori,
                             })) || []),
                         ]}
                     />
+
+                    <Dropdown
+                        label="Jenis Ujian"
+                        value={data.kd_mapel} // Changed from kategori_soal to kd_mapel
+                        onChange={(e) => setData('kd_mapel', e.target.value)}
+                        options={[
+                            { value: '', label: 'Pilih Jenis Ujian' },
+                            ...(bidangOptions?.map((item) => ({
+                                value: item.kode,
+                                label: `${item.kode} - ${item.nama}`,
+                            })) || []),
+                        ]}
+                    />
+
+                    {/* Add Kode Soal input */}
+                    <div>
+                        <label className="mb-2 block">Kode Soal</label>
+                        <input
+                            type="text"
+                            className="w-full rounded border px-3 py-2"
+                            value={data.jenis_soal}
+                            onChange={(e) => setData('jenis_soal', e.target.value)}
+                            placeholder="Masukkan kode soal"
+                        />
+                    </div>
 
                     <Dropdown
                         label="Tambah Audio"
@@ -145,15 +202,15 @@ export default function BankSoalCreate() {
 
                     {showUpload && (
                         <div className="w-full">
-                            <label className="block mb-1 font-medium">Upload Audio</label>
-                            <div className="flex items-center justify-center w-full">
+                            <label className="mb-1 block font-medium">Upload Audio</label>
+                            <div className="flex w-full items-center justify-center">
                                 <label
                                     htmlFor="audio-upload"
-                                    className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                                    className="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 transition-colors hover:bg-gray-100"
                                 >
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                         <svg
-                                            className="w-8 h-8 mb-3 text-gray-500"
+                                            className="mb-3 h-8 w-8 text-gray-500"
                                             aria-hidden="true"
                                             fill="none"
                                             stroke="currentColor"
@@ -192,12 +249,9 @@ export default function BankSoalCreate() {
                     {/* Header Soal */}
                     <div>
                         <label className="text-m text-foreground">Header Soal</label>
-                        <div className="w-full overflow-hidden rounded-lg border bg-background space-y-2">
+                        <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
                             <TooltipProvider>
-                                <Editor
-                                    value={data.header_soal}
-                                    onChange={(value: string) => setData('header_soal', value)} 
-                                />
+                                <Editor value={data.header_soal} onChange={(value: string) => setData('header_soal', value)} />
                             </TooltipProvider>
                         </div>
                     </div>
@@ -205,12 +259,9 @@ export default function BankSoalCreate() {
                     {/* Body Soal */}
                     <div>
                         <label className="text-m text-foreground">Body Soal</label>
-                        <div className="w-full overflow-hidden rounded-lg border bg-background space-y-2">
+                        <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
                             <TooltipProvider>
-                                <Editor
-                                    value={data.body_soal}
-                                    onChange={(value: string) => setData('body_soal', value)}
-                                />
+                                <Editor value={data.body_soal} onChange={(value: string) => setData('body_soal', value)} />
                             </TooltipProvider>
                         </div>
                     </div>
@@ -218,12 +269,9 @@ export default function BankSoalCreate() {
                     {/* Footer Soal */}
                     <div>
                         <label className="text-m text-foreground">Footer Soal</label>
-                        <div className="w-full overflow-hidden rounded-lg border bg-background space-y-2">
+                        <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
                             <TooltipProvider>
-                                <Editor
-                                    value={data.footer_soal}
-                                    onChange={(value: string) => setData('footer_soal', value)} 
-                                />
+                                <Editor value={data.footer_soal} onChange={(value: string) => setData('footer_soal', value)} />
                             </TooltipProvider>
                         </div>
                     </div>
@@ -233,14 +281,12 @@ export default function BankSoalCreate() {
                         const label = i === 0 ? `Jawaban ${String.fromCharCode(65 + i)} (Jawaban Benar)` : `Jawaban ${String.fromCharCode(65 + i)}`;
                         return (
                             <div key={key}>
-                                <label className="text-m text-foreground">
-                                    {label}
-                                </label>
-                                <div className="w-full overflow-hidden rounded-lg border bg-background space-y-2">
+                                <label className="text-m text-foreground">{label}</label>
+                                <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
                                     <TooltipProvider>
                                         <Editor
                                             value={data[key as keyof SoalForm]?.toString() || ''}
-                                            onChange={(value: string) => setData(key as keyof SoalForm, value)} 
+                                            onChange={(value: string) => setData(key as keyof SoalForm, value)}
                                         />
                                     </TooltipProvider>
                                 </div>
@@ -248,19 +294,15 @@ export default function BankSoalCreate() {
                         );
                     })}
 
-                    <div className="flex gap-4 mt-4">
+                    <div className="mt-4 flex gap-4">
                         <button
                             type="button"
                             onClick={() => router.visit('/master-data/bank-soal')}
-                            className="bg-[#AC080C] hover:bg-[#8C0A0F] text-white px-4 py-2 rounded-md"
+                            className="rounded-md bg-[#AC080C] px-4 py-2 text-white hover:bg-[#8C0A0F]"
                         >
                             Cancel
                         </button>
-                        <button
-                            type="submit"
-                            className="bg-[#6784AE] hover:bg-[#56729B] text-white px-4 py-2 rounded-md"
-                            disabled={processing}
-                        >
+                        <button type="submit" className="rounded-md bg-[#6784AE] px-4 py-2 text-white hover:bg-[#56729B]" disabled={processing}>
                             Simpan Soal
                         </button>
                     </div>

@@ -43,8 +43,7 @@ export default function ExamScheduleForm() {
         },
         {
             title: isEdit ? 'Edit' : 'Create',
-            href: route(isEdit ? 'exam-schedule.edit' : 'exam-schedule.create', 
-                  isEdit ? examSchedule.id_penjadwalan : ''),
+            href: route(isEdit ? 'exam-schedule.edit' : 'exam-schedule.create', isEdit ? examSchedule.id_penjadwalan : ''),
         },
     ];
 
@@ -64,39 +63,31 @@ export default function ExamScheduleForm() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (isEdit) {
-            router.put(
-                route('exam-schedule.update', examSchedule.id_penjadwalan),
-                values,
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        toast.success('Jadwal ujian berhasil diperbarui');
-                        router.visit(route('exam-schedule.index'));
-                    },
-                    onError: (errors) => {
-                        Object.keys(errors).forEach(key => {
-                            toast.error(errors[key]);
-                        });
-                    },
+            router.put(route('exam-schedule.update', examSchedule.id_penjadwalan), values, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Jadwal ujian berhasil diperbarui');
+                    router.visit(route('exam-schedule.index'));
                 },
-            );
+                onError: (errors) => {
+                    Object.keys(errors).forEach((key) => {
+                        toast.error(errors[key]);
+                    });
+                },
+            });
         } else {
-            router.post(
-                route('exam-schedule.store'),
-                values,
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        toast.success('Jadwal ujian berhasil ditambahkan');
-                        router.visit(route('exam-schedule.index'));
-                    },
-                    onError: (errors) => {
-                        Object.keys(errors).forEach(key => {
-                            toast.error(errors[key]);
-                        });
-                    },
+            router.post(route('exam-schedule.store'), values, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Jadwal ujian berhasil ditambahkan');
+                    router.visit(route('exam-schedule.index'));
                 },
-            );
+                onError: (errors) => {
+                    Object.keys(errors).forEach((key) => {
+                        toast.error(errors[key]);
+                    });
+                },
+            });
         }
     }
 
@@ -106,11 +97,7 @@ export default function ExamScheduleForm() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="space-between flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} Jadwal Ujian</h1>
-                    <CButton 
-                        type="primary" 
-                        className="md:w-24" 
-                        onClick={() => router.visit(route('exam-schedule.index'))}
-                    >
+                    <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('exam-schedule.index'))}>
                         Kembali
                     </CButton>
                 </div>
@@ -131,18 +118,18 @@ export default function ExamScheduleForm() {
                             )}
                         />
 
-<FormField
+                        <FormField
                             control={form.control}
                             name="id_paket_ujian"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Paket Ujian</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            type="number" 
-                                            placeholder="Enter paket ujian ID" 
-                                            {...field} 
-                                            onChange={e => field.onChange(parseInt(e.target.value))}
+                                        <Input
+                                            type="number"
+                                            placeholder="Enter paket ujian ID"
+                                            {...field}
+                                            onChange={(e) => field.onChange(parseInt(e.target.value))}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -201,11 +188,11 @@ export default function ExamScheduleForm() {
                                 <FormItem>
                                     <FormLabel>Kuota</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            type="number" 
-                                            placeholder="Enter kuota" 
+                                        <Input
+                                            type="number"
+                                            placeholder="Enter kuota"
                                             {...field}
-                                            onChange={e => field.onChange(parseInt(e.target.value))}
+                                            onChange={(e) => field.onChange(parseInt(e.target.value))}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -220,11 +207,11 @@ export default function ExamScheduleForm() {
                                 <FormItem>
                                     <FormLabel>Jenis Ujian</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            type="number" 
-                                            placeholder="Enter jenis ujian" 
+                                        <Input
+                                            type="number"
+                                            placeholder="Enter jenis ujian"
                                             {...field}
-                                            onChange={e => field.onChange(parseInt(e.target.value))}
+                                            onChange={(e) => field.onChange(parseInt(e.target.value))}
                                         />
                                     </FormControl>
                                     <FormMessage />

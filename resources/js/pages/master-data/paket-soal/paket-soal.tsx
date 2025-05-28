@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PageProps, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 
-import { Pencil, Trash2, List} from 'lucide-react';
+import { List, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -50,8 +50,6 @@ export default function UserManager() {
         </AppLayout>
     );
 }
-
-
 
 function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedResponse<PaketSoal>; pageFilters: PageFilter }) {
     const [open, setOpen] = useState(false);
@@ -106,22 +104,27 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             render: (paket_soal: PaketSoal) => paket_soal.nama_paket,
         },
         {
-            label: 'Total Soal', 
+            label: 'Total Soal',
             className: 'w-[200px] text-center',
             render: (paket_soal: PaketSoal) => (
                 <div className="text-center font-medium">
                     {Array.isArray(paket_soal.match_soal_count)
-                        ? paket_soal.match_soal_count.map(item => item.nam).join(', ')
+                        ? paket_soal.match_soal_count.map((item) => item.nam).join(', ')
                         : paket_soal.match_soal_count}
                 </div>
-        ),
+            ),
         },
         {
             label: 'Action',
             className: 'w-[100px] text-center',
             render: (paket_soal: PaketSoal) => (
                 <div className="flex justify-center gap-2">
-                    <CButtonIcon icon={List} type="primary" onClick={() => router.visit(route('master-data.paket-soal.show', paket_soal.id))} className="bg-yellow-500" />
+                    <CButtonIcon
+                        icon={List}
+                        type="primary"
+                        onClick={() => router.visit(route('master-data.paket-soal.show', paket_soal.id))}
+                        className="bg-yellow-500"
+                    />
                     <CButtonIcon icon={Pencil} onClick={() => router.visit(route('master-data.paket-soal.edit', paket_soal.id))} />
                     <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(paket_soal.id)} />
                 </div>

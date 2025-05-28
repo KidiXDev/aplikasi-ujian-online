@@ -17,11 +17,11 @@ import { SearchInputMenu } from '@/components/ui/search-input-menu';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dosen Manager',
-        href: '/user-management/dosen'
+        href: '/user-management/dosen',
     },
 ];
 
-interface Dosen{
+interface Dosen {
     id: number;
     name: string;
     email: string;
@@ -45,23 +45,23 @@ export default function UserManager() {
             <Head title="Dosen Manager" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-  <ContentTitle title="Data Dosen" showButton={false} />
-  <div className="flex gap-2">
-            <button
-            onClick={() => router.visit(route('master-data.import.view'))}
-            className="rounded bg-green-600 px-4 py-2 text-white shadow hover:bg-green-700"
-            >
-            Import
-            </button>
-            <button
-            onClick={() => router.visit(route('master-data.dosen.create'))}
-            className="rounded bg-[#6A86B6] px-4 py-2 text-white shadow hover:bg-gray-700"
-            >
-            + Add
-            </button>
-        </div>
-        </div>
+                <div className="flex items-center justify-between">
+                    <ContentTitle title="Data Dosen" showButton={false} />
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => router.visit(route('master-data.import.view'))}
+                            className="rounded bg-green-600 px-4 py-2 text-white shadow hover:bg-green-700"
+                        >
+                            Import
+                        </button>
+                        <button
+                            onClick={() => router.visit(route('master-data.dosen.create'))}
+                            className="rounded bg-[#6A86B6] px-4 py-2 text-white shadow hover:bg-gray-700"
+                        >
+                            + Add
+                        </button>
+                    </div>
+                </div>
 
                 <div className="mt-4 flex items-center justify-between">
                     <EntriesSelector currentValue={userData.per_page} options={[10, 12, 25, 50, 100]} routeName="master-data.dosen.manager" />
@@ -73,7 +73,7 @@ export default function UserManager() {
     );
 }
 
-const baseClass = "inline-block w-[90px] rounded px-2 py-1 text-center text-white text-xs shadow";
+const baseClass = 'inline-block w-[90px] rounded px-2 py-1 text-center text-white text-xs shadow';
 
 const RoleDecorator: React.FC<{ role: string }> = ({ role }) => {
     switch (role) {
@@ -150,13 +150,9 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             render: (user: Dosen) => (
                 <div className="flex justify-center">
                     {user.dosen?.aktif ? (
-                        <span className="inline-block w-[80px] rounded bg-green-500 px-2 py-1 text-center text-white text-xs shadow">
-                            Aktif
-                        </span>
+                        <span className="inline-block w-[80px] rounded bg-green-500 px-2 py-1 text-center text-xs text-white shadow">Aktif</span>
                     ) : (
-                        <span className="inline-block w-[80px] rounded bg-red-500 px-2 py-1 text-center text-white text-xs shadow">
-                            Tidak Aktif
-                        </span>
+                        <span className="inline-block w-[80px] rounded bg-red-500 px-2 py-1 text-center text-xs text-white shadow">Tidak Aktif</span>
                     )}
                 </div>
             ),
@@ -172,17 +168,17 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
                 </div>
             ),
         },
-        
+
         {
             label: 'Action',
-                className: 'w-[100px] text-center',
-                render: (user: Dosen) => (
-                    <div className="flex justify-center gap-2">
-                        <CButtonIcon icon={Pencil} onClick={() => router.visit(route('master-data.dosen.edit', user.id))} />
-                        <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(user.id)} />
-                    </div>
-                ),
-            },
+            className: 'w-[100px] text-center',
+            render: (user: Dosen) => (
+                <div className="flex justify-center gap-2">
+                    <CButtonIcon icon={Pencil} onClick={() => router.visit(route('master-data.dosen.edit', user.id))} />
+                    <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(user.id)} />
+                </div>
+            ),
+        },
     ];
 
     return (

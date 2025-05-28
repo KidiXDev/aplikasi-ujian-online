@@ -48,21 +48,10 @@ export default function ExamScheduleManager() {
             <Head title="Jadwal Ujian" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <ContentTitle 
-                    title="Jadwal Ujian" 
-                    showButton 
-                    onButtonClick={() => router.visit(route('exam-schedule.create'))} 
-                />
+                <ContentTitle title="Jadwal Ujian" showButton onButtonClick={() => router.visit(route('exam-schedule.create'))} />
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector 
-                        currentValue={examData.per_page} 
-                        options={[10, 25, 50, 100]} 
-                        routeName="exam-schedule.index" 
-                    />
-                    <SearchInputMenu 
-                        defaultValue={filters.search} 
-                        routeName="exam-schedule.index" 
-                    />
+                    <EntriesSelector currentValue={examData.per_page} options={[10, 25, 50, 100]} routeName="exam-schedule.index" />
+                    <SearchInputMenu defaultValue={filters.search} routeName="exam-schedule.index" />
                 </div>
                 <ExamTable data={examData} pageFilters={filters} />
             </div>
@@ -132,22 +121,15 @@ function ExamTable({ data: examData, pageFilters: filters }: { data: PaginatedRe
         },
         {
             label: 'Tipe',
-            render: (exam: JadwalUjian) => exam.online_offline === 1 ? 'Online' : 'Offline',
+            render: (exam: JadwalUjian) => (exam.online_offline === 1 ? 'Online' : 'Offline'),
         },
         {
             label: 'Aksi',
             className: 'w-[100px] text-center',
             render: (exam: JadwalUjian) => (
                 <div className="flex justify-center gap-2">
-                    <CButtonIcon 
-                        icon={Pencil} 
-                        onClick={() => router.visit(route('exam-schedule.edit', exam.id_penjadwalan))} 
-                    />
-                    <CButtonIcon 
-                        icon={Trash2} 
-                        type="danger" 
-                        onClick={() => handleDelete(exam.id_penjadwalan)} 
-                    />
+                    <CButtonIcon icon={Pencil} onClick={() => router.visit(route('exam-schedule.edit', exam.id_penjadwalan))} />
+                    <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(exam.id_penjadwalan)} />
                 </div>
             ),
         },

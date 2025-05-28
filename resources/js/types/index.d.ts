@@ -23,18 +23,18 @@ export interface NavItem {
 }
 
 export interface MainNavItem {
-  title: string;
-  href?: string;
-  icon?: LucideIcon | null;
-  isActive?: boolean;
-  subitem?: SubItems[];
+    title: string;
+    href?: string;
+    icon?: LucideIcon | null;
+    isActive?: boolean;
+    subitem?: SubItems[];
 }
 
-export interface SubItems{
-  title: string;
-  href: string;
-  icon?: LucideIcon | null;
-  isActive?: boolean;
+export interface SubItems {
+    title: string;
+    href: string;
+    icon?: LucideIcon | null;
+    isActive?: boolean;
 }
 
 export interface SharedData {

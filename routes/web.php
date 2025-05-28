@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BankSoalController;
 use App\Http\Controllers\KategoriUjianController;
 use App\Http\Controllers\MatkulController;
 use App\Http\Controllers\TestController;
@@ -10,7 +11,6 @@ use App\Http\Controllers\PesertaManagerEditController;
 use App\Http\Controllers\PesertaImportController;
 use App\Http\Controllers\JenisUjianEditController;
 use App\Http\Controllers\ExamScheduleController;
-use App\Http\Controllers\MonitoringUjianController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\BankSoalControllerCheckbox;
@@ -157,6 +157,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('create', [JenisUjianEditController::class, 'create'])->name('create');
             Route::post('/', [JenisUjianEditController::class, 'store'])->name('store');
         });
+
+        Route::get('/kategorisoal', [BankSoalController::class, 'getKategoriSoal']);
     });
 
     Route::middleware(['role:super_admin'])->group(function () {
