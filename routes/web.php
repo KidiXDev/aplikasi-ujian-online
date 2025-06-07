@@ -56,9 +56,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
 
-    Route::get('rekap-nilai', function () {
-        return Inertia::render('rekap-nilai');
-    })->name('rekap.nilai');
+    Route::get('rekap-nilai', [App\Http\Controllers\RekapNilaiController::class, 'index'])->name('rekap.nilai');
+    Route::get('rekap-nilai/{id}', [App\Http\Controllers\RekapNilaiController::class, 'show'])->name('rekap.nilai.detail');
+    Route::get('rekap-nilai/{id}/export', [App\Http\Controllers\RekapNilaiController::class, 'export'])->name('rekap.nilai.export');
 
     // Buat route yang punya submenu, bisa dimasukkan ke dalam group
     // contohnya kek gini buat master-data
