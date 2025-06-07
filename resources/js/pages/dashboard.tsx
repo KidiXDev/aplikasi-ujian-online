@@ -1,8 +1,9 @@
-import React from 'react';
-import { Users, FileText, CheckCircle, Monitor } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, FileText, CheckCircle, Monitor, Copy, RefreshCw } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,7 +12,20 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+interface TokenData {
+    token: string;
+    waktu: string | null;
+    status: number;
+}
+
 export default function Dashboard() {
+    const [currentToken, setCurrentToken] = useState<TokenData>({
+        token: 'Loading...',
+        waktu: null,
+        status: 0
+    });
+    const [isGenerating, setIsGenerating] = useState(false);
+
     // Mock data for stats
     const stats = [
         { title: 'peserta login', value: '150', icon: Users },
@@ -51,6 +65,77 @@ export default function Dashboard() {
         },
     ];
 
+    // Fetch current token on component mount
+    useEffect(() => {
+        fetchCurrentToken();
+    }, []);
+
+    const fetchCurrentToken = async () => {
+        try {
+            const response = await fetch(route('token.current'));
+            const data = await response.json();
+            setCurrentToken(data);
+        } catch (error) {
+            console.error('Error fetching token:', error);
+            toast.error('Gagal mengambil token');
+        }
+    };
+
+    const generateNewToken = async () => {
+        setIsGenerating(true);
+        try {
+            console.log('Generating new token...');
+            
+            // Gunakan GET request (tidak perlu CSRF)
+            const response = await fetch(route('token.generate'), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Response:', data);
+            
+            if (data.success) {
+                setCurrentToken({
+                    token: data.token,
+                    waktu: data.waktu,
+                    status: 1
+                });
+                toast.success(data.message || 'Token berhasil diperbarui');
+                fetchCurrentToken();
+            } else {
+                toast.error(data.message || 'Gagal memperbarui token');
+            }
+        } catch (error) {
+            console.error('Error generating token:', error);
+            toast.error('Gagal memperbarui token: ' + (error instanceof Error ? error.message : String(error)));
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const copyTokenToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(currentToken.token);
+            toast.success('Token berhasil disalin');
+        } catch (error) {
+            console.error('Error copying token:', error);
+            toast.error('Gagal menyalin token');
+        }
+    };
+
+    const formatDateTime = (dateString: string | null) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleString('id-ID');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -88,7 +173,7 @@ export default function Dashboard() {
 
                 {/* Dashboard Section */}
                 <div className="mb-8">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Dashboard</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Tambah Ujian Card */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -116,19 +201,43 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Token Card */}
+                        {/* Token Card - Updated */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6 flex flex-col justify-between">
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Token Ujian</h3>
-                                <div className="flex items-center justify-center mb-4">
-                                    <span className="text-3xl font-mono font-bold tracking-widest bg-gray-100 px-6 py-2 rounded-lg border border-gray-200 select-all">
-                                        7X9Q2
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">Token Ujian</h3>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        currentToken.status === 1 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-red-100 text-red-800'
+                                    }`}>
+                                        {currentToken.status === 1 ? 'Aktif' : 'Tidak Aktif'}
                                     </span>
                                 </div>
+                                <div className="flex items-center justify-center mb-2">
+                                    <span className="text-3xl font-mono font-bold tracking-widest bg-gray-100 px-6 py-2 rounded-lg border border-gray-200 select-all">
+                                        {currentToken.token}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-500 text-center mb-4">
+                                    Diperbarui: {formatDateTime(currentToken.waktu)}
+                                </p>
                             </div>
-                            <div className="flex items-center justify-center">
-                                <button className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
-                                    Salin Token
+                            <div className="flex items-center justify-center gap-2">
+                                <button 
+                                    onClick={copyTokenToClipboard}
+                                    className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                >
+                                    <Copy className="w-3 h-3" />
+                                    Salin
+                                </button>
+                                <button 
+                                    onClick={generateNewToken}
+                                    disabled={isGenerating}
+                                    className="px-4 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                >
+                                    <RefreshCw className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                                    {isGenerating ? 'Generating...' : 'Buat Baru'}
                                 </button>
                             </div>
                         </div>

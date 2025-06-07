@@ -24,6 +24,7 @@ use App\Models\PaketSoal;
 use App\Http\Controllers\DosenManagerController;
 use App\Http\Controllers\DosenManagerEditController;
 use App\Http\Controllers\DosenImportController;
+use App\Http\Controllers\TokenController;
 
 // Custom route binding untuk Matakuliah model
 Route::bind('matakuliah', function ($value) {
@@ -199,6 +200,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             })->name('roles');
         });
     });
+
+    // Token routes - accessible by all authenticated users (no role restriction)
+    Route::get('/token/current', [TokenController::class, 'getCurrentToken'])->name('token.current');
+    Route::get('/token/generate', [TokenController::class, 'generateNewToken'])->name('token.generate'); // Ubah POST menjadi GET
+    Route::get('/token/copy', [TokenController::class, 'copyToken'])->name('token.copy');
 });
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
