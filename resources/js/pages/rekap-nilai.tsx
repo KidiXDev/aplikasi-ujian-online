@@ -25,10 +25,9 @@ interface Ujian {
 interface Student {
   no: number;
   nama: string;
-  listening: number;
-  struktur: number;
-  reading: number;
-  benar: string;
+  jumlah_soal: number;
+  soal_benar: number;
+  soal_salah: number;
   nilai: number;
 }
 
@@ -47,10 +46,9 @@ interface Props {
 }
 
 interface AverageScores {
-  listening: number;
-  structure: number;
-  reading: number;
-  overall: number;
+  benar: number;
+  salah: number;
+  score: number;
 }
 
 const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
@@ -70,10 +68,9 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [lastPage, setLastPage] = useState<number>(1);
   const [averageScores, setAverageScores] = useState<AverageScores>({
-    listening: 0,
-    structure: 0,
-    reading: 0,
-    overall: 0
+    benar: 0,
+    salah: 0,
+    score: 0
   });
 
   // Update data when initialData changes
@@ -139,6 +136,34 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
     }
   }, [selectedUjian?.id, studentSearchTerm, studentEntriesPerPage, studentCurrentPage]);
 
+  // Hitung rata-rata soal benar, soal salah, dan score untuk chart
+  useEffect(() => {
+    // Filter student data based on search
+    const filtered = studentData.filter(student => {
+      if (!studentSearchTerm) return true;
+      return safeIncludes(student.nama, studentSearchTerm);
+    });
+
+    if (!selectedUjian || filtered.length === 0) {
+      setAverageScores({ benar: 0, salah: 0, score: 0 });
+      return;
+    }
+    let totalBenar = 0;
+    let totalSalah = 0;
+    let totalScore = 0;
+    filtered.forEach((student) => {
+      totalBenar += student.soal_benar;
+      totalSalah += student.soal_salah;
+      totalScore += student.nilai;
+    });
+    const count = filtered.length;
+    setAverageScores({
+      benar: count ? Math.round(totalBenar / count) : 0,
+      salah: count ? Math.round(totalSalah / count) : 0,
+      score: count ? Math.round(totalScore / count) : 0
+    });
+  }, [studentData, studentSearchTerm, selectedUjian]);
+
   // Helper function for safe string comparison
   const safeIncludes = (value: string | null | undefined, searchTerm: string): boolean => {
     if (!value) return false;
@@ -155,12 +180,6 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
       (item.tanggal || '').includes(searchTerm) ||
       safeIncludes(item.status, searchTerm)
     );
-  });
-
-  // Filter student data based on search
-  const filteredStudentData = studentData.filter(student => {
-    if (!studentSearchTerm) return true;
-    return safeIncludes(student.nama, studentSearchTerm);
   });
 
   // Pagination logic for main data
@@ -200,6 +219,12 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
     }
   };
 
+  // Filter student data based on search
+  const filteredStudentData = studentData.filter(student => {
+    if (!studentSearchTerm) return true;
+    return safeIncludes(student.nama, studentSearchTerm);
+  });
+
   // Update student table content section
   const renderStudentTable = () => {
     return (
@@ -208,24 +233,25 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
           <tr>
             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Listening</th>
-            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Structure</th>
-            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Reading</th>
-            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Correct</th>
+            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Soal</th>
+            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Benar</th>
+            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Salah</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
           </tr>
-        </thead>        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredStudentData.map((student) => (
-            <tr key={student.no} className="hover:bg-gray-50">
-              <td className="px-4 py-3 text-sm text-gray-500">{student.no}</td>
-              <td className="px-4 py-3 text-sm font-medium text-gray-900">{student.nama}</td>
-              <td className="px-4 py-3 text-sm text-center bg-blue-50 text-blue-700">{student.listening}</td>
-              <td className="px-4 py-3 text-sm text-center bg-green-50 text-green-700">{student.struktur}</td>
-              <td className="px-4 py-3 text-sm text-center bg-purple-50 text-purple-700">{student.reading}</td>
-              <td className="px-4 py-3 text-sm text-center text-gray-500">{student.benar}</td>
-              <td className="px-4 py-3 text-sm text-center font-medium text-gray-900">{student.nilai}</td>
-            </tr>
-          ))}
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {filteredStudentData.map((student) => {
+            return (
+              <tr key={student.no} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm text-gray-500">{student.no}</td>
+                <td className="px-4 py-3 text-sm font-medium text-gray-900">{student.nama}</td>
+                <td className="px-4 py-3 text-sm text-center">{student.jumlah_soal}</td>
+                <td className="px-4 py-3 text-sm text-center text-green-600">{student.soal_benar}</td>
+                <td className="px-4 py-3 text-sm text-center text-red-600">{student.soal_salah}</td>
+                <td className="px-4 py-3 text-sm text-center font-medium text-gray-900">{student.nilai}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );

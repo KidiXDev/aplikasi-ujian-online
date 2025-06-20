@@ -7,6 +7,7 @@ use App\Models\JadwalUjian;
 use App\Models\JadwalUjianSoal;
 use App\Models\Pengerjaan;
 use App\Models\PengerjaanJawaban;
+use App\Models\Peserta;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -93,9 +94,9 @@ class MonitoringUjianController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('kode_part', 'like', "%{$search}%")
-                  ->orWhere('kode_kelas', 'like', "%{$search}%")
-                  ->orWhere('nama_ujian', 'like', "%{$search}%")
-                  ->orWhere('id_ujian', 'like', "%{$search}%");
+                    ->orWhere('kode_kelas', 'like', "%{$search}%")
+                    ->orWhere('nama_ujian', 'like', "%{$search}%")
+                    ->orWhere('id_ujian', 'like', "%{$search}%");
             });
         }
 
@@ -148,27 +149,42 @@ class MonitoringUjianController extends Controller
             'tipe' => $penjadwalan->tipe,
         ];
 
-        // Get JadwalUjian filtered by id_penjadwalan and optionally by exam_id
-        $jadwalUjianQuery = JadwalUjian::where('id_penjadwalan', $id);
-        
-        if ($examId) {
-            $jadwalUjianQuery->where('id_ujian', $examId);
-        } else {
-            // If no exam_id specified, try with kode_part matching tipe_ujian
-            $jadwalUjianQuery->where('kode_part', $penjadwalan->tipe_ujian);
+        // exam_id is required for this view
+        if (!$examId) {
+            return redirect()->route('monitoring.ujian.preview', $id)
+                ->with('error', 'Exam ID is required to view details.');
         }
 
-        $jadwalUjian = $jadwalUjianQuery->first();
-
-        // If not found and no exam_id was specified, try without kode_part filter
-        if (!$jadwalUjian && !$examId) {
-            $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        }
+        // Get the specific JadwalUjian by exam_id
+        $jadwalUjian = JadwalUjian::where('id_ujian', $examId)->first();
 
         if (!$jadwalUjian) {
-            // Return empty students data if no jadwal ujian found
-            $studentsData = collect([])->paginate((int)$pages);
+            return redirect()->route('monitoring.ujian.preview', $id)
+                ->with('error', 'Exam not found.');
+        }
 
+        // Add nama_ujian to the transformed ujian data
+        $transformedUjian['nama_ujian'] = $jadwalUjian->nama_ujian;
+
+        // Parse kode_kelas to get participant IDs
+        $participantIds = [];
+        if ($jadwalUjian->kode_kelas) {
+            $kodeKelasClean = trim(strval($jadwalUjian->kode_kelas));
+            if (!empty($kodeKelasClean)) {
+                $rawIds = explode(',', $kodeKelasClean);
+                foreach ($rawIds as $rawId) {
+                    $cleanId = trim($rawId);
+                    if (!empty($cleanId) && is_numeric($cleanId)) {
+                        $participantIds[] = intval($cleanId);
+                    }
+                }
+                $participantIds = array_unique($participantIds);
+                sort($participantIds);
+            }
+        }
+
+        if (empty($participantIds)) {
+            $studentsData = collect([])->paginate((int)$pages);
             $stats = [
                 'total_students' => 0,
                 'active_students' => 0,
@@ -183,101 +199,105 @@ class MonitoringUjianController extends Controller
                     'search' => $search,
                     'status' => $status,
                     'pages' => $pages,
+                    'exam_id' => $examId, // Include exam_id in filters
                 ],
             ]);
-        }
-
-        // Parse kode_kelas to get participant IDs
-        $participantIds = [];
-
-        if ($jadwalUjian->kode_kelas) {
-            // Trim whitespace and split by comma
-            $kodeKelasClean = trim(strval($jadwalUjian->kode_kelas));
-            if (!empty($kodeKelasClean)) {
-                // Split by comma and clean each value
-                $rawIds = explode(',', $kodeKelasClean);
-                $participantIds = [];
-
-                foreach ($rawIds as $rawId) {
-                    $cleanId = trim($rawId);
-                    if (!empty($cleanId) && is_numeric($cleanId)) {
-                        $participantIds[] = intval($cleanId);
-                    }
-                }
-
-                // Remove duplicates and sort
-                $participantIds = array_unique($participantIds);
-                sort($participantIds);
-            }
         }
 
         // Get total questions from JadwalUjianSoal
         $jadwalUjianSoal = JadwalUjianSoal::where('id_ujian', $jadwalUjian->id_ujian)->first();
         $totalQuestions = $jadwalUjianSoal ? $jadwalUjianSoal->total_soal : 0;
 
-        // Query participants who exist in Pengerjaan and match the specific ujian
-        $pengerjaanQuery = Pengerjaan::with(['peserta'])
-            ->whereIn('id_peserta', $participantIds)
-            ->where('id_ujian', $jadwalUjian->id_ujian)
+        // Get all participants data with their Pengerjaan status (if exists)
+        $participantsQuery = Peserta::whereIn('id', $participantIds)
             ->when($search, function ($query, $search) {
-                return $query->whereHas('peserta', function ($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%");
-                });
-            })
-            ->when($status, function ($query, $status) {
-                if ($status === 'active') {
-                    return $query->where(function ($q) {
-                        $q->whereNull('nilai')->orWhere('nilai', '=', 0);
+                return $query->where('nama', 'like', "%{$search}%")
+                    ->orWhereHas('pengerjaan', function ($q) use ($search) {
+                        $q->where('id_pengerjaan', 'like', "%{$search}%");
                     });
-                } elseif ($status === 'finish') {
-                    return $query->where(function ($q) {
-                        $q->whereNotNull('nilai')->where('nilai', '>', 0);
-                    });
-                }
-                return $query;
             });
 
-        $pengerjaanList = $pengerjaanQuery->paginate((int)$pages)->withQueryString();
+        // Apply status filter before pagination
+        if ($status) {
+            if ($status === 'active') {
+                $participantsQuery->whereHas('pengerjaan', function ($query) use ($examId) {
+                    $query->where('id_ujian', $examId)
+                        ->where(function ($q) {
+                            $q->where('selesai', 0)->orWhereNull('selesai');
+                        });
+                });
+            } elseif ($status === 'finish') {
+                $participantsQuery->whereHas('pengerjaan', function ($query) use ($examId) {
+                    $query->where('id_ujian', $examId)
+                        ->where('selesai', 1);
+                });
+            } elseif ($status === 'not_started') {
+                $participantsQuery->whereDoesntHave('pengerjaan', function ($query) use ($examId) {
+                    $query->where('id_ujian', $examId);
+                });
+            }
+        }
+
+        $participantsList = $participantsQuery->paginate((int)$pages)->withQueryString();
 
         // Transform data for students table
-        $pengerjaanList->getCollection()->transform(function ($pengerjaan) use ($totalQuestions) {
-            // Count completed questions from PengerjaanJawaban
-            $completedQuestions = PengerjaanJawaban::where('id_pengerjaan', $pengerjaan->id_pengerjaan)->count();
+        $participantsList->getCollection()->transform(function ($participant) use ($examId, $totalQuestions) {
+            // Get Pengerjaan data for this participant and exam
+            $pengerjaan = Pengerjaan::where('id_peserta', $participant->id)
+                ->where('id_ujian', $examId)
+                ->first();
 
-            // Determine status based on nilai (score)
-            $status = 'active';
-            if ($pengerjaan->nilai !== null && $pengerjaan->nilai > 0) {
-                $status = 'finish';
+            $completedQuestions = 0;
+            $status = 'not_started';
+            $nilai = null;
+            $idPengerjaan = null;
+
+            if ($pengerjaan) {
+                // Count answered questions (where jawaban is not null)
+                $completedQuestions = PengerjaanJawaban::where('id_pengerjaan', $pengerjaan->id_pengerjaan)
+                    ->whereNotNull('jawaban')
+                    ->count();
+
+                // Determine status based on selesai column
+                if ($pengerjaan->selesai == 1) {
+                    $status = 'finish';
+                } else {
+                    $status = 'active';
+                }
+
+                $nilai = $pengerjaan->nilai;
+                $idPengerjaan = $pengerjaan->id_pengerjaan;
             }
 
             return [
-                'id' => $pengerjaan->id_peserta,
-                'name' => $pengerjaan->peserta ? $pengerjaan->peserta->nama : 'Unknown',
+                'id' => $participant->id,
+                'id_pengerjaan' => $idPengerjaan,
+                'name' => $participant->nama,
                 'completedQuestions' => $completedQuestions,
                 'totalQuestions' => $totalQuestions,
                 'status' => $status,
-                'nilai' => $pengerjaan->nilai,
+                'nilai' => $nilai,
             ];
         });
 
-        // Calculate statistics
+        // Calculate statistics for all participants
         $totalParticipants = count($participantIds);
-
-        $participantsInPengerjaan = 0;
+        $activeParticipants = 0;
         $finishedParticipants = 0;
 
         if (!empty($participantIds)) {
-            $participantsInPengerjaan = Pengerjaan::whereIn('id_peserta', $participantIds)
-                ->where('id_ujian', $jadwalUjian->id_ujian)
-                ->count();
-            $finishedParticipants = Pengerjaan::whereIn('id_peserta', $participantIds)
-                ->where('id_ujian', $jadwalUjian->id_ujian)
+            $activeParticipants = Pengerjaan::whereIn('id_peserta', $participantIds)
+                ->where('id_ujian', $examId)
                 ->where(function ($query) {
-                    $query->whereNotNull('nilai')->where('nilai', '>', 0);
-                })->count();
-        }
+                    $query->where('selesai', 0)->orWhereNull('selesai');
+                })
+                ->count();
 
-        $activeParticipants = $participantsInPengerjaan - $finishedParticipants;
+            $finishedParticipants = Pengerjaan::whereIn('id_peserta', $participantIds)
+                ->where('id_ujian', $examId)
+                ->where('selesai', 1)
+                ->count();
+        }
 
         $stats = [
             'total_students' => $totalParticipants,
@@ -287,13 +307,93 @@ class MonitoringUjianController extends Controller
 
         return Inertia::render('monitoring/detail', [
             'ujian' => $transformedUjian,
-            'studentsData' => $pengerjaanList,
+            'studentsData' => $participantsList,
             'stats' => $stats,
             'filters' => [
                 'search' => $search,
                 'status' => $status,
                 'pages' => $pages,
+                'exam_id' => $examId, // Include exam_id in filters
             ],
         ]);
+    }
+
+    /**
+     * Reset a participant's exam progress.
+     */
+    public function resetParticipant(Request $request, $id)
+    {
+        $idPengerjaan = $request->input('id_pengerjaan');
+        $examId = $request->query('exam_id');
+
+        if (!$idPengerjaan) {
+            return back()->withErrors(['error' => 'Pengerjaan ID is required']);
+        }
+
+        // Find the Pengerjaan record by id_pengerjaan
+        $pengerjaan = Pengerjaan::find($idPengerjaan);
+
+        if (!$pengerjaan) {
+            return back()->withErrors(['error' => 'Pengerjaan record not found']);
+        }
+
+        // Only allow reset if the participant has finished (selesai = 1)
+        if ($pengerjaan->selesai !== true) {
+            return back()->withErrors(['error' => 'Can only reset participants who have finished the exam']);
+        }
+
+        // Reset the specified fields
+        $pengerjaan->update([
+            'selesai' => 0,
+            'waktu_selesai' => null,
+            'total_soal' => null,
+            'total_jawaban' => null,
+            'jawaban_benar' => null,
+            'jawaban_salah' => null,
+            'nilai' => null,
+        ]);
+
+        // Don't send flash messages for AJAX requests (polling)
+        // The frontend will handle showing the success message
+        return back();
+    }
+
+    /**
+     * Delete a participant's exam progress.
+     */
+    public function deleteParticipant(Request $request, $id)
+    {
+        $idPengerjaan = $request->input('id_pengerjaan');
+        $examId = $request->query('exam_id');
+
+        if (!$idPengerjaan) {
+            return back()->withErrors(['error' => 'Pengerjaan ID is required']);
+        }
+
+        // Find the Pengerjaan record by id_pengerjaan
+        $pengerjaan = Pengerjaan::find($idPengerjaan);
+
+        if (!$pengerjaan) {
+            return back()->withErrors(['error' => 'Pengerjaan record not found']);
+        }
+
+        // Reset the specified fields in Pengerjaan
+        $pengerjaan->update([
+            'selesai' => 0,
+            'waktu_selesai' => null,
+            'total_soal' => null,
+            'total_jawaban' => null,
+            'jawaban_benar' => null,
+            'jawaban_salah' => null,
+            'nilai' => null,
+        ]);
+
+        // Set all jawaban to NULL for this id_pengerjaan in PengerjaanJawaban
+        PengerjaanJawaban::where('id_pengerjaan', $idPengerjaan)
+            ->update(['jawaban' => null]);
+
+        // Don't send flash messages for AJAX requests (polling)
+        // The frontend will handle showing the success message
+        return back();
     }
 }

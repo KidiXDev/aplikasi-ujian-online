@@ -38,4 +38,16 @@ class JadwalUjian extends Model
     {
         return $this->belongsTo(MBidang::class, 'kode_part', 'kode');
     }
+
+    public function event()
+    {
+        return $this->belongsTo(Event::class, 'id_event', 'id_event');
+    }
+    
+    public function bidang()
+    {
+        return $this->belongsTo(Bidang::class, 'kode_part', 'kode');
+    }
+
+    
 }

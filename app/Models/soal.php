@@ -12,9 +12,6 @@ class Soal extends Model
     public $timestamps = false;
     protected $fillable = [
     ];
-    public function match_soal()
-    {
-        return $this->hasMany(MatchSoal::class, 'soal_id', 'ids');
-    }
+    
 }
  

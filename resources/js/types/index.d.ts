@@ -88,6 +88,7 @@ export interface PageFilter {
     search: string;
     pages: number;
     status?: string;
+    exam_id?: string;
 }
 
 export type PageProps<T> = {

@@ -38,6 +38,7 @@ export function StatusFilter({ currentValue, routeName, routeParams = {} }: Stat
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="finish">Finish</SelectItem>
+                    <SelectItem value="not_started">Not Started</SelectItem>
                 </SelectContent>
             </Select>
         </div>

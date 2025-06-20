@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use App\Models\MatchSoal;
 use App\Models\PaketSoal;
 use Illuminate\Support\Facades\Log;
+use App\Models\JadwalUjian;
+use App\Models\JadwalUjianSoal;
 
 class BankSoalControllerCheckbox extends Controller
 {
@@ -40,13 +42,13 @@ class BankSoalControllerCheckbox extends Controller
             ],
         ]);
     }    
-    public function edit(Request $request, PaketSoal $paket_soal)
+    public function edit(Request $request, JadwalUjianSoal $paket_soal)
     {
         // Ambil data paket soal beserta relasi match_soal
-        $paket_soal = PaketSoal::with(['match_soal'])->findOrFail($paket_soal->id);
+        $paket_soal = JadwalUjianSoal::findOrFail($paket_soal->id_ujian);
 
         // Ambil ID soal yang sudah match
-        $matchedSoalIds = $paket_soal->match_soal->pluck('soal_id')->toArray();
+        $idsoal = 
 
         // Ambil semua soal dari tabel m_soal
         $search = $request->query('search', null);
@@ -67,6 +69,21 @@ class BankSoalControllerCheckbox extends Controller
 
         $dataSoal = $query->paginate($perPage)->withQueryString();
 
+        // Ambil string ujian_soal dari model JadwalUjianSoal
+        $ujianSoalString = $paket_soal->ujian_soal; // misal "10,11,12"
+
+        // Ubah ke array integer
+        $ujianSoalIds = array_filter(array_map('intval', explode(',', $ujianSoalString)));
+
+        // Query soal yang sesuai
+        $soalList = DB::connection('data_db')
+            ->table('m_soal')
+            ->whereIn('ids', $ujianSoalIds)
+            ->get();
+
+        // Assign matched soal IDs (use $ujianSoalIds as the matched IDs)
+        $matchedSoalIds = $ujianSoalIds;
+
         return Inertia::render('banksoalcheckbox', [
             'dataSoal' => $dataSoal,
             'filters' => [
@@ -74,37 +91,39 @@ class BankSoalControllerCheckbox extends Controller
                 'pages' => $perPage,
             ],
             'paketSoal' => [
-                'id' => $paket_soal->id,
-                'nama_paket' => $paket_soal->nama_paket,
+                'id_ujian' => $paket_soal->id_ujian,
+                'nama_ujian' => $paket_soal->nama_ujian,
             ],
             'matchedSoalIds' => $matchedSoalIds, // Kirim ID soal yang sudah match
         ]);
     }
 
-    public function update(Request $request, PaketSoal $paket_soal)
+    public function update(Request $request, JadwalUjianSoal $paket_soal)
     {
-        Log::info('Data yang diterima:', $request->all());
-
-        // Validasi data
-        $data = $request->validate([
-            'soal_id' => 'nullable|array',
+        // Validasi input
+        $request->validate([
+            'soal_id' => 'required|array|min:1',
             'soal_id.*' => 'integer|exists:data_db.m_soal,ids',
         ]);
 
-        $soalIds = $data['soal_id'] ?? [];
+        // Ambil data jadwal ujian lama
+        $jadwalUjianSoal = JadwalUjian::findOrFail($paket_soal->id_ujian);
 
-        // Hapus semua relasi sebelumnya
-        MatchSoal::where('paket_id', $paket_soal->id)->delete();
+        // // Buat data baru di JadwalUjian (copy dari lama)
+        // $jadwalUjianBaru = JadwalUjian::create([
+        //     'nama_ujian'  => $jadwalUjianLama->nama_ujian,
+        //     'kode_kelas'  => $jadwalUjianLama->kode_kelas,
+        //     'id_event'    => $jadwalUjianLama->id_event,
+        //     'kode_part'   => $jadwalUjianLama->kode_part,
+        // ]);
 
-        // Simpan relasi soal baru
-        foreach ($soalIds as $id) {
-            MatchSoal::create([
-                'soal_id' => $id,
-                'paket_id' => $paket_soal->id,
-            ]);
-        }
+        $jadwalUjianSoal = JadwalUjianSoal::findOrFail($paket_soal->id_ujian)->update([
+            'total_soal' => count($request->input('soal_id')),
+            'ujian_soal' => implode(',', $request->input('soal_id')),
+        ]);
 
-        return back()->with('success', 'Soal berhasil diperbarui.');
+        return redirect()
+            ->back()
+            ->with('success', 'Soal berhasil ditambahkan sebagai data baru');
     }
-
 }

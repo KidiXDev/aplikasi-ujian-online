@@ -37,4 +37,9 @@ class Peserta extends Model
     {
         return $this->belongsTo(Jurusan::class, 'jurusan', 'id_jurusan');
     }
+
+    public function pengerjaan()
+    {
+        return $this->hasMany(Pengerjaan::class, 'id_peserta', 'id');
+    }
 }

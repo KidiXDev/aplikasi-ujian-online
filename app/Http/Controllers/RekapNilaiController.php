@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\JadwalUjian;
 use App\Models\Pengerjaan;
-use App\Models\PengerjaanJawaban;
 use App\Models\Penjadwalan;
 use App\Models\Peserta;
 use Illuminate\Http\Request;
@@ -79,8 +78,8 @@ class RekapNilaiController extends Controller
                 ], 404);
             }
 
-            // Get base query with eager loading of relationships
-            $query = Pengerjaan::with(['peserta', 'jawaban'])
+            // Get base query tanpa relasi jawaban
+            $query = Pengerjaan::with(['peserta'])
                 ->where('id_jadwal', $jadwalUjian->id_ujian);
 
             // Apply search if provided
@@ -94,51 +93,29 @@ class RekapNilaiController extends Controller
             $totalRecords = $query->count();
 
             // Get all completed tests for average calculations
-            $completedTests = $query->whereNotNull('nilai')->where('nilai', '>', 0)->get();
-            
-            // Initialize arrays for section scores
-            $listeningScores = [];
-            $structureScores = [];
-            $readingScores = [];
-            $overallScores = [];
+            $completedTests = $query->whereNotNull('nilai')->where('nilai', '>=', 0)->get();
 
+            // Inisialisasi array untuk statistik
+            $benarArr = [];
+            $salahArr = [];
+            $scoreArr = [];
             foreach ($completedTests as $test) {
-                $jawaban = $test->jawaban;
-                $sections = $jawaban->groupBy('kd_bidang');
-                
-                foreach ($sections as $kd_bidang => $answers) {
-                    $correctAnswers = $answers->where('jawaban', 1)->count();
-                    $totalQuestions = $answers->count();
-                    $sectionScore = ($totalQuestions > 0) ? ($correctAnswers / $totalQuestions) * 100 : 0;
-                    
-                    switch ($kd_bidang) {
-                        case 1:
-                            $listeningScores[] = $sectionScore;
-                            break;
-                        case 2:
-                            $structureScores[] = $sectionScore;
-                            break;
-                        case 3:
-                            $readingScores[] = $sectionScore;
-                            break;
-                    }
-                }
-                
-                if ($test->nilai) {
-                    $overallScores[] = $test->nilai;
-                }
+                $benar = (int)($test->jawaban_benar ?? 0);
+                $total = (int)($test->total_soal ?? 0);
+                $salah = $total - $benar;
+                $benarArr[] = $benar;
+                $salahArr[] = $salah;
+                $scoreArr[] = round($test->nilai ?? 0);
             }
-
-            // Calculate averages
+            $count = count($completedTests);
             $averages = [
-                'listening' => count($listeningScores) > 0 ? round(array_sum($listeningScores) / count($listeningScores), 2) : 0,
-                'structure' => count($structureScores) > 0 ? round(array_sum($structureScores) / count($structureScores), 2) : 0,
-                'reading' => count($readingScores) > 0 ? round(array_sum($readingScores) / count($readingScores), 2) : 0,
-                'overall' => count($overallScores) > 0 ? round(array_sum($overallScores) / count($overallScores), 2) : 0
+                'benar' => $count ? round(array_sum($benarArr) / $count) : 0,
+                'salah' => $count ? round(array_sum($salahArr) / $count) : 0,
+                'score' => $count ? round(array_sum($scoreArr) / $count) : 0
             ];
 
             // Get paginated data
-            $query = Pengerjaan::with(['peserta', 'jawaban'])
+            $query = Pengerjaan::with(['peserta'])
                 ->where('id_jadwal', $jadwalUjian->id_ujian)
                 ->skip(($page - 1) * $perPage)
                 ->take($perPage);
@@ -153,41 +130,19 @@ class RekapNilaiController extends Controller
             $startNumber = ($page - 1) * $perPage + 1;
             $transformedStudentData = $query->get()->map(function ($item, $index) use ($startNumber) {
                 $peserta = $item->peserta;
-                $jawaban = $item->jawaban;
-                $sections = $jawaban->groupBy('kd_bidang');
-                
-                $scores = [
-                    'listening' => 0,
-                    'structure' => 0,
-                    'reading' => 0
-                ];
-                
-                foreach ($sections as $kd_bidang => $answers) {
-                    $correctAnswers = $answers->where('jawaban', 1)->count();
-                    $totalQuestions = $answers->count();
-                    $sectionScore = ($totalQuestions > 0) ? ($correctAnswers / $totalQuestions) * 100 : 0;
-                    
-                    switch ($kd_bidang) {
-                        case 1:
-                            $scores['listening'] = round($sectionScore);
-                            break;
-                        case 2:
-                            $scores['structure'] = round($sectionScore);
-                            break;
-                        case 3:
-                            $scores['reading'] = round($sectionScore);
-                            break;
-                    }
-                }
-                
+                $total_soal = (int)($item->total_soal ?? 0);
+                $soal_benar = (int)($item->jawaban_benar ?? 0);
+                $soal_salah = $total_soal - $soal_benar;
+                $nilai = round($item->nilai ?? 0);
                 return [
                     'no' => $startNumber + $index,
                     'nama' => $peserta ? $peserta->nama : 'Peserta tidak ditemukan',
-                    'listening' => $scores['listening'],
-                    'struktur' => $scores['structure'],
-                    'reading' => $scores['reading'],
-                    'benar' => $item->jawaban_benar . "/" . $item->total_soal,
-                    'nilai' => round($item->nilai ?? 0)
+                    'jumlah_soal' => $total_soal,
+                    'soal_benar' => $soal_benar,
+                    'soal_salah' => $soal_salah,
+                    'nilai' => $nilai,
+                    // Untuk kompatibilitas frontend lama:
+                    'benar' => $soal_benar . '/' . $total_soal
                 ];
             });
 

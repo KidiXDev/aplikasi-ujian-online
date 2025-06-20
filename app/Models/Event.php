@@ -34,4 +34,10 @@ class Event extends Model
     {
         return $this->hasMany(Penjadwalan::class, 'id_paket_ujian', 'id_event');
     }
+
+    public function jadwalUjian()
+    {
+        return $this->hasMany(JadwalUjian::class, 'id_event', 'id_event');
+    }
+
 }
