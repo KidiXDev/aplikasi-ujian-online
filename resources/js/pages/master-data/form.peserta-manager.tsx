@@ -83,7 +83,8 @@ export default function PesertaForm() {
                 onSuccess: () => {
                     console.log('Peserta created successfully!'); // Log jika berhasil
                 },
-                onError: () => { // Log error jika gagal
+                onError: () => {
+                    // Log error jika gagal
                     toast.error('Failed to create peserta.');
                 },
             });
@@ -115,20 +116,20 @@ export default function PesertaForm() {
                                 </FormItem>
                             )}
                         />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Password</FormLabel>
-                                        <FormControl>
-                                            <PasswordInput placeholder="Enter password" {...field} />
-                                        </FormControl>
-                                        {isEdit && <p className="mt-1 text-xs text-gray-500">*kosongkan jika tidak ingin merubah password</p>}
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                        <PasswordInput placeholder="Enter password" {...field} />
+                                    </FormControl>
+                                    {isEdit && <p className="mt-1 text-xs text-gray-500">*kosongkan jika tidak ingin merubah password</p>}
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="nama"

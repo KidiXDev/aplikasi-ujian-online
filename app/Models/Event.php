@@ -26,4 +26,12 @@ class Event extends Model
         'create_event' => 'datetime',
         'status' => 'integer',
     ];
+
+    /**
+     * Get the penjadwalan items associated with this event.
+     */
+    public function penjadwalans()
+    {
+        return $this->hasMany(Penjadwalan::class, 'id_paket_ujian', 'id_event');
+    }
 }

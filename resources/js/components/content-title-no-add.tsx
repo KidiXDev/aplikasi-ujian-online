@@ -9,9 +9,7 @@ interface ContentTitleProps {
     onButtonClick?: () => void;
 }
 
-export function ContentTitleNoadd({
-    title,
-}: ContentTitleProps) {
+export function ContentTitleNoadd({ title }: ContentTitleProps) {
     return (
         <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">{title}</h1>

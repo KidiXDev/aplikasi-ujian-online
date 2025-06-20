@@ -28,10 +28,16 @@ export function CAlertDialog(props: {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogAction className="bg-button-primary hover:bg-[#475873] hover:text-white shadow transition-colors cursor-pointer" onClick={props.onContinue}>
+                    <AlertDialogAction
+                        className="bg-button-primary cursor-pointer shadow transition-colors hover:bg-[#475873] hover:text-white"
+                        onClick={props.onContinue}
+                    >
                         Iya
                     </AlertDialogAction>
-                    <AlertDialogCancel className="bg-button-danger hover:bg-[#720508] hover:text-white text-white shadow transition-colors cursor-pointer" onClick={props.onCancel}>
+                    <AlertDialogCancel
+                        className="bg-button-danger cursor-pointer text-white shadow transition-colors hover:bg-[#720508] hover:text-white"
+                        onClick={props.onCancel}
+                    >
                         Tidak
                     </AlertDialogCancel>
                 </AlertDialogFooter>

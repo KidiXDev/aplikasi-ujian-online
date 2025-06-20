@@ -3,7 +3,6 @@ import { MainNavItem, NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
     Book,
-    BookA,
     CalendarClock,
     GraduationCap,
     Home,
@@ -44,7 +43,7 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'Peserta',
-                href: '/master-data/test',
+                href: '/master-data/peserta',
                 icon: UserRound,
             },
             {
@@ -54,7 +53,7 @@ const items: MainNavItem[] = [
             },
             {
                 title: 'Kategori Ujian',
-                href: '/master-data/kategori-ujian',
+                href: '/master-data/peserta',
                 icon: Book,
             },
             {
@@ -62,30 +61,15 @@ const items: MainNavItem[] = [
                 href: '/master-data/jenis-ujian',
                 icon: Book,
             },
-            {
-                title: 'Paket Soal',
-                href: '/master-data/paket-soal',
-                icon: Book,
-            },
-            {
+                        {
                 title: 'Bank Soal',
                 href: '/master-data/bank-soal',
                 icon: Book,
             },
             {
-                title: 'Matakuliah',
-                icon: BookA,
-                href: '/master-data/matakuliah',
-            },
-            {
-                title: 'Event',
-                icon: BookA,
-                href: '/master-data/event',
-            },
-            {
-                title: 'Bank Soal Checkbox',
-                icon: BookA,
-                href: '/master-data/banksoalcheckbox',
+                title: 'Paket Soal',
+                href: '/master-data/paket-soal',
+                icon: Book,
             },
         ],
     },
@@ -113,7 +97,7 @@ const items: MainNavItem[] = [
     {
         title: 'Jadwal Ujian',
         icon: CalendarClock,
-        href: '/jadwal-ujian',
+        href: '/penjadwalan',
     },
     {
         title: 'Monitoring',

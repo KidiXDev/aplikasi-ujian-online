@@ -1,13 +1,6 @@
-import { Input } from '@/components/ui/input';
 import { CButton } from '@/components/ui/c-button';
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -41,43 +34,33 @@ export default function FormJenisUjian() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (isEdit && user?.kode) {
-            router.put(
-                route('master-data.jenis-ujian.update', user.kode),
-                values,
-                {
-                    preserveScroll: true,
-                    onSuccess: () => toast.success('Data berhasil diubah!'),
-                    onError: (errors: Record<string, string | string[]>) => {
-                        Object.values(errors).forEach((err) => {
-                            if (Array.isArray(err)) {
-                                err.forEach((e) => toast.error(e));
-                            } else {
-                                toast.error(err);
-                            }
-                        });
-                    },
-                    
-                }
-            );
+            router.put(route('master-data.jenis-ujian.update', user.kode), values, {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Data berhasil diubah!'),
+                onError: (errors: Record<string, string | string[]>) => {
+                    Object.values(errors).forEach((err) => {
+                        if (Array.isArray(err)) {
+                            err.forEach((e) => toast.error(e));
+                        } else {
+                            toast.error(err);
+                        }
+                    });
+                },
+            });
         } else {
-            router.post(
-                route('master-data.jenis-ujian.store'),
-                values,
-                {
-                    preserveScroll: true,
-                    onSuccess: () => toast.success('Data berhasil ditambahkan!'),
-                    onError: (errors: Record<string, string | string[]>) => {
-                        Object.values(errors).forEach((err) => {
-                            if (Array.isArray(err)) {
-                                err.forEach((e) => toast.error(e));
-                            } else {
-                                toast.error(err);
-                            }
-                        });
-                    },
-                    
-                }
-            );
+            router.post(route('master-data.jenis-ujian.store'), values, {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Data berhasil ditambahkan!'),
+                onError: (errors: Record<string, string | string[]>) => {
+                    Object.values(errors).forEach((err) => {
+                        if (Array.isArray(err)) {
+                            err.forEach((e) => toast.error(e));
+                        } else {
+                            toast.error(err);
+                        }
+                    });
+                },
+            });
         }
     }
 
@@ -87,10 +70,7 @@ export default function FormJenisUjian() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} Jenis Ujian</h1>
-                    <CButton
-                        type="primary"
-                        onClick={() => router.visit(route('master-data.jenis-ujian.manager'))}
-                    >
+                    <CButton type="primary" onClick={() => router.visit(route('master-data.jenis-ujian.manager'))}>
                         Back
                     </CButton>
                 </div>
@@ -104,10 +84,7 @@ export default function FormJenisUjian() {
                                 <FormItem>
                                     <FormLabel>Kategori Ujian</FormLabel>
                                     <FormControl>
-                                        <select
-                                            {...field}
-                                            className="w-full rounded-md border border-gray-300 p-2"
-                                        >
+                                        <select {...field} className="w-full rounded-md border border-gray-300 p-2">
                                             <option value="">Pilih Kategori</option>
                                             <option value="TOEFL">TOEFL</option>
                                             <option value="TOEIC">TOEIC</option>

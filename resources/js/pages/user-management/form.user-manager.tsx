@@ -8,6 +8,7 @@ import {
     MultiSelectorTrigger,
 } from '@/components/multi-select';
 import { CButton } from '@/components/ui/c-button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
@@ -115,84 +116,91 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="space-between flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} User</h1>
-                    <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('user-management.user.manager'))}>
-                        Back
-                    </CButton>
-                </div>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        <FormField
-                            control={form.control}
-                            name="username"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Enter your username" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input type="email" placeholder="Enter your email" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        {!isEdit && (
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Password</FormLabel>
-                                        <FormControl>
-                                            <PasswordInput placeholder="Password" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{isEdit ? 'Edit User' : 'Create User'}</CardTitle>
+                        <CardDescription>{isEdit ? 'Edit user details' : 'Create a new user'}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                                <FormField
+                                    control={form.control}
+                                    name="username"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Username</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Enter your username" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="Enter your email" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                {!isEdit && (
+                                    <FormField
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Password</FormLabel>
+                                                <FormControl>
+                                                    <PasswordInput placeholder="Password" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                 )}
-                            />
-                        )}
-                        <FormField
-                            control={form.control}
-                            name="roles"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Roles</FormLabel>
-                                    <FormControl>
-                                        <MultiSelector values={field.value} onValuesChange={field.onChange} loop className="max-w-xs">
-                                            <MultiSelectorTrigger>
-                                                <MultiSelectorInput placeholder="Select roles" />
-                                            </MultiSelectorTrigger>
-                                            <MultiSelectorContent>
-                                                <MultiSelectorList>
-                                                    {allRoles.map((role) => (
-                                                        <MultiSelectorItem key={role.id} value={role.name}>
-                                                            {role.name}
-                                                        </MultiSelectorItem>
-                                                    ))}
-                                                </MultiSelectorList>
-                                            </MultiSelectorContent>
-                                        </MultiSelector>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <CButton type="submit">Save</CButton>
-                    </form>
-                </Form>
+                                <FormField
+                                    control={form.control}
+                                    name="roles"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Roles</FormLabel>
+                                            <FormControl>
+                                                <MultiSelector values={field.value} onValuesChange={field.onChange} loop className="max-w-xs">
+                                                    <MultiSelectorTrigger>
+                                                        <MultiSelectorInput placeholder="Select roles" />
+                                                    </MultiSelectorTrigger>
+                                                    <MultiSelectorContent>
+                                                        <MultiSelectorList>
+                                                            {allRoles.map((role) => (
+                                                                <MultiSelectorItem key={role.id} value={role.name}>
+                                                                    {role.name}
+                                                                </MultiSelectorItem>
+                                                            ))}
+                                                        </MultiSelectorList>
+                                                    </MultiSelectorContent>
+                                                </MultiSelector>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex gap-2">
+                                    <CButton type="submit">Save</CButton>
+                                    <CButton type="primary" onClick={() => router.visit(route('user-management.user.manager'))}>
+                                        Back
+                                    </CButton>
+                                </div>
+                            </form>
+                        </Form>
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );

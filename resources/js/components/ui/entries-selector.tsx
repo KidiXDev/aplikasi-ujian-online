@@ -5,6 +5,7 @@ interface EntriesSelectorProps {
     currentValue: number;
     options?: number[];
     routeName: string;
+    routeParams?: Record<string, string | number>;
     paramName?: string;
 }
 
@@ -18,10 +19,10 @@ export function EntriesSelector({
     currentValue,
     options = [10, 25, 50, 100],
     routeName,
+    routeParams = {},
     paramName = "pages"
 }: EntriesSelectorProps) {
     const filters = usePage().props.filters as PageFilter;
-    const currentPage = filters.page || 1;
 
     return (
         <div className="flex items-center gap-2">
@@ -29,10 +30,10 @@ export function EntriesSelector({
             <Select
                 value={String(currentValue)}
                 onValueChange={(value) => {
-                    router.visit(route(routeName), {
+                    router.visit(route(routeName, routeParams), {
                         data: {
                             [paramName]: value,
-                            page: currentPage,
+                            page: 1, // Reset to first page when changing entries
                             search: filters.search || '',
                         },
                         preserveState: true,

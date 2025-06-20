@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'nip',
     ];
 
     /**
@@ -46,5 +47,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function dosen(){
+        return $this->hasOne(Dosen::class, 'nip', 'nip');
     }
 }

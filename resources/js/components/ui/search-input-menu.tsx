@@ -6,6 +6,7 @@ interface SearchInputMenuProps {
     defaultValue?: string;
     placeholder?: string;
     routeName: string;
+    routeParams?: Record<string, string | number>;
     paramName?: string;
     width?: string;
 }
@@ -14,11 +15,11 @@ export function SearchInputMenu({
     defaultValue = "",
     placeholder = "Search...",
     routeName,
+    routeParams = {},
     paramName = "search",
     width = "w-[300px]"
 }: SearchInputMenuProps) {
-    return (
-        <div className={`relative ${width}`}>
+    return (        <div className={`relative ${width}`}>
             <Input
                 type="text"
                 placeholder={placeholder}
@@ -26,8 +27,12 @@ export function SearchInputMenu({
                 defaultValue={defaultValue}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                        router.visit(route(routeName), {
-                            data: { [paramName]: (e.target as HTMLInputElement).value },
+                        const value = (e.target as HTMLInputElement).value;
+                        router.visit(route(routeName, routeParams), {
+                            data: { 
+                                [paramName]: value,
+                                page: 1 // Reset to first page when searching
+                            },
                             preserveState: true,
                             preserveScroll: true,
                         });

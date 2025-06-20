@@ -1,16 +1,16 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, usePage } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { useEffect, useState } from 'react';
 import { Listbox } from '@headlessui/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // import { CAlertDialog } from '@/components/c-alert-dialog';
+import { ContentTitleNoadd } from '@/components/content-title-no-add';
 import { CustomTable } from '@/components/ui/c-table';
 import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
-import { ContentTitleNoadd } from '@/components/content-title-no-add';
 
 interface BreadcrumbItem {
     title: string;
@@ -83,13 +83,13 @@ export default function Banksoal() {
         router.put(
             route('master-data.bank-soal-checkbox.update', paketSoal.id),
             {
-                soal_id: selectedSoalIds, 
+                soal_id: selectedSoalIds,
             },
             {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Soal berhasil diperbarui'),
                 onError: () => toast.error('Gagal menyimpan soal'),
-            }
+            },
         );
     };
 
@@ -110,18 +110,10 @@ export default function Banksoal() {
                     </div>
                     <SearchInputMenu defaultValue={filters?.search} routeName="master-data.bank.soal" />
                 </div>
-                <BankSoalTable
-                    data={dataSoal}
-                    pageFilters={filters}
-                    selectedSoalIds={selectedSoalIds}
-                    setSelectedSoalIds={setSelectedSoalIds}
-                />
+                <BankSoalTable data={dataSoal} pageFilters={filters} selectedSoalIds={selectedSoalIds} setSelectedSoalIds={setSelectedSoalIds} />
 
                 {paketSoal && (
-                    <button
-                        onClick={handleSave}
-                        className="mt-4 self-start px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
+                    <button onClick={handleSave} className="mt-4 self-start rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
                         Simpan Checklist Soal
                     </button>
                 )}
@@ -145,7 +137,7 @@ function renderContentWithBase64(content: string | null) {
     if (isProbablyBase64) {
         const mimeType = detectMimeType(content);
         const imageSrc = `data:${mimeType};base64,${content}`;
-        return <img src={imageSrc} alt="gambar" className="max-w-full max-h-60 object-contain rounded" />;
+        return <img src={imageSrc} alt="gambar" className="max-h-60 max-w-full rounded object-contain" />;
     }
 
     return <span className="text-base font-medium whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: content }} />;
@@ -179,21 +171,19 @@ function OrderFilter({ defaultValue }: { defaultValue: string }) {
         <div className="relative w-[150px]">
             <Listbox value={order} onChange={handleChange}>
                 <div className="relative">
-                    <Listbox.Button className="w-[100px] rounded-lg border border-gray-300 py-2 px-3 text-sm text-gray-700 text-left">
+                    <Listbox.Button className="w-[100px] rounded-lg border border-gray-300 px-3 py-2 text-left text-sm text-gray-700">
                         {options.find((o) => o.value === order)?.label}
-                        <span className="absolute inset-y-0 right-15 flex items-center pointer-events-none">
-                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                        <span className="pointer-events-none absolute inset-y-0 right-15 flex items-center">
+                            <ChevronDown className="h-4 w-4 text-gray-500" />
                         </span>
                     </Listbox.Button>
-                    <Listbox.Options className="absolute z-10 mt-1 w-[100px] rounded-lg bg-white shadow border border-gray-200">
+                    <Listbox.Options className="absolute z-10 mt-1 w-[100px] rounded-lg border border-gray-200 bg-white shadow">
                         {options.map((option) => (
                             <Listbox.Option
                                 key={option.value}
                                 value={option.value}
                                 className={({ active }) =>
-                                    `cursor-pointer px-4 py-2 text-sm ${
-                                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                                    }`
+                                    `cursor-pointer px-4 py-2 text-sm ${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`
                                 }
                             >
                                 {option.label}
@@ -238,21 +228,19 @@ function BankSoalTable({
         {
             label: 'Soal',
             render: (item: Soal) => (
-                <div className="flex flex-col gap-2 max-w-[900px] whitespace-pre-wrap break-words">
+                <div className="flex max-w-[900px] flex-col gap-2 break-words whitespace-pre-wrap">
                     {item.suara && <audio controls src={`/storage/${item.suara}`} className="w-[250px] max-w-full" />}
                     {renderContentWithBase64(item.header_soal)}
                     {renderContentWithBase64(item.body_soal)}
                     {renderContentWithBase64(item.footer_soal)}
-                    <ul className="space-y-2 font-medium text-base">
+                    <ul className="space-y-2 text-base font-medium">
                         {[item.jw_1, item.jw_2, item.jw_3, item.jw_4].map((jw, idx) => {
                             const huruf = String.fromCharCode(65 + idx);
                             const isCorrect = idx === item.jw_fix;
                             return (
-                                <li key={idx} className={`flex ${isCorrect ? 'text-green-600 font-semibold' : ''} max-w-[900px]`}>
-                                    <span className="flex-shrink-0 mr-2">{huruf}.</span>
-                                    <div className="whitespace-pre-wrap break-words">
-                                        {renderContentWithBase64(jw)}
-                                    </div>
+                                <li key={idx} className={`flex ${isCorrect ? 'font-semibold text-green-600' : ''} max-w-[900px]`}>
+                                    <span className="mr-2 flex-shrink-0">{huruf}.</span>
+                                    <div className="break-words whitespace-pre-wrap">{renderContentWithBase64(jw)}</div>
                                 </li>
                             );
                         })}
@@ -266,18 +254,14 @@ function BankSoalTable({
             render: (item: Soal) => {
                 const isSelected = selectedSoalIds.includes(item.ids);
                 return (
-                    <div className="flex justify-center items-center w-full h-full">
+                    <div className="flex h-full w-full items-center justify-center">
                         <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => {
-                                setSelectedSoalIds((prev) =>
-                                    prev.includes(item.ids)
-                                        ? prev.filter((id) => id !== item.ids)
-                                        : [...prev, item.ids]
-                                );
+                                setSelectedSoalIds((prev) => (prev.includes(item.ids) ? prev.filter((id) => id !== item.ids) : [...prev, item.ids]));
                             }}
-                            className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600"
                         />
                     </div>
                 );
