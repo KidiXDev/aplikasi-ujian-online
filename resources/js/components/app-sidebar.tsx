@@ -11,6 +11,7 @@ import {
     Settings,
     ShieldAlert,
     ShieldCheck,
+    Tags,
     UserRound,
     UsersRound,
 } from 'lucide-react';
@@ -55,6 +56,11 @@ const items: MainNavItem[] = [
                 title: 'Kategori Ujian',
                 href: '/master-data/peserta',
                 icon: Book,
+            },
+            {
+                title: 'Kategori Soal',
+                href: '/master-data/kategori-soal',
+                icon: Tags,
             },
             {
                 title: 'Jenis Ujian',

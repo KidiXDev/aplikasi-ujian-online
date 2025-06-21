@@ -195,7 +195,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
         });
 
-        Route::get('/kategorisoal', [BankSoalController::class, 'getKategoriSoal']);
+        // Route untuk kategori soal
+        Route::prefix('kategori-soal')->name('kategori-soal.')->group(function () {
+            Route::get('/', [KategoriUjianController::class, 'index'])->name('index');
+            Route::get('/create', [KategoriUjianController::class, 'create'])->name('create');
+            Route::post('/', [KategoriUjianController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [KategoriUjianController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [KategoriUjianController::class, 'update'])->name('update');
+            Route::delete('/{id}', [KategoriUjianController::class, 'destroy'])->name('destroy');
+        });
 
         Route::get('/bank-soal-checkbox/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('bank-soal-checkbox.edit');
         Route::put('/bank-soal-checkbox/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('bank-soal-checkbox.update');
