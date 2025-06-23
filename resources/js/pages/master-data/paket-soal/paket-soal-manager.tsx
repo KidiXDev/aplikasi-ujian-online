@@ -24,6 +24,7 @@ interface JadwalUjianType {
     nama: string;
   };
 }
+
 interface JadwalUjianSoalType {
   id_ujian: number;
   total_soal: number;
@@ -32,28 +33,23 @@ interface JadwalUjianSoalType {
 export default function PaketSoalManager() {
   const [open, setOpen] = useState(false);
   const [targetId, setTargetId] = useState<number | null>(null);
-
-  // Ambil data dari props inertia
   const { jadwalUjian = [], jadwalUjianSoal = [] } = (usePage().props as unknown) as {
     jadwalUjian: JadwalUjianType[];
     jadwalUjianSoal: JadwalUjianSoalType[];
   };
 
-  // Gabungkan data jadwalUjian dan jadwalUjianSoal berdasarkan id_ujian
-  const data = jadwalUjian.map((item) => {
-    const soal = jadwalUjianSoal.find((s) => s.id_ujian === item.id_ujian);
-    return {
-      id: item.id_ujian,
-      nama: item.nama_ujian,
-      event: item.event?.nama_event ?? item.id_event,
-      bidang: item.bidang?.nama ?? item.kode_part, // tampilkan nama bidang jika ada
-      jumlah: soal ? soal.total_soal : 0,
-    };
-  });
-
-  useEffect(() => {
-    toast.success('Paket soal dimuat');
-  }, []);
+  const [data, setData] = useState(() =>
+    jadwalUjian.map((item) => {
+      const soal = jadwalUjianSoal.find((s) => s.id_ujian === item.id_ujian);
+      return {
+        id: item.id_ujian,
+        nama: item.nama_ujian,
+        event: item.event?.nama_event ?? item.id_event,
+        bidang: item.bidang?.nama ?? item.kode_part,
+        jumlah: soal ? soal.total_soal : 0,
+      };
+    })
+  );
 
   const handleDelete = (id: number) => {
     setTargetId(id);
@@ -61,17 +57,46 @@ export default function PaketSoalManager() {
   };
 
   const confirmDelete = () => {
-    toast.success(`Paket soal dengan ID ${targetId} berhasil dihapus`);
-    setOpen(false);
+    if (targetId === null) return;
+
+    router.delete(`/master-data/paket-soal/${targetId}`, {
+      preserveState: true,
+      onSuccess: () => {
+        toast.success(`Paket soal dengan ID ${targetId} berhasil dihapus`);
+        setData((prev) => prev.filter((item) => item.id !== targetId));
+        setOpen(false);
+        setTargetId(null);
+      },
+      onError: (err) => {
+        toast.error('Gagal menghapus paket soal');
+        console.error(err);
+      },
+    });
   };
 
   const breadcrumbs = [{ title: 'Paket Soal', href: '/master-data/paket-soal' }];
 
   const columns = [
-    { label: 'ID', className: 'text-center w-[80px]', render: (d: typeof data[0]) => <div className="text-center">{d.id}</div> },
-    { label: 'Nama Paket Soal', className: 'w-[300px]', render: (d: typeof data[0]) => d.nama },
-    { label: 'Event', className: 'w-[200px]', render: (d: typeof data[0]) => d.event },
-    { label: 'Bidang', className: 'w-[150px]', render: (d: typeof data[0]) => d.bidang },
+    {
+      label: 'ID',
+      className: 'text-center w-[80px]',
+      render: (d: typeof data[0]) => <div className="text-center">{d.id}</div>,
+    },
+    {
+      label: 'Nama Paket Soal',
+      className: 'w-[300px]',
+      render: (d: typeof data[0]) => d.nama,
+    },
+    {
+      label: 'Event',
+      className: 'w-[200px]',
+      render: (d: typeof data[0]) => d.event,
+    },
+    {
+      label: 'Bidang',
+      className: 'w-[150px]',
+      render: (d: typeof data[0]) => d.bidang,
+    },
     {
       label: 'Jumlah Soal',
       className: 'text-center w-[150px]',
@@ -96,11 +121,7 @@ export default function PaketSoalManager() {
             icon={Pencil}
             onClick={() => router.visit(`/master-data/paket-soal/${d.id}/edit`)}
           />
-          <CButtonIcon
-            icon={Trash2}
-            type="danger"
-            onClick={() => handleDelete(d.id)}
-          />
+          <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(d.id)} />
         </div>
       ),
     },
@@ -110,7 +131,11 @@ export default function PaketSoalManager() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Data Paket Soal" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        <ContentTitle title="Data Paket Soal" showButton onButtonClick={() => router.visit('/master-data/paket-soal/create')} />
+        <ContentTitle
+          title="Data Paket Soal"
+          showButton
+          onButtonClick={() => router.visit('/master-data/paket-soal/create')}
+        />
 
         <div className="mt-4 flex items-center justify-between">
           <EntriesSelector currentValue={10} options={[10, 25, 50]} routeName="#" />

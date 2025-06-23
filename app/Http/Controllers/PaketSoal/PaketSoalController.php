@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\PaketSoal;
 
 use App\Http\Controllers\Controller;
-use App\Models\JadwalUjian;
 use Illuminate\Http\Request;
-use App\Models\JadwalUjianSoal;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
+use App\Models\JadwalUjian;
+use App\Models\JadwalUjianSoal;
 use App\Models\Event;
 use App\Models\Bidang;
 
@@ -19,28 +19,25 @@ class PaketSoalController extends Controller
             ->with('event:id_event,nama_event')
             ->get();
 
-        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian','total_soal')->get();
+        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
 
         return Inertia::render('master-data/paket-soal/paket-soal-manager', [
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
         ]);
     }
-    
+
     public function list()
     {
-        // Ambil semua paket soal (bisa tambahkan filter sesuai kebutuhan)
         $paketSoal = JadwalUjian::select('id_ujian', 'nama_ujian')->get();
         return response()->json($paketSoal);
     }
 
     public function create()
     {
-        // Ambil data yang diperlukan untuk membuat paket soal, misalnya daftar event dan bidang
         $events = Event::select('id_event', 'nama_event')->get();
         $bidangs = Bidang::select('id_bidang', 'nama_bidang')->get();
 
-        // Tampilkan halaman untuk membuat paket soal
         return Inertia::render('master-data/paket-soal/create-paket-soal', [
             'events' => $events,
             'bidangs' => $bidangs,
@@ -49,18 +46,35 @@ class PaketSoalController extends Controller
 
     public function edit($id)
     {
-        // Ambil data paket soal yang akan diedit
         $paketSoal = JadwalUjian::findOrFail($id);
-
-        // Ambil data yang diperlukan untuk mengisi form edit, misalnya daftar event dan bidang
         $events = Event::select('id_event', 'nama_event')->get();
         $bidangs = Bidang::select('id_bidang', 'nama_bidang')->get();
 
-        // Tampilkan halaman untuk mengedit paket soal
         return Inertia::render('master-data/paket-soal/create-paket-soal', [
             'paketSoal' => $paketSoal,
             'events' => $events,
             'bidangs' => $bidangs,
         ]);
+    }
+
+    public function delete(Request $request, $id)
+    {
+        try {
+            Log::info("Menghapus paket soal ID: $id");
+
+            // Hapus semua soal terkait
+            JadwalUjianSoal::where('id_ujian', $id)->delete();
+
+            // Hapus paket soal
+            JadwalUjian::destroy($id);
+
+            Log::info("Paket soal ID $id berhasil dihapus");
+
+            // FIX PALING BENER: langsung redirect back, biar Inertia happy
+            return redirect()->back()->with('success', 'Paket soal berhasil dihapus.');
+        } catch (\Exception $e) {
+            Log::error("Gagal hapus paket soal ID $id", ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Gagal menghapus paket soal: ' . $e->getMessage());
+        }
     }
 }
