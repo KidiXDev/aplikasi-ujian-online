@@ -196,7 +196,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Route untuk kategori soal
-        Route::prefix('kategori-soal')->name('master-data.kategori-soal.')->group(function () {
+        Route::prefix('kategori-soal')->name('kategori-soal.')->group(function () {
             Route::get('/', [KategoriUjianController::class, 'index'])->name('index');
             Route::get('/create', [KategoriUjianController::class, 'create'])->name('create');
             Route::post('/', [KategoriUjianController::class, 'store'])->name('store');
