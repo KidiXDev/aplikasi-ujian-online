@@ -142,7 +142,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('create', [PesertaManagerEditController::class, 'create'])->name('create');
             Route::post('/', [PesertaManagerEditController::class, 'store'])->name('store');
             Route::post('import', [PesertaImportController::class, 'import'])->name('import');
+
+            // ✅ Tambahan dari kode kedua:
+            Route::put('{peserta}/toggle-status', [PesertaManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
+
+
+
 
         Route::prefix('import')->name('import.')->group(function () {
             Route::get('/', [PesertaImportController::class, 'importView'])->name('view');

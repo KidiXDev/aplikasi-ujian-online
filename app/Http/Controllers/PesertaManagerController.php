@@ -66,7 +66,7 @@ class PesertaManagerController extends Controller
             DB::connection('data_db')->table('tblkelas')->where('Kelas', $nis)->delete();
         });
 
-        return redirect()->back()->with('success', 'Peserta dan data terkait berhasil dihapus');
+        return redirect()->back()->with('success', 'Peserta berhasil dihapus');
     }
 
     public function update(Request $request, Peserta $peserta)
@@ -82,6 +82,14 @@ class PesertaManagerController extends Controller
 
         $peserta->update($data);
 
-        return redirect()->back()->with('success', 'Data berhasil diupdate');
+        // return redirect()->back()->with('success', 'Peserta berhasil diedit');
+    }
+
+    public function toggleStatus(Request $request, Peserta $peserta)
+    {
+        $peserta->status = $request->input('status', 0);
+        $peserta->save();
+
+        return redirect()->back()->with('success', 'Status berhasil diedit');
     }
 }
