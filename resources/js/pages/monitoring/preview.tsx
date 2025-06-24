@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { ContentTitle } from '@/components/content-title';
@@ -62,7 +62,8 @@ export default function Preview({ ujian, jadwalUjianList, filters, flash }: Prop
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Preview ${ujian.paket_ujian}`} />            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+            <Head title={`Preview ${ujian.paket_ujian}`} />
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <ContentTitle
                     title="Preview Ujian"
                     showButton
@@ -72,39 +73,37 @@ export default function Preview({ ujian, jadwalUjianList, filters, flash }: Prop
                 />
 
                 {/* Exam Info Card */}
-                <div className="rounded-lg border bg-card p-4 shadow-sm">
+                <div className="bg-card rounded-lg border p-4 shadow-sm">
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Tipe Ujian</p>
+                            <p className="text-muted-foreground text-sm font-medium">Tipe Ujian</p>
                             <p className="text-base font-semibold">{ujian.tipe_ujian}</p>
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Kelompok</p>
+                            <p className="text-muted-foreground text-sm font-medium">Kelompok</p>
                             <p className="text-base font-semibold">{ujian.kelas_prodi}</p>
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Tanggal</p>
+                            <p className="text-muted-foreground text-sm font-medium">Tanggal</p>
                             <p className="text-base font-semibold">{new Date(ujian.tanggal_ujian).toLocaleDateString('id-ID')}</p>
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Waktu</p>
-                            <p className="text-base font-semibold">{ujian.mulai} - {ujian.selesai}</p>
+                            <p className="text-muted-foreground text-sm font-medium">Waktu</p>
+                            <p className="text-base font-semibold">
+                                {ujian.mulai} - {ujian.selesai}
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector 
-                        currentValue={jadwalUjianList.per_page} 
-                        options={[10, 25, 50, 100]} 
-                        routeName="monitoring.ujian.preview" 
+                    <EntriesSelector
+                        currentValue={jadwalUjianList.per_page}
+                        options={[10, 25, 50, 100]}
+                        routeName="monitoring.ujian.preview"
                         routeParams={{ id: ujian.id }}
                     />
-                    <SearchInputMenu 
-                        defaultValue={filters.search} 
-                        routeName="monitoring.ujian.preview" 
-                        routeParams={{ id: ujian.id }}
-                    />
+                    <SearchInputMenu defaultValue={filters.search} routeName="monitoring.ujian.preview" routeParams={{ id: ujian.id }} />
                 </div>
 
                 <JadwalUjianTable data={jadwalUjianList} ujianId={ujian.id} pageFilters={filters} />
@@ -113,12 +112,12 @@ export default function Preview({ ujian, jadwalUjianList, filters, flash }: Prop
     );
 }
 
-function JadwalUjianTable({ 
-    data: jadwalUjianList, 
+function JadwalUjianTable({
+    data: jadwalUjianList,
     ujianId,
-    pageFilters: filters 
-}: { 
-    data: PaginatedResponse<JadwalUjian>; 
+    pageFilters: filters,
+}: {
+    data: PaginatedResponse<JadwalUjian>;
     ujianId: number;
     pageFilters: PageFilter;
 }) {
@@ -139,29 +138,24 @@ function JadwalUjianTable({
         {
             label: 'ID Ujian',
             className: 'w-[120px] text-center',
-            render: (jadwal: JadwalUjian) => (
-                <div className="text-center font-mono text-sm">
-                    {jadwal.id_ujian}
-                </div>
-            ),
-        },        {
+            render: (jadwal: JadwalUjian) => <div className="text-center font-mono text-sm">{jadwal.id_ujian}</div>,
+        },
+        {
             label: 'Nama Ujian',
             className: 'flex-1',
-            render: (jadwal: JadwalUjian) => (
-                <div className="font-medium">
-                    {jadwal.nama_ujian || `Ujian ${jadwal.kode_part}`}
-                </div>
-            ),
+            render: (jadwal: JadwalUjian) => <div className="font-medium">{jadwal.nama_ujian || `Ujian ${jadwal.kode_part}`}</div>,
         },
         {
             label: 'Aksi',
             className: 'w-[80px] text-center',
             render: (jadwal: JadwalUjian) => (
                 <div className="flex justify-center">
-                    <Link href={route('monitoring.ujian.detail', { 
-                        id: jadwal.id_penjadwalan,
-                        exam_id: jadwal.id_ujian 
-                    })}>
+                    <Link
+                        href={route('monitoring.ujian.detail', {
+                            id: jadwal.id_penjadwalan,
+                            exam_id: jadwal.id_ujian,
+                        })}
+                    >
                         <Button variant="ghost" size="sm">
                             <ChevronRight />
                         </Button>

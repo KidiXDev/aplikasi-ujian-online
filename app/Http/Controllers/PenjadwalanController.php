@@ -27,10 +27,10 @@ class PenjadwalanController extends Controller
         if ($search) {
             $query->where('kode_jadwal', 'like', "%{$search}%")
                 ->orWhere('tipe_ujian', 'like', "%{$search}%")
-                ->orWhereHas('event', function($q) use ($search) {
+                ->orWhereHas('event', function ($q) use ($search) {
                     $q->where('nama_event', 'like', "%{$search}%");
                 })
-                ->orWhereHas('event.jadwalUjian', function($q) use ($search) {
+                ->orWhereHas('event.jadwalUjian', function ($q) use ($search) {
                     $q->where('nama_ujian', 'like', "%{$search}%");
                 });
         }
@@ -54,7 +54,7 @@ class PenjadwalanController extends Controller
                 'kode_jadwal' => $penjadwalan->kode_jadwal,
                 'online_offline' => $penjadwalan->online_offline,
                 'flag' => $penjadwalan->flag,
-                
+
                 // Data dari relasi Event
                 'event' => [
                     'id_event' => $penjadwalan->event?->id_event,
@@ -62,10 +62,10 @@ class PenjadwalanController extends Controller
                     'mulai_event' => $penjadwalan->event?->mulai_event,
                     'akhir_event' => $penjadwalan->event?->akhir_event,
                 ],
-                
+
 
                 'paket_ujian' => $penjadwalan->event?->nama_event ?? 'paket tidak ditemukan',
-                
+
                 // Data tambahan dari JadwalUjian
                 'jadwal_ujian_count' => $penjadwalan->event?->jadwalUjian?->count() ?? 0,
             ];
@@ -105,10 +105,10 @@ class PenjadwalanController extends Controller
             // Ambil data kategori dan event sebelum create
             $kategoriSoal = KategoriSoal::find($validated['tipe_ujian']);
             $event = Event::find($validated['id_paket_ujian']);
-            
+
             // Generate kode jadwal
             $kodeJadwal = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
-            
+
             // Tambahkan kode jadwal ke data yang akan disimpan
             $validated['kode_jadwal'] = $kodeJadwal;
 
@@ -130,10 +130,10 @@ class PenjadwalanController extends Controller
     public function edit($id)
     {
         $penjadwalan = Penjadwalan::findOrFail($id);
-        
+
         // Load relasi yang diperlukan
         $penjadwalan->load(['event', 'jenis_ujian']);
-        
+
         $events = Event::where('status', 1)->get(['id_event', 'nama_event']);
         $kategoriSoal = KategoriSoal::all(['id', 'kategori']);
 
@@ -165,7 +165,7 @@ class PenjadwalanController extends Controller
     public function update(Request $request, $id)
     {
         $penjadwalan = Penjadwalan::findOrFail($id);
-        
+
         $validated = $request->validate([
             'id_paket_ujian' => 'required|integer|exists:data_db.t_event,id_event',
             'tipe_ujian' => 'required|integer|exists:data_db.t_kat_soal,id',
@@ -178,8 +178,10 @@ class PenjadwalanController extends Controller
 
         return DB::transaction(function () use ($validated, $penjadwalan) {
             // Jika event atau kategori berubah, generate ulang kode jadwal
-            if ($penjadwalan->id_paket_ujian != $validated['id_paket_ujian'] || 
-                $penjadwalan->tipe_ujian != $validated['tipe_ujian']) {
+            if (
+                $penjadwalan->id_paket_ujian != $validated['id_paket_ujian'] ||
+                $penjadwalan->tipe_ujian != $validated['tipe_ujian']
+            ) {
                 $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
             }
 
@@ -200,11 +202,11 @@ class PenjadwalanController extends Controller
     public function destroy($id)
     {
         $penjadwalan = Penjadwalan::findOrFail($id);
-        
+
         return DB::transaction(function () use ($penjadwalan) {
             // Load relasi untuk mendapatkan nama event
             $penjadwalan->load(['event']);
-            
+
             // Handle case where event might be null
             $namaEvent = $penjadwalan->event ? $penjadwalan->event->nama_event : 'Event tidak ditemukan';
 
@@ -229,42 +231,42 @@ class PenjadwalanController extends Controller
     public function showPeserta(Request $request, $id)
     {
         $penjadwalan = Penjadwalan::with(['event', 'jenis_ujian'])->findOrFail($id);
-        
+
         // Ambil jadwal ujian terkait
         $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        
+
         if (!$jadwalUjian) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
-        
+
         // Parse peserta yang sudah terdaftar dari kode_kelas di jadwal_ujian
         $pesertaIds = [];
         if ($jadwalUjian->kode_kelas) {
             $pesertaIds = explode(',', $jadwalUjian->kode_kelas);
             $pesertaIds = array_filter(array_map('trim', $pesertaIds));
         }
-        
+
         // Query peserta yang terdaftar dengan pagination dan search
         $search = $request->input('search');
         $query = Peserta::with('jurusanRef');
-        
+
         if (!empty($pesertaIds)) {
             $query->whereIn('id', $pesertaIds);
         } else {
             // Jika tidak ada peserta terdaftar, return empty query
             $query->whereRaw('1 = 0'); // This will return no results
         }
-        
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nis', 'like', "%{$search}%");
+                    ->orWhere('nis', 'like', "%{$search}%");
             });
         }
-        
+
         $data = $query->orderBy('nama')
-                  ->paginate($request->input('per_page', 10))
-                  ->withQueryString();
+            ->paginate($request->input('per_page', 10))
+            ->withQueryString();
 
         // Hitung jumlah peserta terdaftar
         $jumlahTerdaftar = !empty($pesertaIds) ? Peserta::whereIn('id', $pesertaIds)->count() : 0;
@@ -297,43 +299,43 @@ class PenjadwalanController extends Controller
     public function addPesertaForm(Request $request, $id)
     {
         $penjadwalan = Penjadwalan::with(['event', 'jenis_ujian'])->findOrFail($id);
-        
+
         // Ambil jadwal ujian terkait
         $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        
+
         if (!$jadwalUjian) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
-        
+
         // Parse peserta yang sudah terdaftar dari kode_kelas
         $registeredPesertaIds = [];
         if ($jadwalUjian->kode_kelas) {
             $registeredPesertaIds = explode(',', $jadwalUjian->kode_kelas);
             $registeredPesertaIds = array_filter(array_map('trim', $registeredPesertaIds));
         }
-        
+
         // Query peserta yang tersedia (belum terdaftar) dengan pagination dan search
         $search = $request->input('search');
         $query = Peserta::with('jurusanRef')
-                        ->where('status', 1); // Hanya peserta aktif
-        
+            ->where('status', 1); // Hanya peserta aktif
+
         if (!empty($registeredPesertaIds)) {
             $query->whereNotIn('id', $registeredPesertaIds);
         }
-        
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nis', 'like', "%{$search}%");
+                    ->orWhere('nis', 'like', "%{$search}%");
             });
         }
-        
+
         $data = $query->orderBy('nama')
-                      ->paginate($request->input('per_page', 10))
-                      ->withQueryString();
-        
+            ->paginate($request->input('per_page', 10))
+            ->withQueryString();
+
         $jumlahTerdaftar = count($registeredPesertaIds);
-        
+
         return Inertia::render('penjadwalan/add-peserta', [
             'penjadwalan' => [
                 'id_penjadwalan' => $penjadwalan->id_penjadwalan,
@@ -366,44 +368,47 @@ class PenjadwalanController extends Controller
             'peserta_ids' => 'required|array|min:1',
             'peserta_ids.*' => 'exists:data_db.t_peserta,id',
         ]);
-        
+
         $penjadwalan = Penjadwalan::with(['jenis_ujian'])->findOrFail($id);
         $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        
+
         if (!$jadwalUjian) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
-        
+
         // Parse peserta yang sudah terdaftar dari kode_kelas
         $existingPesertaIds = [];
         if ($jadwalUjian->kode_kelas) {
             $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
             $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
         }
-        
+
         // Validasi kuota
         $pesertaBaru = count($request->peserta_ids);
         $jumlahTerdaftar = count($existingPesertaIds);
-        
+
         if (($jumlahTerdaftar + $pesertaBaru) > $penjadwalan->kuota) {
-            return redirect()->back()->with('error', 
-                "Tidak dapat menambahkan peserta. Kuota tersisa: " . 
-                ($penjadwalan->kuota - $jumlahTerdaftar) . " peserta."
+            return redirect()->back()->with(
+                'error',
+                "Tidak dapat menambahkan peserta. Kuota tersisa: " .
+                    ($penjadwalan->kuota - $jumlahTerdaftar) . " peserta."
             );
         }
-        
+
         // Gabungkan peserta baru dengan yang sudah ada
         $allPesertaIds = array_merge($existingPesertaIds, $request->peserta_ids);
         $allPesertaIds = array_unique($allPesertaIds); // Remove duplicates
-        
+
         // Update kode_kelas dengan daftar peserta baru
         $kodeKelas = implode(',', $allPesertaIds);
         $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
-        
-        $kategoriNama = $penjadwalan->jenis_ujian ? $penjadwalan->jenis_ujian->kategori : 'Kategori';
-        
+
+        $kategoriSoal = KategoriSoal::find($penjadwalan->jenis_ujian);
+        $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori';
+
         // Redirect ke halaman peserta manager setelah berhasil menambahkan
-        return redirect()->route('penjadwalan.peserta', $id)->with('success', 
+        return redirect()->route('penjadwalan.peserta', $id)->with(
+            'success',
             "Berhasil menambahkan {$pesertaBaru} peserta ke jadwal ujian {$kategoriNama}."
         );
     }
@@ -417,36 +422,37 @@ class PenjadwalanController extends Controller
         $request->validate([
             'peserta_id' => 'required|exists:data_db.t_peserta,id',
         ]);
-        
+
         $penjadwalan = Penjadwalan::findOrFail($id);
         $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        
+
         if (!$jadwalUjian) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
-        
+
         // Parse peserta yang sudah terdaftar dari kode_kelas
         $existingPesertaIds = [];
         if ($jadwalUjian->kode_kelas) {
             $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
             $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
         }
-        
+
         // Hapus peserta dari daftar
         $pesertaIdToRemove = (string)$request->peserta_id;
-        $updatedPesertaIds = array_filter($existingPesertaIds, function($id) use ($pesertaIdToRemove) {
+        $updatedPesertaIds = array_filter($existingPesertaIds, function ($id) use ($pesertaIdToRemove) {
             return $id !== $pesertaIdToRemove;
         });
-        
+
         // Update kode_kelas
         $kodeKelas = empty($updatedPesertaIds) ? null : implode(',', $updatedPesertaIds);
         $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
-        
+
         // Ambil nama peserta untuk pesan sukses
         $peserta = Peserta::find($request->peserta_id);
         $namaPeserta = $peserta ? $peserta->nama : 'Peserta';
-        
-        return redirect()->back()->with('success', 
+
+        return redirect()->back()->with(
+            'success',
             "Peserta {$namaPeserta} berhasil dihapus dari jadwal ujian."
         );
     }
@@ -458,15 +464,16 @@ class PenjadwalanController extends Controller
     {
         $penjadwalan = Penjadwalan::findOrFail($id);
         $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        
+
         if (!$jadwalUjian) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
-        
+
         // Clear all participants
         $jadwalUjian->update(['kode_kelas' => null]);
-        
-        return redirect()->back()->with('success', 
+
+        return redirect()->back()->with(
+            'success',
             'Semua peserta berhasil dihapus dari jadwal ujian.'
         );
     }
@@ -480,34 +487,35 @@ class PenjadwalanController extends Controller
             'peserta_ids' => 'required|array|min:1',
             'peserta_ids.*' => 'required|exists:data_db.t_peserta,id',
         ]);
-        
+
         $penjadwalan = Penjadwalan::findOrFail($id);
         $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-        
+
         if (!$jadwalUjian) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
-        
+
         // Parse peserta yang sudah terdaftar dari kode_kelas
         $existingPesertaIds = [];
         if ($jadwalUjian->kode_kelas) {
             $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
             $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
         }
-        
+
         // Remove selected participants
         $pesertaIdsToRemove = array_map('strval', $request->peserta_ids);
-        $updatedPesertaIds = array_filter($existingPesertaIds, function($id) use ($pesertaIdsToRemove) {
+        $updatedPesertaIds = array_filter($existingPesertaIds, function ($id) use ($pesertaIdsToRemove) {
             return !in_array($id, $pesertaIdsToRemove);
         });
-        
+
         // Update kode_kelas
         $kodeKelas = empty($updatedPesertaIds) ? null : implode(',', $updatedPesertaIds);
         $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
-        
+
         $jumlahDihapus = count($pesertaIdsToRemove);
-        
-        return redirect()->back()->with('success', 
+
+        return redirect()->back()->with(
+            'success',
             "{$jumlahDihapus} peserta berhasil dihapus dari jadwal ujian."
         );
     }
@@ -528,13 +536,13 @@ class PenjadwalanController extends Controller
         // Ambil 3 huruf pertama dari kombinasi event dan kategori
         $eventCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $event->nama_event), 0, 2));
         $kategoriCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $kategori->kategori), 0, 1));
-        
+
         // Kombinasi 3 huruf
         $prefix = $eventCode . $kategoriCode;
-        
+
         // Jika kurang dari 3 huruf, tambahkan 'X'
         $prefix = str_pad($prefix, 3, 'X');
-        
+
         // Jika lebih dari 3 huruf, potong menjadi 3
         $prefix = substr($prefix, 0, 3);
 
@@ -569,7 +577,7 @@ class PenjadwalanController extends Controller
 
         // Ambil nama kategori saja (bagian sebelum tanda "-")
         $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Tidak Diketahui';
-        
+
         // Jika kategori mengandung tanda "-", ambil bagian sebelumnya saja
         if (strpos($kategoriNama, '-') !== false) {
             $kategoriNama = trim(explode('-', $kategoriNama)[0]);
