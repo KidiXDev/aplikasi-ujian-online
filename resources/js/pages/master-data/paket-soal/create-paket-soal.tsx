@@ -5,25 +5,28 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
 import { CButton } from '@/components/ui/c-button';
 
 const formSchema = z.object({
-  nama: z.string().min(2, { message: 'Nama ujian minimal 2 karakter.' }),
   event: z.string().min(1, { message: 'Wajib pilih event.' }),
   bidang: z.string().min(1, { message: 'Wajib pilih bidang.' }),
 });
 
 export default function CreatePaketSoal() {
-  // Ambil data dari props inertia
   const { events = [], bidangs = [], edit = false, paket } = usePage().props as unknown as {
     events: { id_event: number; nama_event: string }[];
     bidangs: { kode: number; nama: string }[];
     edit?: boolean;
     paket?: {
       id_ujian: number;
-      nama_ujian: string;
       id_event: number;
       kode_part: number;
     };
@@ -32,7 +35,6 @@ export default function CreatePaketSoal() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nama: paket?.nama_ujian ?? '',
       event: paket?.id_event?.toString() ?? '',
       bidang: paket?.kode_part?.toString() ?? '',
     },
@@ -44,23 +46,18 @@ export default function CreatePaketSoal() {
   ];
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const payload = {
+      id_event: values.event,
+      kode_part: values.bidang,
+    };
+
     if (edit && paket) {
-      // Update
-      router.put(`/master-data/paket-soal/${paket.id_ujian}`, {
-        nama_ujian: values.nama,
-        id_event: values.event,
-        kode_part: values.bidang,
-      }, {
+      router.put(`/master-data/paket-soal/${paket.id_ujian}`, payload, {
         onSuccess: () => toast.success('Paket soal berhasil diupdate!'),
         onError: () => toast.error('Gagal update paket soal.'),
       });
     } else {
-      // Create
-      router.post('/master-data/paket-soal', {
-        nama_ujian: values.nama,
-        id_event: values.event,
-        kode_part: values.bidang,
-      }, {
+      router.post('/master-data/paket-soal', payload, {
         onSuccess: () => toast.success('Paket soal berhasil disimpan!'),
         onError: () => toast.error('Gagal menyimpan paket soal.'),
       });
@@ -80,20 +77,7 @@ export default function CreatePaketSoal() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-xl">
-            <FormField
-              control={form.control}
-              name="nama"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Ujian</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Contoh: TOEFL Listening Paket 1" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Event */}
             <FormField
               control={form.control}
               name="event"
@@ -115,12 +99,13 @@ export default function CreatePaketSoal() {
               )}
             />
 
+            {/* Bidang */}
             <FormField
               control={form.control}
               name="bidang"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bidang</FormLabel>
+                  <FormLabel>Nama Ujian</FormLabel>
                   <FormControl>
                     <select {...field} className="w-full rounded-md border border-gray-300 p-2">
                       <option value="">Pilih Bidang</option>

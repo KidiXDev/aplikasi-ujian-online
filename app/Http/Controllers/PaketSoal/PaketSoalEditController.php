@@ -38,13 +38,13 @@ class PaketSoalEditController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_ujian' => 'required|string|max:255',
             'id_event' => 'required|integer|exists:data_db.t_event,id_event',
             'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
         ]);
 
         $paket = JadwalUjian::findOrFail($id);
-        $paket->nama_ujian = $request->input('nama_ujian');
+        $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
+        $paket->nama_ujian = $namaUjian;
         $paket->id_event = $request->input('id_event');
         $paket->kode_part = $request->input('kode_part');
         $paket->save();
@@ -57,15 +57,15 @@ class PaketSoalEditController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_ujian' => 'required|string|max:255',
             'id_event' => 'required|integer|exists:data_db.t_event,id_event',
             'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
         ]);
 
         $kode_kelas = null;
 
+        $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
         $jadwalUjian = JadwalUjian::create([
-            'nama_ujian' => $request->input('nama_ujian'),
+            'nama_ujian' => $namaUjian,
             'kode_kelas' => $kode_kelas,
             'id_event' => $request->input('id_event'),
             'kode_part' => $request->input('kode_part'),
@@ -81,7 +81,7 @@ class PaketSoalEditController extends Controller
         ]);
 
         // Redirect ke halaman index atau create lagi
-        return redirect()->route('master-data.paket-soal.create')->with('success', 'Paket soal berhasil dibuat!');
+        return redirect()->route('master-data.paket-soal.index')->with('success', 'Paket soal berhasil dibuat!');
     }
 
     public function create()

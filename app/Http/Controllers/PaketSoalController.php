@@ -35,13 +35,13 @@ class PaketSoalController extends Controller
         );
     }
 
-    public function delete(PaketSoal $paketSoal)
+    public function destroy(PaketSoal $paketSoal)
     {
         try {
             Log::info('Delete route called with ID:', ['id' => $paketSoal->id]);
 
             // Hapus data terkait di tabel match_soals
-            MatchSoal::where('paket_id', $paketSoal->id)->delete();
+            \App\Models\MatchSoal::where('paket_id', $paketSoal->id)->delete();
 
             // Hapus data di tabel paket_soals
             $paketSoal->delete();

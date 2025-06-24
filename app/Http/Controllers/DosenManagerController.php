@@ -49,14 +49,14 @@ class DosenManagerController extends Controller
 
         $user->delete();
 
-        return redirect()->back()->with('success', 'User deleted successfully');
+        return redirect()->back()->with('success', 'Dosen dan data terkait berhasil dihapus');
     }
 
     public function update(Request $request, User $user)
     {
         $user->update($request->all());
 
-        return redirect()->back()->with('success', 'User updated successfully');
+        return redirect()->back()->with('success', 'Data berhasil diupdate');
     }
 
     public function import(Request $request)

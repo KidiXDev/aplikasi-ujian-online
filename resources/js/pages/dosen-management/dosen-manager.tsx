@@ -135,7 +135,7 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             render: (user: Dosen) => user.dosen?.nip,
         },
         {
-            label: 'Name',
+            label: 'Nama',
             className: 'w-[400px]',
             render: (user: Dosen) => user.name,
         },
