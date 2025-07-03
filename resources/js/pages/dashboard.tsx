@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle, Copy, FileText, Monitor, RefreshCw, Users } from 'lucide-react';
+import { CheckCircle, Copy, FileText, Monitor, RefreshCw, Users, Calendar, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -26,43 +26,14 @@ export default function Dashboard() {
     });
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Mock data for stats
-    const stats = [
-        { title: 'peserta login', value: '150', icon: Users },
-        { title: 'peserta soal ujian', value: '120', icon: FileText },
-        { title: 'ujian berlangsung', value: '5', icon: CheckCircle },
-        { title: 'ujian selesai', value: '25', icon: Monitor },
-    ];
-
-    // Mock data for exam history
-    const examHistory = [
-        {
-            ujian: 'Matematika Dasar',
-            kelas: 'X-1',
-            kode: 'MTK001',
-            peserta: 30,
-            selesai: 28,
-            jadwal: '2024-01-15 08:00',
-            status: 'Selesai',
-        },
-        {
-            ujian: 'Bahasa Indonesia',
-            kelas: 'X-2',
-            kode: 'BIN001',
-            peserta: 32,
-            selesai: 30,
-            jadwal: '2024-01-15 10:00',
-            status: 'Berlangsung',
-        },
-        {
-            ujian: 'Fisika',
-            kelas: 'XI-1',
-            kode: 'FIS001',
-            peserta: 28,
-            selesai: 0,
-            jadwal: '2024-01-16 08:00',
-            status: 'Terjadwal',
-        },
+    // Shortcuts data
+    const shortcuts = [
+        { title: 'Kelola Soal', href: 'master-data/paket-soal', description: 'Tambah dan edit soal ujian', icon: FileText },
+        { title: 'Kelola Peserta', href: 'master-data/peserta', description: 'Manajemen data peserta ujian', icon: Users },
+        { title: 'Laporan Nilai', href: 'monitoring-ujian', description: 'Melihat hasil dan keluaran nilai ujian', icon: CheckCircle },
+        { title: 'Kelola Ujian', href: 'penjadwalan', description: 'Melihat dan mengatur jadwal ujian', icon: Monitor },
+        { title: 'Kelola Event', href: 'master-data/event', description: 'Melihat event ujian yang sedang berjalan', icon: FileText },
+        { title: 'Monitoring Ujian', href: 'monitoring-ujian', description: 'Mengelola dan memantau jalannya ujian', icon: Settings },
     ];
 
     // Fetch current token on component mount
@@ -140,20 +111,24 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="p-6">
-                {/* Stats Cards */}
+                {/* Shortcuts Section */}
                 <div className="mb-8">
-                    <h2 className="mb-4 text-xl font-semibold text-gray-900">Dashboard</h2>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {stats.map((stat, index) => (
-                            <div key={index} className="rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md">
+                    <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Shortcuts</h2>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {shortcuts.map((shortcut, index) => (
+                            <Link
+                                key={index}
+                                href={shortcut.href}
+                                className="rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md hover:border-blue-200 group"
+                            >
                                 <div className="mb-4 flex items-center justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-                                        <stat.icon className="h-6 w-6 text-blue-600" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                                        <shortcut.icon className="h-6 w-6 text-blue-600" />
                                     </div>
                                 </div>
-                                <h3 className="mb-1 text-2xl font-bold text-gray-900">{stat.value}</h3>
-                                <p className="text-sm text-gray-600">{stat.title}</p>
-                            </div>
+                                <h3 className="mb-1 text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{shortcut.title}</h3>
+                                <p className="text-sm text-gray-600">{shortcut.description}</p>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -161,14 +136,14 @@ export default function Dashboard() {
                 {/* Dashboard Section */}
                 <div className="mb-8">
                     <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 min-h-[220px]">
                         {/* Tambah Ujian Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white p-6">
+                        <div className="rounded-lg border border-gray-200 bg-white p-8 flex flex-col items-center justify-center min-h-[180px]">
                             <h3 className="mb-4 text-lg font-semibold text-gray-900">Tambah Ujian</h3>
-                            <div className="flex h-32 items-center justify-center">
+                            <div className="flex items-center justify-center w-full">
                                 <Link
                                     href="/penjadwalan"
-                                    className="rounded-lg border border-gray-300 bg-gray-100 px-6 py-2 text-center font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                                    className="rounded-lg border border-gray-300 bg-gray-100 px-8 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-200 w-full max-w-xs"
                                 >
                                     Tambah Ujian
                                 </Link>
@@ -176,12 +151,12 @@ export default function Dashboard() {
                         </div>
 
                         {/* Monitoring Ujian Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white p-6">
+                        <div className="rounded-lg border border-gray-200 bg-white p-8 flex flex-col items-center justify-center min-h-[180px]">
                             <h3 className="mb-4 text-lg font-semibold text-gray-900">Monitoring Ujian</h3>
-                            <div className="flex h-32 items-center justify-center">
+                            <div className="flex items-center justify-center w-full">
                                 <Link
                                     href="/monitoring-ujian"
-                                    className="rounded-lg border border-gray-300 bg-gray-100 px-6 py-2 text-center font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                                    className="rounded-lg border border-gray-300 bg-gray-100 px-8 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-200 w-full max-w-xs"
                                 >
                                     Monitoring
                                 </Link>
@@ -189,7 +164,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Token Card - Updated */}
-                        <div className="flex flex-col justify-between rounded-lg border border-gray-200 bg-white p-6">
+                        <div className="flex flex-col justify-between rounded-lg border border-gray-200 bg-white p-8 min-h-[180px]">
                             <div>
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="text-lg font-semibold text-gray-900">Token Ujian</h3>
@@ -225,53 +200,6 @@ export default function Dashboard() {
                                     {isGenerating ? 'Generating...' : 'Buat Baru'}
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Exam History Section */}
-                <div>
-                    <h2 className="mb-4 text-xl font-semibold text-gray-900">Exam History</h2>
-                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="border-b border-gray-200 bg-blue-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Ujian</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Kelas</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Kode</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Peserta</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Selesai</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Jadwal</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    {examHistory.map((exam, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">{exam.ujian}</td>
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">{exam.kelas}</td>
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">{exam.kode}</td>
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">{exam.peserta}</td>
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">{exam.selesai}</td>
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">{exam.jadwal}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                        exam.status === 'Selesai'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : exam.status === 'Berlangsung'
-                                                              ? 'bg-yellow-100 text-yellow-800'
-                                                              : 'bg-blue-100 text-blue-800'
-                                                    }`}
-                                                >
-                                                    {exam.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 </div>
