@@ -30,7 +30,7 @@ export default function Dashboard() {
     const shortcuts = [
         { title: 'Kelola Soal', href: 'master-data/paket-soal', description: 'Tambah dan edit soal ujian', icon: FileText },
         { title: 'Kelola Peserta', href: 'master-data/peserta', description: 'Manajemen data peserta ujian', icon: Users },
-        { title: 'Laporan Nilai', href: 'monitoring-ujian', description: 'Melihat hasil dan keluaran nilai ujian', icon: CheckCircle },
+        { title: 'Laporan Nilai', href: 'rekap-nilai', description: 'Melihat hasil dan keluaran nilai ujian', icon: CheckCircle },
         { title: 'Kelola Ujian', href: 'penjadwalan', description: 'Melihat dan mengatur jadwal ujian', icon: Monitor },
         { title: 'Kelola Event', href: 'master-data/event', description: 'Melihat event ujian yang sedang berjalan', icon: FileText },
         { title: 'Monitoring Ujian', href: 'monitoring-ujian', description: 'Mengelola dan memantau jalannya ujian', icon: Settings },
