@@ -149,6 +149,18 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
 
     const columns = [
         {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (user: Dosen) => {
+                const idx = users.findIndex(u => u.id === user.id);
+                return (
+                    <div className="text-center">
+                        {(userData.per_page * (userData.current_page - 1)) + idx + 1}
+                    </div>
+                );
+            },
+        },
+        {
             label: 'ID',
             className: 'w-[100px] text-center',
             render: (user: Dosen) => <div className="text-center font-medium">{user.id}</div>,
