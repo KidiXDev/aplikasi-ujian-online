@@ -27,13 +27,9 @@ class MonitoringUjianController extends Controller
         // Apply search filter if provided
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->whereHas('jenis_ujian', function ($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%");
-                })
-                    ->orWhereHas('event', function ($q) use ($search) {
-                        $q->where('nama_event', 'like', "%{$search}%");
-                    })
-                    ->orWhere('jenis_ujian', 'like', "%{$search}%");
+                $q->whereHas('event', function ($q) use ($search) {
+                    $q->where('nama_event', 'like', "%{$search}%");
+                });
             });
         }
 
