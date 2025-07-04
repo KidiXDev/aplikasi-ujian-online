@@ -70,20 +70,6 @@ export default function UserManager() {
     );
 }
 
-const baseClass = 'inline-block w-[90px] rounded px-2 py-1 text-center text-white text-xs shadow';
-
-const RoleDecorator: React.FC<{ role: string }> = ({ role }) => {
-    switch (role) {
-        case 'super_admin':
-            return <span className={`${baseClass} bg-red-700`}>{role}</span>;
-        case 'admin':
-            return <span className={`${baseClass} bg-yellow-500`}>{role}</span>;
-        case 'dosen':
-            return <span className={`${baseClass} bg-pink-500`}>{role}</span>;
-        default:
-            return <span className={`${baseClass} bg-gray-400`}>{role}</span>;
-    }
-};
 
 function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedResponse<Dosen>; pageFilters: PageFilter }) {
     const [open, setOpen] = useState(false);
@@ -177,16 +163,23 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
         },
         {
             label: 'Status',
-            className: 'w-[150px] text-center', // samakan dengan peserta
+            className: 'w-[150px] text-center',
             render: (user: Dosen) => (
-                <div className="flex justify-center">
-                    <button
-                        className={`inline-block w-[80px] rounded px-2 py-1 text-center text-xs text-white shadow
-                            ${user.dosen?.aktif ? 'bg-green-500 hover:bg-green-700' : 'bg-red-500 hover:bg-red-700'}`}
-                        onClick={() => handleToggleStatus(user)}
+                <div className="flex items-center justify-center">
+                    <CButton
+                        className={`rounded p-2 text-white shadow transition w-[100px] 
+                            ${user.dosen?.aktif ? 'bg-green-600 hover:bg-green-700' : 'bg-button-danger hover:bg-red-700'}`}
+                        onClick={async () => {
+                            try {
+                                await handleToggleStatus(user);
+                                toast.success('Status berhasil diubah');
+                            } catch {
+                                toast.error('Gagal mengubah status');
+                            }
+                        }}
                     >
-                        {user.dosen?.aktif ? 'Aktif' : 'Tidak Aktif'}
-                    </button>
+                        {user.dosen?.aktif ? 'Active' : 'Non Active'}
+                    </CButton>
                 </div>
             ),
         },
@@ -204,9 +197,9 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
                                     : r.name === 'admin'
                                     ? 'bg-yellow-500'
                                     : r.name === 'dosen'
-                                    ? 'bg-pink-500'
+                                    ? 'bg-blue-500'
                                     : 'bg-gray-400') +
-                                ' px-2 py-1 text-xs text-white shadow !opacity-100'
+                                ' px-2 py-1 text-sm text-white shadow !opacity-100'
                             }
                             disabled
                         >
