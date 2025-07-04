@@ -150,7 +150,7 @@ class BankSoalController extends Controller
             'jw_2' => 'required|string',
             'jw_3' => 'required|string',
             'jw_4' => 'required|string',
-            'jw_fix' => 'required|in:A,B,C,D,0,1,2,3',
+            'jw_fix' => 'requirFed|in:A,B,C,D,0,1,2,3',
             'jenis_soal' => 'nullable|string',
             'file' => 'nullable|file|mimes:mp3,wav',
             'delete_audio' => 'nullable|boolean',
