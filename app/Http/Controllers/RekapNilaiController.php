@@ -113,6 +113,8 @@ class RekapNilaiController extends Controller
                 'salah' => $count ? round(array_sum($salahArr) / $count) : 0,
                 'score' => $count ? round(array_sum($scoreArr) / $count) : 0
             ];
+            $maxScore = $count ? max($scoreArr) : 0;
+            $minScore = $count ? min($scoreArr) : 0;
 
             // Get paginated data
             $query = Pengerjaan::with(['peserta'])
@@ -156,7 +158,9 @@ class RekapNilaiController extends Controller
                 'totalStudents' => $registeredStudents,
                 'absentStudents' => $absentStudents,
                 'finishedStudents' => $finishedStudents,
-                'averageScores' => $averages
+                'averageScores' => $averages,
+                'maxScore' => $maxScore,
+                'minScore' => $minScore,
             ];
 
             return response()->json([
@@ -165,7 +169,7 @@ class RekapNilaiController extends Controller
                     'total' => $totalRecords,
                     'perPage' => $perPage,
                     'currentPage' => $page,
-                    'lastPage' => ceil($totalRecords / $perPage),
+                    'lastPage' => ceil($totalRecords / $perPage)
                 ],
                 'stats' => $stats
             ]);

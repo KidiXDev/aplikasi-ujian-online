@@ -3,32 +3,35 @@ import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
     Legend
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
     Legend
 );
 
-interface ScoreChartProps {
-    averageScores: {
-        benar: number;
-        salah: number;
-        score: number;
-    };
+interface PesertaScore {
+    nama: string;
+    score: number;
 }
 
-const ScoreChart: React.FC<ScoreChartProps> = ({ averageScores }) => {
+interface ScoreChartProps {
+    pesertaScores: PesertaScore[];
+}
+
+const ScoreChart: React.FC<ScoreChartProps> = ({ pesertaScores = [] }) => {
     const options = {
         responsive: true,
         maintainAspectRatio: false,
@@ -38,7 +41,7 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ averageScores }) => {
             },
             title: {
                 display: true,
-                text: 'Rata-Rata Soal Benar, Salah, dan Score',
+                text: 'Rekap Nilai Peserta',
                 font: {
                     size: 16,
                     weight: 'bold' as const
@@ -50,8 +53,8 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ averageScores }) => {
             },
             tooltip: {
                 callbacks: {
-                    label: function(tooltipItem: TooltipItem<'bar'>) {
-                        return `Rata-Rata: ${tooltipItem.raw}`;
+                    label: function(tooltipItem: TooltipItem<'line'>) {
+                        return `Score: ${tooltipItem.raw}`;
                     }
                 }
             }
@@ -61,20 +64,20 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ averageScores }) => {
                 beginAtZero: true,
                 title: {
                     display: true,
-                    text: 'Jumlah',
+                    text: 'Score',
                     font: {
                         size: 12,
                         weight: 'bold' as const
                     }
                 },
                 ticks: {
-                    callback: (value: number) => `${value}`
+                    callback: (tickValue: string | number) => `${tickValue}`
                 }
             },
             x: {
                 title: {
                     display: true,
-                    text: 'Tipe',
+                    text: 'Peserta',
                     font: {
                         size: 12,
                         weight: 'bold' as const
@@ -85,22 +88,17 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ averageScores }) => {
     };
 
     const data = {
-        labels: ['Soal Benar', 'Soal Salah', 'Score'],
+        labels: pesertaScores.map(p => p.nama),
         datasets: [
             {
-                label: 'Jumlah',
-                data: [averageScores.benar, averageScores.salah, averageScores.score],
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(255, 206, 86, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 206, 86, 1)'
-                ],
-                borderWidth: 1
+                label: 'Score',
+                data: pesertaScores.map(p => p.score),
+                fill: false,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.3)',
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
             },
         ],
     };
@@ -108,7 +106,7 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ averageScores }) => {
     return (
         <div className="bg-white rounded-lg border shadow-sm p-4 mb-6">
             <div className="h-[300px]">
-                <Bar options={options} data={data} />
+                <Line options={options} data={data} />
             </div>
         </div>
     );
