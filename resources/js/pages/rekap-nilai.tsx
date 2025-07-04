@@ -11,6 +11,12 @@ import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScoreChart from '@/components/ScoreChart';
 
+// Helper function for safe string comparison
+const safeIncludes = (value: string | null | undefined, searchTerm: string): boolean => {
+  if (!value) return false;
+  return value.toLowerCase().includes(searchTerm.toLowerCase());
+};
+
 interface Ujian {
   id?: number;
   tipe: string;
@@ -57,21 +63,23 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   const [searchTerm] = useState<string>(filters.search);
   const [selectedUjian, setSelectedUjian] = useState<Ujian | null>(null);
   const [studentData, setStudentData] = useState<Student[]>([]);
+  // Tambahkan state untuk menyimpan semua data siswa
+  const [allStudentData, setAllStudentData] = useState<Student[]>([]);
   const [totalStudents, setTotalStudents] = useState<number>(0);
   const [absentStudents, setAbsentStudents] = useState<number>(0);
   const [finishedStudents, setFinishedStudents] = useState<number>(0);
   const [studentSearchTerm, setStudentSearchTerm] = useState<string>("");
+  const [studentSearchInput, setStudentSearchInput] = useState<string>("");
   const [studentEntriesPerPage, setStudentEntriesPerPage] = useState<number>(10);
   const [studentCurrentPage, setStudentCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [lastPage, setLastPage] = useState<number>(1);
-  const [averageScores, setAverageScores] = useState<AverageScores>({
-    benar: 0,
-    salah: 0,
-    score: 0
-  });
+  // State untuk menyimpan statistik global (tidak berubah saat search)
+  const [globalAverageScores, setGlobalAverageScores] = useState<AverageScores>({ benar: 0, salah: 0, score: 0 });
+  const [globalMaxScore, setGlobalMaxScore] = useState<number>(0);
+  const [globalMinScore, setGlobalMinScore] = useState<number>(0);
 
   // Update data when initialData changes
   useEffect(() => {
@@ -94,9 +102,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
               page: studentCurrentPage,
             }
           });
-          
-          const { studentData, pagination, stats } = response.data;
-          
+          const { studentData, pagination, stats, allStudentData: allDataFromBackend } = response.data;
           if (studentData) {
             setStudentData(studentData);
             setTotalRecords(pagination.total);
@@ -104,26 +110,36 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
             setStudentCurrentPage(pagination.currentPage);
             setStudentEntriesPerPage(pagination.perPage);
           }
-          
+          // Simpan semua data siswa (pastikan backend mengirim allStudentData)
+          if (allDataFromBackend) {
+            setAllStudentData(allDataFromBackend);
+          } else {
+            setAllStudentData(studentData || []);
+          }
           if (stats) {
             setTotalStudents(stats.totalStudents);
             setAbsentStudents(stats.absentStudents);
             setFinishedStudents(stats.finishedStudents);
-            if (stats.averageScores) {
-              setAverageScores(stats.averageScores);
+            // Jika tidak sedang search, update statistik global dan card
+            if (!studentSearchTerm) {
+              setGlobalAverageScores(stats.averageScores);
+              setGlobalMaxScore(stats.maxScore);
+              setGlobalMinScore(stats.minScore);
             }
-          }        } catch (error: unknown) {
+            // Jika sedang search, statistik card tetap pakai global (tidak perlu set state lain)
+          }
+        } catch (error: unknown) {
           const err = error as { response?: { data?: { message?: string } } };
           console.error('Error fetching student data:', error);
           setError(err.response?.data?.message || 'Failed to load student data. Please try again.');
           setStudentData([]);
           setTotalRecords(0);
           setLastPage(1);
+          setAllStudentData([]);
         } finally {
           setLoading(false);
         }
       };
-      
       fetchStudentData();
     } else {
       // Reset student data when no exam is selected
@@ -133,42 +149,13 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
       setFinishedStudents(0);
       setTotalRecords(0);
       setLastPage(1);
+      setGlobalAverageScores({ benar: 0, salah: 0, score: 0 });
+      setGlobalMaxScore(0);
+      setGlobalMinScore(0);
+      setAllStudentData([]);
     }
+  // Hapus globalAverageScores, globalMaxScore, globalMinScore dari dependency array
   }, [selectedUjian?.id, studentSearchTerm, studentEntriesPerPage, studentCurrentPage]);
-
-  // Hitung rata-rata soal benar, soal salah, dan score untuk chart
-  useEffect(() => {
-    // Filter student data based on search
-    const filtered = studentData.filter(student => {
-      if (!studentSearchTerm) return true;
-      return safeIncludes(student.nama, studentSearchTerm);
-    });
-
-    if (!selectedUjian || filtered.length === 0) {
-      setAverageScores({ benar: 0, salah: 0, score: 0 });
-      return;
-    }
-    let totalBenar = 0;
-    let totalSalah = 0;
-    let totalScore = 0;
-    filtered.forEach((student) => {
-      totalBenar += student.soal_benar;
-      totalSalah += student.soal_salah;
-      totalScore += student.nilai;
-    });
-    const count = filtered.length;
-    setAverageScores({
-      benar: count ? Math.round(totalBenar / count) : 0,
-      salah: count ? Math.round(totalSalah / count) : 0,
-      score: count ? Math.round(totalScore / count) : 0
-    });
-  }, [studentData, studentSearchTerm, selectedUjian]);
-
-  // Helper function for safe string comparison
-  const safeIncludes = (value: string | null | undefined, searchTerm: string): boolean => {
-    if (!value) return false;
-    return value.toLowerCase().includes(searchTerm.toLowerCase());
-  };
 
   // Filter data based on search term
   const filteredData = data.filter(item => {
@@ -198,8 +185,14 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   };
 
   const handleStudentSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStudentSearchTerm(e.target.value);
-    setStudentCurrentPage(1);
+    setStudentSearchInput(e.target.value);
+  };
+
+  const handleStudentSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setStudentSearchTerm(studentSearchInput);
+      setStudentCurrentPage(1);
+    }
   };
 
   // Action handlers
@@ -236,7 +229,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Soal</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Benar</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Salah</th>
-            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -355,21 +348,63 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                   </div>
                 </div>
               </div>
+              {/* Statistik Nilai */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              {/* Card Rata-rata Nilai */}
+              <div className="bg-purple-50 rounded-lg p-4 flex items-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-purple-100 p-3 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20v-6m0 0V4m0 10l-3-3m3 3l3-3" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Rata-rata Nilai</p>
+                  <p className="text-2xl font-bold text-gray-900">{globalAverageScores.score}</p>
+                </div>
+              </div>
+              {/* Card Nilai Tertinggi */}
+              <div className="bg-orange-50 rounded-lg p-4 flex items-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-orange-100 p-3 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12l5 5L20 7" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Nilai Tertinggi</p>
+                  <p className="text-2xl font-bold text-gray-900">{globalMaxScore}</p>
+                </div>
+              </div>
+              {/* Card Nilai Terendah */}
+              <div className="bg-red-50 rounded-lg p-4 flex items-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-red-100 p-3 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12l-7 7-7-7" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Nilai Terendah</p>
+                  <p className="text-2xl font-bold text-gray-900">{globalMinScore}</p>
+                </div>
+              </div>
+            </div>
+
             </div>
 
             {/* Score Chart */}
             <div className="bg-white rounded-lg border shadow-sm mb-6">
               <div className="border-b px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-800">Rata-rata Nilai</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Grafik Rekap Nilai</h3>
               </div>
               <div className="px-6 py-4">
-                <ScoreChart averageScores={averageScores} />
+                {/* Kirim seluruh data siswa ke ScoreChart */}
+                <ScoreChart pesertaScores={allStudentData.map(s => ({ nama: s.nama, score: s.nilai }))} />
               </div>
             </div>
 
+            
             {/* Student Results Table */}            <div className="bg-white rounded-lg border shadow-sm">
               <div className="border-b px-6 py-4 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Student Results</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Tabel Siswa</h3>
                 <a
                   href={`/rekap-nilai/${selectedUjian.id}/export`}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
@@ -413,8 +448,9 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                     type="text"
                     placeholder="Search student..."
                     className="border pl-10 pr-4 py-2 rounded-lg text-sm w-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
-                    value={studentSearchTerm}
+                    value={studentSearchInput}
                     onChange={handleStudentSearch}
+                    onKeyDown={handleStudentSearchKeyDown}
                     disabled={loading}
                   />
                 </div>

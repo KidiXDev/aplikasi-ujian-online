@@ -113,6 +113,8 @@ class RekapNilaiController extends Controller
                 'salah' => $count ? round(array_sum($salahArr) / $count) : 0,
                 'score' => $count ? round(array_sum($scoreArr) / $count) : 0
             ];
+            $maxScore = $count ? max($scoreArr) : 0;
+            $minScore = $count ? min($scoreArr) : 0;
 
             // Get paginated data
             $query = Pengerjaan::with(['peserta'])
@@ -146,6 +148,27 @@ class RekapNilaiController extends Controller
                 ];
             });
 
+            // Ambil semua data siswa untuk chart (tanpa pagination, tanpa filter search)
+            $allStudentRaw = Pengerjaan::with(['peserta'])
+                ->where('id_jadwal', $jadwalUjian->id_ujian)
+                ->get();
+
+            $allStudentData = $allStudentRaw->map(function ($item, $index) {
+                $peserta = $item->peserta;
+                $total_soal = (int)($item->total_soal ?? 0);
+                $soal_benar = (int)($item->jawaban_benar ?? 0);
+                $soal_salah = $total_soal - $soal_benar;
+                $nilai = round($item->nilai ?? 0);
+                return [
+                    'no' => $index + 1,
+                    'nama' => $peserta ? $peserta->nama : 'Peserta tidak ditemukan',
+                    'jumlah_soal' => $total_soal,
+                    'soal_benar' => $soal_benar,
+                    'soal_salah' => $soal_salah,
+                    'nilai' => $nilai,
+                ];
+            });
+
             // Calculate statistics
             $baseQuery = Pengerjaan::where('id_jadwal', $jadwalUjian->id_ujian);
             $registeredStudents = (clone $baseQuery)->count();
@@ -156,7 +179,9 @@ class RekapNilaiController extends Controller
                 'totalStudents' => $registeredStudents,
                 'absentStudents' => $absentStudents,
                 'finishedStudents' => $finishedStudents,
-                'averageScores' => $averages
+                'averageScores' => $averages,
+                'maxScore' => $maxScore,
+                'minScore' => $minScore,
             ];
 
             return response()->json([
@@ -165,9 +190,11 @@ class RekapNilaiController extends Controller
                     'total' => $totalRecords,
                     'perPage' => $perPage,
                     'currentPage' => $page,
-                    'lastPage' => ceil($totalRecords / $perPage),
+                    'lastPage' => ceil($totalRecords / $perPage)
                 ],
-                'stats' => $stats
+                'stats' => $stats,
+                // Tambahkan seluruh data siswa untuk chart
+                'allStudentData' => $allStudentData,
             ]);
 
         } catch (\Exception $e) {
