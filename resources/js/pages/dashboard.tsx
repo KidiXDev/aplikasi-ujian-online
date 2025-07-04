@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle, Copy, FileText, Monitor, RefreshCw, Users, Calendar, Settings } from 'lucide-react';
+import { CheckCircle, Copy, FileText, Monitor, RefreshCw, Users, Calendar, Settings, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,6 +25,7 @@ export default function Dashboard() {
         status: 0,
     });
     const [isGenerating, setIsGenerating] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
 
     // Shortcuts data
     const shortcuts = [
@@ -39,6 +40,13 @@ export default function Dashboard() {
     // Fetch current token on component mount
     useEffect(() => {
         fetchCurrentToken();
+        
+        // Update clock every second
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+
+        return () => clearInterval(timer);
     }, []);
 
     const fetchCurrentToken = async () => {
@@ -107,10 +115,42 @@ export default function Dashboard() {
         return new Date(dateString).toLocaleString('id-ID');
     };
 
+    const formatCurrentTime = () => {
+        return {
+            time: currentTime.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }),
+            date: currentTime.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        };
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="p-6">
+                {/* Header dengan Jam */}
+                <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
+                            <p className="text-gray-600">Selamat datang di sistem ujian online</p>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-lg bg-green-200 border border-blue-200 p-4 shadow-sm">
+                            <Clock className="h-6 w-6 text-black-600" />
+                            <div className="text-center">
+                                <p className="text-2xl text-gray-900 font-mono">{formatCurrentTime().time}</p>
+                                <p className="text-xs text-gray-600 mt-1">{formatCurrentTime().date}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {/* Shortcuts Section */}
                 <div className="mb-8">
                     <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Shortcuts</h2>
@@ -133,72 +173,63 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Dashboard Section */}
+                {/* Dashboard Section - Layout Diperbaiki */}
                 <div className="mb-8">
-                    <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 min-h-[220px]">
-                        {/* Tambah Ujian Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white p-8 flex flex-col items-center justify-center min-h-[180px]">
-                            <h3 className="mb-4 text-lg font-semibold text-gray-900">Tambah Ujian</h3>
-                            <div className="flex items-center justify-center w-full">
-                                <Link
-                                    href="/penjadwalan"
-                                    className="rounded-lg border border-gray-300 bg-gray-100 px-8 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-200 w-full max-w-xs"
-                                >
-                                    Tambah Ujian
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Monitoring Ujian Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white p-8 flex flex-col items-center justify-center min-h-[180px]">
-                            <h3 className="mb-4 text-lg font-semibold text-gray-900">Monitoring Ujian</h3>
-                            <div className="flex items-center justify-center w-full">
-                                <Link
-                                    href="/monitoring-ujian"
-                                    className="rounded-lg border border-gray-300 bg-gray-100 px-8 py-3 text-center font-medium text-gray-700 transition-colors hover:bg-gray-200 w-full max-w-xs"
-                                >
-                                    Monitoring
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Token Card - Updated */}
-                        <div className="flex flex-col justify-between rounded-lg border border-gray-200 bg-white p-8 min-h-[180px]">
-                            <div>
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h3 className="text-lg font-semibold text-gray-900">Token Ujian</h3>
+                    <h2 className="mb-4 text-xl font-semibold text-gray-900">Token Management</h2>
+                    <div className="flex justify-center">
+                        {/* Token Card - Layout Diperbaiki */}
+                        <div className="w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-sm">
+                            <div className="border-b border-gray-100 p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                                            <Copy className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-900">Token Ujian</h3>
+                                            <p className="text-sm text-gray-500">Token akses untuk peserta ujian</p>
+                                        </div>
+                                    </div>
                                     <span
-                                        className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                        className={`rounded-full px-3 py-1 text-xs font-medium ${
                                             currentToken.status === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                         }`}
                                     >
                                         {currentToken.status === 1 ? 'Aktif' : 'Tidak Aktif'}
                                     </span>
                                 </div>
-                                <div className="mb-2 flex items-center justify-center">
-                                    <span className="rounded-lg border border-gray-200 bg-gray-100 px-6 py-2 font-mono text-3xl font-bold tracking-widest select-all">
-                                        {currentToken.token}
-                                    </span>
-                                </div>
-                                <p className="mb-4 text-center text-xs text-gray-500">Diperbarui: {formatDateTime(currentToken.waktu)}</p>
                             </div>
-                            <div className="flex items-center justify-center gap-2">
-                                <button
-                                    onClick={copyTokenToClipboard}
-                                    className="flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                                >
-                                    <Copy className="h-3 w-3" />
-                                    Salin
-                                </button>
-                                <button
-                                    onClick={generateNewToken}
-                                    disabled={isGenerating}
-                                    className="flex items-center gap-1 rounded-lg bg-green-600 px-4 py-1 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
-                                >
-                                    <RefreshCw className={`h-3 w-3 ${isGenerating ? 'animate-spin' : ''}`} />
-                                    {isGenerating ? 'Generating...' : 'Buat Baru'}
-                                </button>
+                            <div className="p-6">
+                                <div className="mb-4 text-center">
+                                    <div className="mb-2 inline-block rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-8 py-4">
+                                        <span className="font-mono text-4xl font-bold tracking-wider text-gray-800 select-all">
+                                            {currentToken.token}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Klik token untuk menyalin</p>
+                                </div>
+                                <div className="mb-4 rounded-lg bg-gray-50 p-3">
+                                    <p className="text-center text-sm text-gray-600">
+                                        Terakhir diperbarui: <span className="font-medium">{formatDateTime(currentToken.waktu)}</span>
+                                    </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={copyTokenToClipboard}
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                        Salin Token
+                                    </button>
+                                    <button
+                                        onClick={generateNewToken}
+                                        disabled={isGenerating}
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
+                                    >
+                                        <RefreshCw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                                        {isGenerating ? 'Generating...' : 'Buat Baru'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
