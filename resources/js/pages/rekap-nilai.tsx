@@ -63,6 +63,8 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   const [searchTerm] = useState<string>(filters.search);
   const [selectedUjian, setSelectedUjian] = useState<Ujian | null>(null);
   const [studentData, setStudentData] = useState<Student[]>([]);
+  // Tambahkan state untuk menyimpan semua data siswa
+  const [allStudentData, setAllStudentData] = useState<Student[]>([]);
   const [totalStudents, setTotalStudents] = useState<number>(0);
   const [absentStudents, setAbsentStudents] = useState<number>(0);
   const [finishedStudents, setFinishedStudents] = useState<number>(0);
@@ -74,13 +76,6 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   const [error, setError] = useState<string | null>(null);
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [lastPage, setLastPage] = useState<number>(1);
-  const [averageScores, setAverageScores] = useState<AverageScores>({
-    benar: 0,
-    salah: 0,
-    score: 0
-  });
-  const [maxScore, setMaxScore] = useState<number>(0);
-  const [minScore, setMinScore] = useState<number>(0);
   // State untuk menyimpan statistik global (tidak berubah saat search)
   const [globalAverageScores, setGlobalAverageScores] = useState<AverageScores>({ benar: 0, salah: 0, score: 0 });
   const [globalMaxScore, setGlobalMaxScore] = useState<number>(0);
@@ -107,7 +102,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
               page: studentCurrentPage,
             }
           });
-          const { studentData, pagination, stats } = response.data;
+          const { studentData, pagination, stats, allStudentData: allDataFromBackend } = response.data;
           if (studentData) {
             setStudentData(studentData);
             setTotalRecords(pagination.total);
@@ -115,24 +110,23 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
             setStudentCurrentPage(pagination.currentPage);
             setStudentEntriesPerPage(pagination.perPage);
           }
+          // Simpan semua data siswa (pastikan backend mengirim allStudentData)
+          if (allDataFromBackend) {
+            setAllStudentData(allDataFromBackend);
+          } else {
+            setAllStudentData(studentData || []);
+          }
           if (stats) {
             setTotalStudents(stats.totalStudents);
             setAbsentStudents(stats.absentStudents);
             setFinishedStudents(stats.finishedStudents);
             // Jika tidak sedang search, update statistik global dan card
             if (!studentSearchTerm) {
-              setAverageScores(stats.averageScores);
-              setMaxScore(stats.maxScore);
-              setMinScore(stats.minScore);
               setGlobalAverageScores(stats.averageScores);
               setGlobalMaxScore(stats.maxScore);
               setGlobalMinScore(stats.minScore);
-            } else {
-              // Jika sedang search, statistik card tetap pakai global
-              setAverageScores(globalAverageScores);
-              setMaxScore(globalMaxScore);
-              setMinScore(globalMinScore);
             }
+            // Jika sedang search, statistik card tetap pakai global (tidak perlu set state lain)
           }
         } catch (error: unknown) {
           const err = error as { response?: { data?: { message?: string } } };
@@ -141,11 +135,11 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
           setStudentData([]);
           setTotalRecords(0);
           setLastPage(1);
+          setAllStudentData([]);
         } finally {
           setLoading(false);
         }
       };
-      
       fetchStudentData();
     } else {
       // Reset student data when no exam is selected
@@ -155,12 +149,12 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
       setFinishedStudents(0);
       setTotalRecords(0);
       setLastPage(1);
-      setMaxScore(0);
-      setMinScore(0);
       setGlobalAverageScores({ benar: 0, salah: 0, score: 0 });
       setGlobalMaxScore(0);
       setGlobalMinScore(0);
+      setAllStudentData([]);
     }
+  // Hapus globalAverageScores, globalMaxScore, globalMinScore dari dependency array
   }, [selectedUjian?.id, studentSearchTerm, studentEntriesPerPage, studentCurrentPage]);
 
   // Filter data based on search term
@@ -235,7 +229,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Soal</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Benar</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Salah</th>
-            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -399,17 +393,18 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
             {/* Score Chart */}
             <div className="bg-white rounded-lg border shadow-sm mb-6">
               <div className="border-b px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-800">Rata-rata Nilai</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Grafik Rekap Nilai</h3>
               </div>
               <div className="px-6 py-4">
-                <ScoreChart pesertaScores={filteredStudentData.map(s => ({ nama: s.nama, score: s.nilai }))} />
+                {/* Kirim seluruh data siswa ke ScoreChart */}
+                <ScoreChart pesertaScores={allStudentData.map(s => ({ nama: s.nama, score: s.nilai }))} />
               </div>
             </div>
 
             
             {/* Student Results Table */}            <div className="bg-white rounded-lg border shadow-sm">
               <div className="border-b px-6 py-4 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Student Results</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Tabel Siswa</h3>
                 <a
                   href={`/rekap-nilai/${selectedUjian.id}/export`}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
