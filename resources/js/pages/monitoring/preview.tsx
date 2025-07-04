@@ -68,7 +68,7 @@ export default function Preview({ ujian, jadwalUjianList, filters, flash }: Prop
                     showButton
                     showIcon={false}
                     buttonText="Kembali"
-                    onButtonClick={() => router.visit(route('monitoring.ujian'))}
+                    onButtonClick={() => router.visit(route('monitoring.ujian.index'))}
                 />
 
                 {/* Exam Info Card */}

@@ -61,7 +61,11 @@ const items: MainNavItem[] = [
                 href: '/master-data/jenis-ujian',
                 icon: Book,
             },
-            
+            {
+                title: 'Bank Soal',
+                href: '/master-data/bank-soal',
+                icon: Book,
+            },            
             {
                 title: 'Event',
                 href: '/master-data/event',
@@ -70,11 +74,6 @@ const items: MainNavItem[] = [
             {
                 title: 'Paket Soal',
                 href: '/master-data/paket-soal',
-                icon: Book,
-            },
-            {
-                title: 'Bank Soal',
-                href: '/master-data/bank-soal',
                 icon: Book,
             },
         ],

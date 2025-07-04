@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PageProps, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -34,6 +34,8 @@ type JadwalUjian = {
     kode_jadwal: string;
     online_offline: number;
     flag: number;
+    paket_ujian: string;  // Data dari JadwalUjian
+    jadwal_ujian_count: number;
 };
 
 export default function PenjadwalanManager() {
@@ -86,6 +88,10 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
                 router.delete(route('penjadwalan.destroy', targetId), {
                     preserveState: true,
                     preserveScroll: true,
+                    onSuccess: () => {
+                        // Force refresh halaman setelah delete
+                        router.reload({ only: ['data'] });
+                    }
                 });
             }
         } catch {
@@ -113,7 +119,7 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
         },
         {
             label: 'Paket Ujian',
-            render: (exam: JadwalUjian) => exam.id_paket_ujian,
+            render: (exam: JadwalUjian) => exam.paket_ujian,
         },
         {
             label: 'Tanggal Ujian',
@@ -132,14 +138,14 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
             render: (exam: JadwalUjian) => exam.kuota,
         },
         {
-            label: 'Tipe',
-            render: (exam: JadwalUjian) => exam.online_offline === 1 ? 'Online' : 'Offline',
-        },
-        {
             label: 'Aksi',
             className: 'w-[100px] text-center',
             render: (exam: JadwalUjian) => (
                 <div className="flex justify-center gap-2">
+                    <CButtonIcon 
+                        icon={Users} 
+                        onClick={() => router.visit(route('penjadwalan.peserta', exam.id_penjadwalan))} 
+                    />
                     <CButtonIcon 
                         icon={Pencil} 
                         onClick={() => router.visit(route('penjadwalan.edit', exam.id_penjadwalan))} 
@@ -172,3 +178,4 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
         </>
     );
 }
+

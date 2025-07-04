@@ -106,7 +106,7 @@ export default function BankSoalCreate() {
     useEffect(() => {
         const fetchKategoriOptions = async () => {
             try {
-                const res = await axios.get('/master-data/kategorisoal');
+                const res = await axios.get('/master-data/kategori-soal-dropdown');
                 console.log('Kategori Soal response:', res.data); // Tambahkan logging
                 setKategoriOptions(res.data);
             } catch (error) {

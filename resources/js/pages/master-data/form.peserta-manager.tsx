@@ -13,15 +13,16 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const formSchema = z.object({
-    username: z.string().min(2, { message: 'Username must be at least 2 characters.' }),
+    username: z.string().min(2, { message: 'Username must be at least 2 characters.' }).max(20, { message: 'Username max 20 characters.' }),
     password: z
         .string()
         .optional()
-        .refine((val) => !val || val.length >= 8, { message: 'Password must be at least 8 characters.' }),
+        .refine((val) => !val || val.length >= 8, { message: 'Password must be at least 8 characters.' })
+        .refine((val) => !val || val.length <= 20, { message: 'Password max 20 characters.' }),
     status: z.number().min(0, { message: 'Status is required.' }),
     jurusan: z.number().min(0, { message: 'Jurusan is required.' }),
-    nis: z.string().min(5, { message: 'NIS must be at least 5 characters.' }),
-    nama: z.string().min(2, { message: 'Nama must be at least 2 characters.' }),
+    nis: z.string().min(5, { message: 'NIS must be at least 5 characters.' }).max(20, { message: 'NIS max 20 characters.' }),
+    nama: z.string().min(2, { message: 'Nama must be at least 2 characters.' }).max(20, { message: 'Nama max 20 characters.' }),
 });
 
 export default function PesertaForm() {
@@ -60,7 +61,7 @@ export default function PesertaForm() {
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log('Submitting values:', values); // Log data yang dikirim
+        // console.log('Submitting values:', values); // Log data yang dikirim
         if (isEdit) {
             const params = new URLSearchParams(window.location.search);
             const page = params.get('page') || 1;
@@ -71,7 +72,9 @@ export default function PesertaForm() {
                 {
                     preserveScroll: true,
                     // onSuccess tidak perlu router.visit lagi jika backend sudah redirect ke page yang benar
-                    onSuccess: () => {},
+                    onSuccess: () => {
+                        // console.log('Peserta berhasil diubah!')
+                    },
                     onError: () => {
                         toast.error('Failed to update peserta.');
                     },
@@ -81,7 +84,7 @@ export default function PesertaForm() {
             router.post(route('master-data.peserta.store'), values, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    console.log('Peserta created successfully!'); // Log jika berhasil
+                    // console.log('Peserta berhasil ditambahkan!'); // Log jika berhasil
                 },
                 onError: () => {
                     // Log error jika gagal
@@ -110,7 +113,7 @@ export default function PesertaForm() {
                                 <FormItem>
                                     <FormLabel>Username</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter username" {...field} />
+                                        <Input placeholder="Masukkan username" maxLength={20} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -123,7 +126,7 @@ export default function PesertaForm() {
                                 <FormItem>
                                     <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <PasswordInput placeholder="Enter password" {...field} />
+                                        <PasswordInput placeholder="Masukkan password" maxLength={20} {...field} />
                                     </FormControl>
                                     {isEdit && <p className="mt-1 text-xs text-gray-500">*kosongkan jika tidak ingin merubah password</p>}
                                     <FormMessage />
@@ -137,7 +140,7 @@ export default function PesertaForm() {
                                 <FormItem>
                                     <FormLabel>Nama</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter nama" {...field} />
+                                        <Input placeholder="Masukkan nama" maxLength={20} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -151,7 +154,7 @@ export default function PesertaForm() {
                                 <FormItem>
                                     <FormLabel>NIS</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter NIS" {...field} />
+                                        <Input placeholder="Masukkan NIS" maxLength={15} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
