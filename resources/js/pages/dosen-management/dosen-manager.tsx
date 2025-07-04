@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import { CAlertDialog } from '@/components/c-alert-dialog';
 import { ContentTitle } from '@/components/content-title';
-import { CButtonIcon } from '@/components/ui/c-button';
+import { CButton, CButtonIcon } from '@/components/ui/c-button';
 import { CustomTable } from '@/components/ui/c-table';
 import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
@@ -45,24 +45,20 @@ export default function UserManager() {
             <Head title="Dosen Manager" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                    <ContentTitle title="Data Dosen" showButton={false} />
-                    <div className="flex gap-2">
-                        <button
+                <ContentTitle
+                    title="Data Dosen"
+                    showButton
+                    onButtonClick={() => router.visit(route('master-data.dosen.create'))}
+                    extraButtons={
+                        <CButton
+                            className="bg-green-600 px-4 text-white shadow"
+                            type="success"
                             onClick={() => router.visit(route('master-data.import-dosen.view'))}
-                            className="rounded bg-green-600 px-4 py-2 text-white shadow hover:bg-green-700"
                         >
                             Import
-                        </button>
-                        <button
-                            onClick={() => router.visit(route('master-data.dosen.create'))}
-                            className="rounded bg-[#6A86B6] px-4 py-2 text-white shadow hover:bg-gray-700"
-                        >
-                            + Add
-                        </button>
-                    </div>
-                </div>
-
+                        </CButton>
+                    }
+                />
                 <div className="mt-4 flex items-center justify-between">
                     <EntriesSelector currentValue={userData.per_page} options={[10, 12, 25, 50, 100]} routeName="master-data.dosen.manager" />
                     <SearchInputMenu defaultValue={filters.search} routeName="master-data.dosen.manager" />
@@ -146,24 +142,39 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
         },
         {
             label: 'Status',
-            className: 'w-[100px] text-center',
+            className: 'w-[150px] text-center', // samakan dengan peserta
             render: (user: Dosen) => (
-                <div className="flex justify-center">
+                <div className="flex items-center justify-center">
                     {user.dosen?.aktif ? (
-                        <span className="inline-block w-[80px] rounded bg-green-500 px-2 py-1 text-center text-xs text-white shadow">Aktif</span>
+                        <span className="rounded bg-green-600 p-2 text-white shadow">Active</span>
                     ) : (
-                        <span className="inline-block w-[80px] rounded bg-red-500 px-2 py-1 text-center text-xs text-white shadow">Tidak Aktif</span>
+                        <span className="bg-button-danger rounded p-2 text-white shadow">Non Active</span>
                     )}
                 </div>
             ),
         },
         {
             label: 'Roles',
-            className: 'w-[100px] text-center',
+            className: 'w-[150px] text-center',
             render: (user: Dosen) => (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap justify-center gap-1">
                     {user.roles.map((r) => (
-                        <RoleDecorator key={r.name} role={r.name} />
+                        <CButton
+                            key={r.name}
+                            className={
+                                (r.name === 'super_admin'
+                                    ? 'bg-red-700'
+                                    : r.name === 'admin'
+                                    ? 'bg-yellow-500'
+                                    : r.name === 'dosen'
+                                    ? 'bg-pink-500'
+                                    : 'bg-gray-400') +
+                                ' px-2 py-1 text-xs text-white shadow !opacity-100'
+                            }
+                            disabled
+                        >
+                            {r.name}
+                        </CButton>
                     ))}
                 </div>
             ),
