@@ -60,11 +60,13 @@ export default function Monitoring({ ujianList, filters, flash }: Props) {
                     <EntriesSelector 
                         currentValue={ujianList.per_page} 
                         options={[10, 25, 50, 100]} 
-                        routeName="monitoring.ujian" 
+                        routeName="monitoring.ujian.index" 
+                        routeParams={{ page: ujianList.current_page }} 
                     />
                     <SearchInputMenu 
                         defaultValue={filters.search} 
-                        routeName="monitoring.ujian" 
+                        routeName="monitoring.ujian.index" 
+                        routeParams={{ page: ujianList.current_page, per_page: ujianList.per_page, search: filters.search }} 
                     />
                 </div>
 
@@ -85,7 +87,8 @@ function UjianTable({ data: ujianList, pageFilters: filters }: { data: Paginated
 
     // Helper function to navigate with preserved search parameters
     const navigateToPage = (page: number) => {
-        router.visit(route('monitoring.ujian'), {
+        router.visit(route('monitoring.ujian.index'), {
+            method: 'get',
             data: {
                 page: page,
                 search: filters.search,

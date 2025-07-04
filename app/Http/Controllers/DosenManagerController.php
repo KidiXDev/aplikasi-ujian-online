@@ -83,4 +83,22 @@ class DosenManagerController extends Controller
             logger()->info('User NIP: ' . $user->nip . ', Aktif: ' . optional($user->dosen)->aktif);
         }
     }
+
+    public function toggleStatus($id)
+    {
+        $user = User::with('dosen')->findOrFail($id);
+
+        if (!$user->dosen) {
+            return response()->json(['error' => 'Data dosen tidak ditemukan'], 404);
+        }
+
+        // Toggle status aktif
+        $user->dosen->aktif = !$user->dosen->aktif;
+        $user->dosen->save();
+
+        return response()->json([
+            'success' => true,
+            'aktif' => $user->dosen->aktif,
+        ]);
+    }
 }
