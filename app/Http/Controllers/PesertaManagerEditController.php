@@ -93,7 +93,7 @@ class PesertaManagerEditController extends Controller
 
         $page = $request->input('page', 1);
         return redirect()->route('master-data.peserta.manager', ['page' => $page])
-            ->with('success', 'Peserta berhasil diupdate');
+            ->with('success', 'Peserta berhasil diedit');
     }
 
     public function create()

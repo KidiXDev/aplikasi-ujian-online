@@ -75,7 +75,7 @@ class DosenManagerEditController extends Controller
             $user->syncRoles($data['roles']);
         }
 
-        return redirect()->route('master-data.dosen.manager')->with('success', 'User updated successfully');
+        return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil diupdate');
     }
 
     public function create()
@@ -118,6 +118,6 @@ class DosenManagerEditController extends Controller
             $user->syncRoles($data['roles']);
         }
 
-        return redirect()->route('master-data.dosen.manager')->with('success', 'User created successfully');
+        return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil ditambahkan');
     }
 }

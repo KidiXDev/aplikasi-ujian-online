@@ -22,10 +22,11 @@ export default function ImportPeserta() {
         router.post(route('master-data.peserta.import'), formData, {
             forceFormData: true,
             onSuccess: () => {
-                toast.success('Import berhasil');
+                toast.success('Import peserta berhasil');
                 const lastPage = localStorage.getItem('peserta_last_page') || 1;
                 router.visit(route('master-data.peserta.manager', { page: lastPage }), { replace: true });
                 localStorage.removeItem('peserta_last_page');
+                // console.log('Import peserta berhasil!');
             },
             onError: () => toast.error('Import gagal, periksa format file.'),
         });
