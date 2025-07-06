@@ -49,9 +49,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
 
     Route::get('/bidangs', [BidangController::class, 'index']); // dropdown bidang
-    Route::get('/paket-soal/create', function () {
-        return Inertia::render('master-data/paket-soal/CreatePaketSoal');
-    })->name('paket-soal.create');
 
     Route::post('/paket-soal', [PaketSoalEditController::class, 'store'])->name('paket-soal.store');
 
@@ -148,7 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('{peserta}/toggle-status', [PesertaManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
-
+        Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
 
 
         Route::prefix('import')->name('import.')->group(function () {
@@ -207,15 +204,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Route untuk paket soal
         Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
-
-            Route::get('/', [PaketSoalController::class, 'index'])->name('index');
-            Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
+            // Route index untuk menampilkan semua paket soal
+            Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
+            
+            // Route untuk menampilkan paket soal berdasarkan event
+            Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
+            
+            // Route untuk create - PASTIKAN INI ADA DAN BENAR
+            // Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
             Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
-            Route::get('/{paket_soal}', [PaketSoalEditController::class, 'edit'])->name('edit');
+            Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
+            
+            // Route untuk edit, update, destroy, show
+            Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
             Route::put('/{paket_soal}', [PaketSoalEditController::class, 'update'])->name('update');
             Route::delete('/{paket_soal}', [PaketSoalController::class, 'destroy'])->name('destroy');
-            Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
             Route::get('/{paket_soal}/detail', [PaketSoalController::class, 'show'])->name('show');
         });
 

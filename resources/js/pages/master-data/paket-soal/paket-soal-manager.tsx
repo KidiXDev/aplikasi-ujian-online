@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { List, Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 
 import { CAlertDialog } from '@/components/c-alert-dialog';
 import { ContentTitle } from '@/components/content-title';
@@ -83,7 +83,16 @@ export default function PaketSoalManager() {
     setOpen(false);
   };
 
-  const breadcrumbs = [{ title: 'Paket Soal', href: '/master-data/paket-soal' }];
+  const handleBack = () => {
+    // Gunakan window.history.back() untuk kembali ke state sebelumnya
+    window.history.back();
+  };
+
+  // Perbaiki breadcrumbs
+  const breadcrumbs = [
+    { title: 'Event', href: '/master-data/event' },
+    { title: 'Paket Soal', href: '#' }
+  ];
 
   const columns = [
     { label: 'ID', className: 'text-center w-[80px]', render: (d: typeof data[0]) => <div className="text-center">{d.id}</div> },
@@ -105,11 +114,6 @@ export default function PaketSoalManager() {
             onClick={() => router.visit(`/master-data/bank-soal-checkbox/${d.id}/edit`)}
           />
           <CButtonIcon
-            icon={List}
-            className="bg-yellow-500"
-            onClick={() => router.visit(`/master-data/paket-soal/${d.id}/detail`)}
-          />
-          <CButtonIcon
             icon={Pencil}
             onClick={() => router.visit(`/master-data/paket-soal/${d.id}`)}
           />
@@ -127,7 +131,22 @@ export default function PaketSoalManager() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Data Paket Soal" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        <ContentTitle title="Data Paket Soal" showButton onButtonClick={() => router.visit('/master-data/paket-soal/create')} />
+        {/* Tombol Kembali */}
+        <button
+          onClick={handleBack}
+          className="mb-4 self-start flex items-center gap-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700 transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Kembali
+        </button>
+
+        <ContentTitle 
+          title="Part" 
+          showButton 
+          onButtonClick={() => router.visit(route('master-data.create'))} 
+        />
 
         <div className="mt-4 flex items-center justify-between">
           <EntriesSelector
@@ -144,13 +163,38 @@ export default function PaketSoalManager() {
         </div>
 
         <CustomTable columns={columns} data={data} />
+        
         <PaginationWrapper
           currentPage={jadwalUjian.current_page}
           lastPage={jadwalUjian.last_page}
           perPage={jadwalUjian.per_page}
           total={jadwalUjian.total}
           onNavigate={(page) => {
-            router.visit(route('master-data.paket-soal.index', { pages: jadwalUjian.per_page, page }), { preserveScroll: true });
+            // Gunakan URL yang benar untuk pagination
+            const currentUrl = window.location.pathname;
+            const isEventSpecific = currentUrl.includes('/master-data/paket-soal/') && 
+                                   currentUrl.split('/').length > 4;
+            
+            if (isEventSpecific) {
+              // Jika sedang di halaman event specific
+              const idEvent = currentUrl.split('/').pop();
+              router.visit(`/master-data/paket-soal/${idEvent}`, {
+                data: {
+                  pages: jadwalUjian.per_page,
+                  page
+                },
+                preserveScroll: true
+              });
+            } else {
+              // Jika di halaman index semua paket soal
+              router.visit('/master-data/paket-soal', {
+                data: {
+                  pages: jadwalUjian.per_page,
+                  page
+                },
+                preserveScroll: true
+              });
+            }
           }}
         />
 

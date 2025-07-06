@@ -67,15 +67,15 @@ const items: MainNavItem[] = [
                 icon: Book,
             },            
             {
-                title: 'Event',
+                title: 'Paket Soal',
                 href: '/master-data/event',
                 icon: Book,
             },
-            {
-                title: 'Paket Soal',
-                href: '/master-data/paket-soal',
-                icon: Book,
-            },
+            // {
+            //     title: 'Paket Soal',
+            //     href: '/master-data/paket-soal',
+            //     icon: Book,
+            // },
         ],
     },
     {

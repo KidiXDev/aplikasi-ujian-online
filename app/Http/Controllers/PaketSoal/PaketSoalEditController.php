@@ -61,26 +61,22 @@ class PaketSoalEditController extends Controller
             'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
         ]);
 
-        $kode_kelas = null;
-
         $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
         $jadwalUjian = JadwalUjian::create([
             'nama_ujian' => $namaUjian,
-            'kode_kelas' => $kode_kelas,
+            'kode_kelas' => null,
             'id_event' => $request->input('id_event'),
             'kode_part' => $request->input('kode_part'),
         ]);
 
-        $ujiaSoal = 0;
-        $totalSoal = 0;
-        $jadwalUjianSoal = JadwalUjianSoal::create([
+        JadwalUjianSoal::create([
             'id_ujian' => $jadwalUjian->id_ujian,
             'kd_bidang' => $request->input('kode_part'),
-            'total_soal' => $totalSoal,
-            'ujian_soal' => $ujiaSoal
+            'total_soal' => 0,
+            'ujian_soal' => 0
         ]);
 
-        // Redirect ke halaman index atau create lagi
+        // REDIRECT KE ROUTE YANG BENAR
         return redirect()->route('master-data.paket-soal.index')->with('success', 'Paket soal berhasil dibuat!');
     }
 
