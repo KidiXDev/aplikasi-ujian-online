@@ -145,7 +145,7 @@ export default function PaketSoalManager() {
         <ContentTitle 
           title="Part" 
           showButton 
-          onButtonClick={() => router.visit(route('master-data.paket-soal.add'))} 
+          onButtonClick={() => router.visit(route('master-data.create'))} 
         />
 
         <div className="mt-4 flex items-center justify-between">

@@ -145,7 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('{peserta}/toggle-status', [PesertaManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
-
+        Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
 
 
         Route::prefix('import')->name('import.')->group(function () {
@@ -211,7 +211,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
             
             // Route untuk create - PASTIKAN INI ADA DAN BENAR
-            Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
+            // Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
             Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
