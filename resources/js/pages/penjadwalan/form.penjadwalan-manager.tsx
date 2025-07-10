@@ -27,7 +27,13 @@ interface KategoriSoal {
     kategori: string;
 }
 
+interface Event {
+    id_event: number;
+    nama_event: string;
+}
+
 const formSchema = z.object({
+    id_paket_ujian: z.number().min(1, 'Paket ujian is required'),
     tipe_ujian: z.number().min(1, 'Tipe ujian is required'),  // Ubah ke number
     tanggal: z.string().min(1, 'Tanggal is required'),
     waktu_mulai: z.string().min(1, 'Waktu mulai is required'),
@@ -37,9 +43,10 @@ const formSchema = z.object({
 });
 
 export default function PenjadwalanForm() {
-    const { penjadwalan, kategoriSoal } = usePage<{ 
+    const { penjadwalan, kategoriSoal, events } = usePage<{ 
         penjadwalan?: Penjadwalan; 
         kategoriSoal: KategoriSoal[];
+        events: Event[];
     }>().props;
     
     const isEdit = !!penjadwalan;
@@ -59,6 +66,7 @@ export default function PenjadwalanForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            id_paket_ujian: penjadwalan?.id_paket_ujian ?? 0,
             tipe_ujian: penjadwalan?.tipe_ujian ?? 0,  // Default ke 0
             tanggal: penjadwalan?.tanggal ?? '',
             waktu_mulai: penjadwalan?.waktu_mulai ?? '',
@@ -129,6 +137,38 @@ export default function PenjadwalanForm() {
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+
+                        {/* Dropdown untuk Paket Ujian (Event) */}
+                        <FormField
+                            control={form.control}
+                            name="id_paket_ujian"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Paket Ujian</FormLabel>
+                                    <Select
+                                        value={field.value > 0 ? field.value.toString() : ""}
+                                        onValueChange={(value) => field.onChange(parseInt(value))}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Pilih Paket Ujian" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {events.map((event) => (
+                                                <SelectItem 
+                                                    key={event.id_event} 
+                                                    value={event.id_event.toString()}
+                                                >
+                                                    {event.nama_event}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         {/* Dropdown untuk Tipe Ujian (KategoriSoal) */}
                         <FormField

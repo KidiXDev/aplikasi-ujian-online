@@ -1,19 +1,19 @@
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { UserPlus, ArrowLeft, Users, Calendar, Clock, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, Clock, UserPlus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ContentTitle } from '@/components/content-title';
+import { Badge } from '@/components/ui/badge';
 import { CButton } from '@/components/ui/c-button';
 import { CustomTable } from '@/components/ui/c-table';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface Peserta {
     id: number;
@@ -72,7 +72,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AddPeserta() {
     const { penjadwalan, data: pesertaData, jumlahTerdaftar, sisaKuota, filters, flash } = usePage<PageProps>().props;
-    
+
     const [selectedPeserta, setSelectedPeserta] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -85,18 +85,14 @@ export default function AddPeserta() {
     }, [flash]);
 
     const handleSelectPeserta = (pesertaId: number) => {
-        setSelectedPeserta(prev => 
-            prev.includes(pesertaId) 
-                ? prev.filter(id => id !== pesertaId)
-                : [...prev, pesertaId]
-        );
+        setSelectedPeserta((prev) => (prev.includes(pesertaId) ? prev.filter((id) => id !== pesertaId) : [...prev, pesertaId]));
     };
 
     const handleSelectAll = () => {
         if (selectedPeserta.length === pesertaData.data.length && pesertaData.data.length > 0) {
             setSelectedPeserta([]);
         } else {
-            setSelectedPeserta(pesertaData.data.map(p => p.id));
+            setSelectedPeserta(pesertaData.data.map((p) => p.id));
         }
     };
 
@@ -112,55 +108,38 @@ export default function AddPeserta() {
         }
 
         setIsLoading(true);
-        router.post(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta/add`, {
-            peserta_ids: selectedPeserta
-        }, {
-            onFinish: () => setIsLoading(false),
-            // Remove preserveState to force fresh data load
-            preserveState: false,
-            preserveScroll: false,
-            onSuccess: () => {
-                // Force navigation to peserta page without preserving state
-                router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta`, {
-                    preserveState: false,
-                    preserveScroll: false,
-                });
-            }
-        });
+        router.post(
+            `/penjadwalan/${penjadwalan.id_penjadwalan}/peserta/add`,
+            {
+                peserta_ids: selectedPeserta,
+            },
+            {
+                onFinish: () => setIsLoading(false),
+                // Remove preserveState to force fresh data load
+                preserveState: false,
+                preserveScroll: false,
+                onSuccess: () => {
+                    // Force navigation to peserta page without preserving state
+                    router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta`, {
+                        preserveState: false,
+                        preserveScroll: false,
+                    });
+                },
+            },
+        );
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Tambah Peserta - ${penjadwalan.kode_jadwal}`} />
-            
+
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 {/* Header - like penjadwalan-manager */}
                 <div className="flex items-center justify-between">
-                    <ContentTitle 
-                        title="Tambah Peserta Ujian"
-                        showButton={false}
-                    />
-                    <div className="flex items-center gap-2">
-                        <CButton 
-                            type="primary"
-                            onClick={() => router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta`)}
-                        >
-                            <div className="flex items-center gap-2">
-                                <ArrowLeft className="h-4 w-4" />
-                                Kembali
-                            </div>
-                        </CButton>
-                        <CButton 
-                            type="primary"
-                            onClick={handleAddPeserta}
-                            disabled={selectedPeserta.length === 0 || sisaKuota === 0 || isLoading}
-                        >
-                            <div className="flex items-center gap-2">
-                                <UserPlus className="h-4 w-4" />
-                                {isLoading ? 'Memproses...' : `Tambahkan (${selectedPeserta.length})`}
-                            </div>
-                        </CButton>
-                    </div>
+                    <ContentTitle title="Tambah Peserta Ujian" showButton={false} />
+                    <CButton onClick={() => router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta`)}>
+                        Kembali
+                    </CButton>
                 </div>
 
                 {/* Schedule Information */}
@@ -175,29 +154,27 @@ export default function AddPeserta() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                             <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <Calendar className="text-muted-foreground h-4 w-4" />
                                 <span className="text-sm">
                                     <span className="font-medium">Tanggal:</span> {new Date(penjadwalan.tanggal).toLocaleDateString('id-ID')}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <Clock className="text-muted-foreground h-4 w-4" />
                                 <span className="text-sm">
                                     <span className="font-medium">Waktu:</span> {penjadwalan.waktu_mulai} - {penjadwalan.waktu_selesai}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <Users className="text-muted-foreground h-4 w-4" />
                                 <span className="text-sm">
                                     <span className="font-medium">Peserta:</span> {jumlahTerdaftar}/{penjadwalan.kuota}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Badge variant={sisaKuota > 0 ? "default" : "destructive"}>
-                                    Sisa Kuota: {sisaKuota}
-                                </Badge>
+                                <Badge variant={sisaKuota > 0 ? 'default' : 'destructive'}>Sisa Kuota: {sisaKuota}</Badge>
                             </div>
                         </div>
                     </CardContent>
@@ -206,11 +183,11 @@ export default function AddPeserta() {
                 {/* Table Controls */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <EntriesSelector 
-                            currentValue={pesertaData.per_page} 
-                            options={[10, 25, 50, 100]} 
-                            routeName="penjadwalan.peserta.add" 
-                            routeParams={{ id_penjadwalan: penjadwalan.id_penjadwalan }}
+                        <EntriesSelector
+                            currentValue={pesertaData.per_page}
+                            options={[10, 25, 50, 100]}
+                            routeName="penjadwalan.peserta.add"
+                            routeParams={{ id: penjadwalan.id_penjadwalan }}
                         />
                         <div className="flex items-center gap-2">
                             <Checkbox
@@ -218,22 +195,27 @@ export default function AddPeserta() {
                                 onCheckedChange={handleSelectAll}
                                 disabled={pesertaData.data.length === 0 || sisaKuota === 0}
                             />
-                            <span className="text-sm text-muted-foreground">
-                                Pilih semua di halaman ini
-                            </span>
+                            <span className="text-muted-foreground text-sm">Pilih semua di halaman ini</span>
                         </div>
                     </div>
-                    <SearchInputMenu 
-                        defaultValue={filters.search} 
-                        routeName="penjadwalan.peserta.add"
-                        routeParams={{ id_penjadwalan: penjadwalan.id_penjadwalan }}
-                    />
+                    <div className="flex items-center gap-3">
+                        <SearchInputMenu
+                            defaultValue={filters.search}
+                            routeName="penjadwalan.peserta.add"
+                            routeParams={{ id: penjadwalan.id_penjadwalan }}
+                            placeholder="Cari peserta tersedia..."
+                        />
+                        <CButton type="primary" onClick={handleAddPeserta} disabled={selectedPeserta.length === 0 || sisaKuota === 0 || isLoading}>
+                            <UserPlus className="h-4 w-4" />
+                            {isLoading ? 'Memproses...' : `Tambahkan (${selectedPeserta.length})`}
+                        </CButton>
+                    </div>
                 </div>
 
                 {/* Available Participants Table */}
-                <AddPesertaTable 
-                    data={pesertaData} 
-                    pageFilters={filters} 
+                <AddPesertaTable
+                    data={pesertaData}
+                    pageFilters={filters}
                     penjadwalanId={penjadwalan.id_penjadwalan}
                     selectedPeserta={selectedPeserta}
                     onSelectPeserta={handleSelectPeserta}
@@ -245,16 +227,16 @@ export default function AddPeserta() {
     );
 }
 
-function AddPesertaTable({ 
-    data: pesertaData, 
-    pageFilters: filters, 
+function AddPesertaTable({
+    data: pesertaData,
+    pageFilters: filters,
     penjadwalanId,
     selectedPeserta,
     onSelectPeserta,
     sisaKuota,
-    isLoading
-}: { 
-    data: PaginatedResponse<Peserta>; 
+    isLoading,
+}: {
+    data: PaginatedResponse<Peserta>;
     pageFilters: PageFilter;
     penjadwalanId: number;
     selectedPeserta: number[];
@@ -267,6 +249,7 @@ function AddPesertaTable({
             data: {
                 page: page,
                 search: filters.search,
+                per_page: pesertaData.per_page,
             },
             preserveState: true,
             preserveScroll: true,
@@ -286,10 +269,12 @@ function AddPesertaTable({
             ),
         },
         {
+            label: 'Id',
+            render: (peserta: Peserta) => <span className="font-medium">{peserta.id}</span>,
+        },
+        {
             label: 'NIS',
-            render: (peserta: Peserta) => (
-                <span className="font-medium">{peserta.nis}</span>
-            ),
+            render: (peserta: Peserta) => <span className="font-medium">{peserta.nis}</span>,
         },
         {
             label: 'Nama Peserta',
@@ -298,30 +283,40 @@ function AddPesertaTable({
         {
             label: 'Status',
             render: (peserta: Peserta) => (
-                <Badge variant={peserta.status === 1 ? "default" : "secondary"}>
-                    {peserta.status === 1 ? 'Aktif' : 'Tidak Aktif'}
-                </Badge>
+                <Badge variant={peserta.status === 1 ? 'default' : 'secondary'}>{peserta.status === 1 ? 'Aktif' : 'Tidak Aktif'}</Badge>
             ),
         },
     ];
 
     return (
         <div className="flex flex-col gap-4">
+            {/* Table Controls dengan EntriesSelector */}
             {pesertaData.data.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                    {filters.search ? 'Tidak ada peserta yang ditemukan' : 'Semua peserta sudah terdaftar atau tidak ada peserta tersedia'}
+                <div className="text-muted-foreground py-8 text-center">
+                    {filters.search ? (
+                        <div>
+                            <p>Tidak ada peserta ditemukan dengan pencarian "{filters.search}"</p>
+                            <p className="text-sm mt-1">Coba ubah kata kunci pencarian atau hapus filter</p>
+                        </div>
+                    ) : (
+                        <div>
+                            <p>Semua peserta sudah terdaftar atau tidak ada peserta tersedia</p>
+                            <p className="text-sm mt-1">Peserta yang sudah terdaftar tidak akan ditampilkan di sini</p>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <CustomTable columns={columns} data={pesertaData.data} />
             )}
 
-            <PaginationWrapper
-                currentPage={pesertaData.current_page}
-                lastPage={pesertaData.last_page}
-                perPage={pesertaData.per_page}
-                total={pesertaData.total}
-                onNavigate={navigateToPage}
-            />
+            {/* Show entries info & pagination di bawah tabel */}
+                <PaginationWrapper
+                    currentPage={pesertaData.current_page}
+                    lastPage={pesertaData.last_page}
+                    perPage={pesertaData.per_page}
+                    total={pesertaData.total}
+                    onNavigate={navigateToPage}
+                />
         </div>
     );
 }
