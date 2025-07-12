@@ -22,14 +22,14 @@ interface Penjadwalan {
     jenis_ujian: number;
 }
 
-interface Event {
-    id_event: number;
-    nama_event: string;
-}
-
 interface KategoriSoal {
     id: number;
     kategori: string;
+}
+
+interface Event {
+    id_event: number;
+    nama_event: string;
 }
 
 const formSchema = z.object({
@@ -43,10 +43,10 @@ const formSchema = z.object({
 });
 
 export default function PenjadwalanForm() {
-    const { penjadwalan, events, kategoriSoal } = usePage<{ 
+    const { penjadwalan, kategoriSoal, events } = usePage<{ 
         penjadwalan?: Penjadwalan; 
-        events: Event[];
         kategoriSoal: KategoriSoal[];
+        events: Event[];
     }>().props;
     
     const isEdit = !!penjadwalan;
@@ -137,7 +137,7 @@ export default function PenjadwalanForm() {
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        
+
                         {/* Dropdown untuk Paket Ujian (Event) */}
                         <FormField
                             control={form.control}
@@ -146,7 +146,7 @@ export default function PenjadwalanForm() {
                                 <FormItem>
                                     <FormLabel>Paket Ujian</FormLabel>
                                     <Select
-                                        value={field.value.toString()}
+                                        value={field.value > 0 ? field.value.toString() : ""}
                                         onValueChange={(value) => field.onChange(parseInt(value))}
                                     >
                                         <FormControl>
@@ -178,7 +178,7 @@ export default function PenjadwalanForm() {
                                 <FormItem>
                                     <FormLabel>Tipe Ujian</FormLabel>
                                     <Select
-                                        value={field.value.toString()}
+                                        value={field.value > 0 ? field.value.toString() : ""}
                                         onValueChange={(value) => field.onChange(parseInt(value))}
                                     >
                                         <FormControl>
