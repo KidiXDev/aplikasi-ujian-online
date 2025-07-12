@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, BookOpen, Calendar, Clock, UserPlus, Users } from 'lucide-react';
+import { BookOpen, Calendar, Clock, UserPlus, Users } from 'lucide-react'; // Hapus ArrowLeft
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 

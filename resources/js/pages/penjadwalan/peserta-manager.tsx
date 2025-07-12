@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Trash2, UserMinus, UserPlus, UserX } from 'lucide-react';
+import { Trash2, UserMinus, UserPlus, UserX, BookOpen, Calendar, Clock, Users } from 'lucide-react'; // Hapus ArrowLeft
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -15,7 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
-import { BookOpen, Calendar, Clock, Users } from 'lucide-react';
 
 interface Peserta {
     id: number;
@@ -251,13 +250,7 @@ function PesertaTable({
         });
     };
 
-    // Handler untuk EntriesSelector
-    const handleChangeEntries = (value: number) => {
-        navigateToPage(1, value);
-    };
-
     const isAllSelected = pesertaData.data.length > 0 && selectedPeserta.length === pesertaData.data.length;
-    const isPartiallySelected = selectedPeserta.length > 0 && selectedPeserta.length < pesertaData.data.length;
 
     const getDialogContent = () => {
         if (bulkAction === 'clear-all') {

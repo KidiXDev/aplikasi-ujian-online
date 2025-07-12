@@ -57,18 +57,6 @@ export default function PenjadwalanManager() {
         if (flash.error) toast.error(flash.error);
     }, [flash]);
 
-    // Handler untuk EntriesSelector
-    const handleChangeEntries = (value: number) => {
-        router.visit(route('penjadwalan.index'), {
-            data: {
-                pages: value,
-                search: filters.search,
-            },
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Jadwal Ujian" />
