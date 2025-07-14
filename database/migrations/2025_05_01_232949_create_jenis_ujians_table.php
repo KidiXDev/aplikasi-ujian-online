@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Skip in testing environment since test tables are already created
-        if (app()->environment('testing')) {
+        if (app()->environment('testing', 'ci')) {
             return;
         }
 

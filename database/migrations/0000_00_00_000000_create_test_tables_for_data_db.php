@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Only run in testing environment
-        if (app()->environment('testing')) {
+        if (app()->environment('testing', 'ci')) {
             // Create tables on the data_db connection for testing
             $connection = 'data_db';
 
@@ -203,7 +203,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (app()->environment('testing')) {
+        if (app()->environment('testing', 'ci')) {
             $connection = 'data_db';
             $tables = [
                 't_peserta',

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Skip this migration in testing environment since we create the table with the column already
-        if (app()->environment('testing')) {
+        if (app()->environment('testing', 'ci')) {
             return;
         }
 
@@ -27,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         // Skip this migration in testing environment
-        if (app()->environment('testing')) {
+        if (app()->environment('testing', 'ci')) {
             return;
         }
 
