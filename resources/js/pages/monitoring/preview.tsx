@@ -136,6 +136,15 @@ function JadwalUjianTable({
 
     const columns = [
         {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (jadwal: JadwalUjian) => {
+                const index = jadwalUjianList.data.findIndex((j) => j.id_ujian === jadwal.id_ujian);
+                const rowNumber = (jadwalUjianList.current_page - 1) * jadwalUjianList.per_page + index + 1;
+                return <div className="text-center font-medium">{rowNumber}</div>;
+            },
+        },
+        {
             label: 'ID Ujian',
             className: 'w-[120px] text-center',
             render: (jadwal: JadwalUjian) => <div className="text-center font-mono text-sm">{jadwal.id_ujian}</div>,

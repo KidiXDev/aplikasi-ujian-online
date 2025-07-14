@@ -6,6 +6,7 @@ use App\Models\Penjadwalan;
 use App\Models\Event;
 use App\Models\KategoriSoal;
 use App\Models\JadwalUjian;
+use App\Models\MBidang;
 use App\Models\Peserta;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -573,7 +574,7 @@ class PenjadwalanController extends Controller
     {
         // Load relasi event dan ambil kategori manual
         $penjadwalan->load(['event']);
-        $kategoriSoal = KategoriSoal::find($penjadwalan->tipe_ujian);
+        $kategoriSoal = MBidang::find($penjadwalan->tipe_ujian);
 
         // Ambil nama kategori saja (bagian sebelum tanda "-")
         $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Tidak Diketahui';
