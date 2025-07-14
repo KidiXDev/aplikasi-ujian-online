@@ -98,7 +98,9 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             {
                 preserveState: true,
                 preserveScroll: true,
-                // onSuccess: () => toast.success('Status berhasil diubah'),
+                onSuccess: () => {
+                    router.reload({ only: ['data'] }); // reload data peserta saja
+                },
                 // onError: () => toast.error('Gagal mengubah status'),
             },
         );
@@ -160,7 +162,7 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
         },
 
         {
-            label: 'Jurusan',
+            label: 'Kategori',
             className: 'w-[300px] text-center',
             render: (peserta: Peserta) => {
                 const jurusan = peserta.jurusan_ref?.nama_jurusan || '-';
@@ -181,11 +183,10 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             render: (peserta: Peserta) => (
                 <div className="flex items-center justify-center">
                     <button
-                        className={`rounded p-2 text-white shadow transition ${
+                        className={`w-[100px] rounded p-2 text-white shadow transition ${
                             peserta.status ? 'bg-green-600 hover:bg-green-700' : 'bg-button-danger hover:bg-red-700'
                         }`}
                         onClick={() => handleToggleStatus(peserta)}
-                        title="Klik untuk ubah status"
                     >
                         {peserta.status ? 'Active' : 'Non Active'}
                     </button>
