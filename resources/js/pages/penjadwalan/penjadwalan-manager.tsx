@@ -64,11 +64,7 @@ export default function PenjadwalanManager() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <ContentTitle title="Jadwal Ujian" showButton onButtonClick={() => router.visit(route('penjadwalan.create'))} />
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector
-                        currentValue={examData.per_page}
-                        options={[10, 25, 50, 100]}
-                        routeName="penjadwalan.index"
-                    />
+                    <EntriesSelector currentValue={examData.per_page} options={[10, 25, 50, 100]} routeName="penjadwalan.index" />
                     <SearchInputMenu defaultValue={filters.search} routeName="penjadwalan.index" />
                 </div>
                 <PenjadwalanTable data={examData} pageFilters={filters} />
@@ -118,6 +114,15 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
 
     const columns = [
         {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (exam: JadwalUjian) => {
+                const index = examData.data.findIndex((s) => s.id_penjadwalan === exam.id_penjadwalan);
+                const rowNumber = (examData.current_page - 1) * examData.per_page + index + 1;
+                return <div className="text-center font-medium">{rowNumber}</div>;
+            },
+        },
+        {
             label: 'Tipe Ujian',
             render: (exam: JadwalUjian) => exam.tipe_ujian,
         },
@@ -160,13 +165,13 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
                 <CustomTable columns={columns} data={examData.data} />
 
                 {/* Show entries info */}
-                    <PaginationWrapper
-                        currentPage={examData.current_page}
-                        lastPage={examData.last_page}
-                        perPage={examData.per_page}
-                        total={examData.total}
-                        onNavigate={navigateToPage}
-                    />
+                <PaginationWrapper
+                    currentPage={examData.current_page}
+                    lastPage={examData.last_page}
+                    perPage={examData.per_page}
+                    total={examData.total}
+                    onNavigate={navigateToPage}
+                />
             </div>
 
             <CAlertDialog open={open} setOpen={setOpen} onContinue={confirmDelete} />
