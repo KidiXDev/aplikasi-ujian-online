@@ -85,9 +85,14 @@ class PenjadwalanController extends Controller
 
         // Ambil Event yang memiliki template JadwalUjian (untuk dropdown paket ujian)
         $events = Event::whereHas('jadwalUjian', function ($query) {
-            $query->where('kode_kelas', null)
+            $query->where(function ($q) {
+                $q->where('kode_kelas', null)
+                    ->orWhere('kode_kelas', 1);
+            })
                 ->whereNull('id_penjadwalan');
         })->get(['id_event', 'nama_event']);
+
+        // $events = Event::all(['id_event', 'nama_event']);
 
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
             'kategoriSoal' => $kategoriSoal,
@@ -109,7 +114,10 @@ class PenjadwalanController extends Controller
 
         return DB::transaction(function () use ($validated) {
             // Validasi bahwa Event yang dipilih memiliki template JadwalUjian
-            $hasTemplate = JadwalUjian::where('kode_kelas', null)
+            $hasTemplate = JadwalUjian::where(function ($q) {
+                $q->where('kode_kelas', null)
+                    ->orWhere('kode_kelas', 1);
+            })
                 ->whereNull('id_penjadwalan')
                 ->where('id_event', $validated['id_paket_ujian'])
                 ->exists();
@@ -430,18 +438,23 @@ class PenjadwalanController extends Controller
         ]);
 
         $penjadwalan = Penjadwalan::with(['jenis_ujian'])->findOrFail($id);
-        $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
 
-        if (!$jadwalUjian) {
+        // Ambil semua jadwal ujian yang terkait dengan penjadwalan ini
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $id)->get();
+
+        if ($jadwalUjians->isEmpty()) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
 
-        // Parse peserta yang sudah terdaftar dari kode_kelas
+        // Hitung total peserta yang sudah terdaftar di semua jadwal ujian
         $existingPesertaIds = [];
-        if ($jadwalUjian->kode_kelas) {
-            $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
-            $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
+        foreach ($jadwalUjians as $jadwalUjian) {
+            if ($jadwalUjian->kode_kelas) {
+                $ids = explode(',', $jadwalUjian->kode_kelas);
+                $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
+            }
         }
+        $existingPesertaIds = array_unique($existingPesertaIds);
 
         // Validasi kuota
         $pesertaBaru = count($request->peserta_ids);
@@ -458,19 +471,20 @@ class PenjadwalanController extends Controller
         // Gabungkan peserta baru dengan yang sudah ada
         $allPesertaIds = array_merge($existingPesertaIds, $request->peserta_ids);
         $allPesertaIds = array_unique($allPesertaIds); // Remove duplicates
-
-        // Update kode_kelas dengan daftar peserta baru
         $kodeKelas = implode(',', $allPesertaIds);
-        $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
+
+        // Update semua jadwal ujian terkait penjadwalan ini
+        foreach ($jadwalUjians as $jadwalUjian) {
+            $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
+        }
 
         // Get kategori name for success message
         $kategoriSoal = KategoriSoal::find($penjadwalan->tipe_ujian);
         $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori';
 
-        // Redirect ke halaman peserta manager setelah berhasil menambahkan
         return redirect()->route('penjadwalan.peserta', $id)->with(
             'success',
-            "Berhasil menambahkan {$pesertaBaru} peserta ke jadwal ujian {$kategoriNama}."
+            "Berhasil menambahkan {$pesertaBaru} peserta ke semua jadwal ujian {$kategoriNama}."
         );
     }
 

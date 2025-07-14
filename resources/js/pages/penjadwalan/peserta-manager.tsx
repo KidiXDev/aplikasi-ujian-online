@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Trash2, UserMinus, UserPlus, UserX, BookOpen, Calendar, Clock, Users } from 'lucide-react'; // Hapus ArrowLeft
+import { BookOpen, Calendar, Clock, Trash2, UserMinus, UserPlus, Users, UserX } from 'lucide-react'; // Hapus ArrowLeft
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -86,9 +86,7 @@ export default function PesertaManager() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <ContentTitle title="Peserta Ujian" showButton={false} />
-                    <CButton onClick={() => router.visit('/penjadwalan')}>
-                        Kembali
-                    </CButton>
+                    <CButton onClick={() => router.visit('/penjadwalan')}>Kembali</CButton>
                 </div>
 
                 {/* Schedule Information */}
@@ -273,16 +271,13 @@ function PesertaTable({
 
     const columns = [
         {
-            label: 'Pilih',
-            className: 'w-[100px]',
-            render: (peserta: Peserta) => (
-                <div className="flex justify-center">
-                    <Checkbox
-                        checked={selectedPeserta.includes(peserta.id)}
-                        onCheckedChange={(checked) => handleSelectPeserta(peserta.id, Boolean(checked))}
-                    />
-                </div>
-            ),
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (peserta: Peserta) => {
+                const index = pesertaData.data.findIndex((s) => s.id === peserta.id);
+                const rowNumber = (pesertaData.current_page - 1) * pesertaData.per_page + index + 1;
+                return <div className="text-center font-medium">{rowNumber}</div>;
+            },
         },
         {
             label: 'Id',
@@ -300,6 +295,18 @@ function PesertaTable({
             label: 'Status',
             render: (peserta: Peserta) => (
                 <Badge variant={peserta.status === 1 ? 'default' : 'secondary'}>{peserta.status === 1 ? 'Aktif' : 'Tidak Aktif'}</Badge>
+            ),
+        },
+        {
+            label: 'Pilih',
+            className: 'w-[100px]',
+            render: (peserta: Peserta) => (
+                <div className="flex justify-center">
+                    <Checkbox
+                        checked={selectedPeserta.includes(peserta.id)}
+                        onCheckedChange={(checked) => handleSelectPeserta(peserta.id, Boolean(checked))}
+                    />
+                </div>
             ),
         },
         {
@@ -326,10 +333,7 @@ function PesertaTable({
                             routeParams={{ id: penjadwalanId }}
                         />
                         <div className="flex items-center gap-2">
-                            <Checkbox 
-                                checked={isAllSelected} 
-                                onCheckedChange={handleSelectAll} 
-                            />
+                            <Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
                             <span className="text-sm text-gray-600">
                                 Pilih Semua {selectedPeserta.length > 0 && `(${selectedPeserta.length} terpilih)`}
                             </span>
@@ -372,25 +376,25 @@ function PesertaTable({
                         {filters.search ? (
                             <div>
                                 <p>Tidak ada peserta ditemukan dengan pencarian "{filters.search}"</p>
-                                <p className="text-sm mt-1">Coba ubah kata kunci pencarian atau hapus filter</p>
+                                <p className="mt-1 text-sm">Coba ubah kata kunci pencarian atau hapus filter</p>
                             </div>
                         ) : (
                             <div>
                                 <p>Belum ada peserta terdaftar dalam ujian ini</p>
-                                <p className="text-sm mt-1">Klik "Tambah Peserta" untuk menambahkan peserta ke ujian</p>
+                                <p className="mt-1 text-sm">Klik "Tambah Peserta" untuk menambahkan peserta ke ujian</p>
                             </div>
                         )}
                     </div>
                 ) : (
                     <CustomTable columns={columns} data={pesertaData.data} />
                 )}
-                    <PaginationWrapper
-                        currentPage={pesertaData.current_page}
-                        lastPage={pesertaData.last_page}
-                        perPage={pesertaData.per_page}
-                        total={pesertaData.total}
-                        onNavigate={page => navigateToPage(page)}
-                    />
+                <PaginationWrapper
+                    currentPage={pesertaData.current_page}
+                    lastPage={pesertaData.last_page}
+                    perPage={pesertaData.per_page}
+                    total={pesertaData.total}
+                    onNavigate={(page) => navigateToPage(page)}
+                />
             </div>
 
             <CAlertDialog
