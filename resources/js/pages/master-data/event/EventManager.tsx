@@ -54,7 +54,7 @@ export default function EventManager() {
       <Head title="Data Event" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         <ContentTitle
-          title="Data Event"
+          title="Paket Soal"
           showButton
           onButtonClick={() => router.visit(route('master-data.event.create'))}
         />
@@ -178,7 +178,7 @@ function EventTable({
           <CButtonIcon
             icon={List}
             className="bg-yellow-500"
-            onClick={() => router.visit(route('master-data.event.show', event.id_event))}
+            onClick={() => router.visit(`/master-data/paket-soal/${event.id_event}`)}
           />
           <CButtonIcon
             icon={Pencil}
