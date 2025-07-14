@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip in testing environment since test tables are already created
+        if (app()->environment('testing')) {
+            return;
+        }
+
         try {
             Schema::connection('data_db')->create('paket_soals', function (Blueprint $table) {
                 $table->id();
