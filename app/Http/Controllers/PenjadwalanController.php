@@ -6,7 +6,7 @@ use App\Models\Penjadwalan;
 use App\Models\Event;
 use App\Models\KategoriSoal;
 use App\Models\JadwalUjian;
-use App\Models\MBidang;
+use App\Models\JadwalUjianSoal;
 use App\Models\Peserta;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,7 +37,7 @@ class PenjadwalanController extends Controller
         }
 
         $data = $query->orderBy('id_penjadwalan', 'desc')
-            ->paginate($request->input('per_page', 10))
+            ->paginate($request->input('pages', 10)) // Ganti dari per_page ke pages
             ->withQueryString();
 
         // Transform data untuk menambahkan informasi dari JadwalUjian
@@ -80,13 +80,18 @@ class PenjadwalanController extends Controller
 
     public function create()
     {
-        // Ambil data Event dan KategoriSoal
-        $events = Event::where('status', 1)->get(['id_event', 'nama_event']);
+        // Ambil KategoriSoal dan Event yang memiliki template JadwalUjian
         $kategoriSoal = KategoriSoal::all(['id', 'kategori']);
 
+        // Ambil Event yang memiliki template JadwalUjian (untuk dropdown paket ujian)
+        $events = Event::whereHas('jadwalUjian', function ($query) {
+            $query->where('kode_kelas', null)
+                ->whereNull('id_penjadwalan');
+        })->get(['id_event', 'nama_event']);
+
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
-            'events' => $events,
             'kategoriSoal' => $kategoriSoal,
+            'events' => $events,
         ]);
     }
 
@@ -103,6 +108,16 @@ class PenjadwalanController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated) {
+            // Validasi bahwa Event yang dipilih memiliki template JadwalUjian
+            $hasTemplate = JadwalUjian::where('kode_kelas', null)
+                ->whereNull('id_penjadwalan')
+                ->where('id_event', $validated['id_paket_ujian'])
+                ->exists();
+
+            if (!$hasTemplate) {
+                return redirect()->back()->with('error', 'Event yang dipilih tidak memiliki template jadwal ujian.');
+            }
+
             // Ambil data kategori dan event sebelum create
             $kategoriSoal = KategoriSoal::find($validated['tipe_ujian']);
             $event = Event::find($validated['id_paket_ujian']);
@@ -119,12 +134,19 @@ class PenjadwalanController extends Controller
             // Buat JadwalUjian otomatis
             $this->createJadwalUjian($penjadwalan);
 
+            // ✅ Debug: Get duplication statistics (optional, can be removed in production)
+            $stats = $this->getDuplikasiStats($penjadwalan);
+
             // Prepare nama untuk success message
             $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Ujian';
             $namaEvent = $event ? $event->nama_event : 'Event';
 
+            // Enhanced success message with duplication stats
+            $successMessage = "Jadwal ujian {$kategoriNama} - {$namaEvent} dengan kode {$kodeJadwal} berhasil ditambahkan. " .
+                "({$stats['jadwal_ujian_count']} jadwal ujian, {$stats['jadwal_ujian_soal_count']} soal diduplikasi)";
+
             return redirect()->route('penjadwalan.index')
-                ->with('success', "Jadwal ujian {$kategoriNama} - {$namaEvent} dengan kode {$kodeJadwal} berhasil ditambahkan.");
+                ->with('success', $successMessage);
         });
     }
 
@@ -135,8 +157,13 @@ class PenjadwalanController extends Controller
         // Load relasi yang diperlukan
         $penjadwalan->load(['event', 'jenis_ujian']);
 
-        $events = Event::where('status', 1)->get(['id_event', 'nama_event']);
         $kategoriSoal = KategoriSoal::all(['id', 'kategori']);
+
+        // Ambil Event yang memiliki template JadwalUjian (untuk dropdown paket ujian)
+        $events = Event::whereHas('jadwalUjian', function ($query) {
+            $query->where('kode_kelas', null)
+                ->whereNull('id_penjadwalan');
+        })->get(['id_event', 'nama_event']);
 
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
             'penjadwalan' => [
@@ -158,8 +185,8 @@ class PenjadwalanController extends Controller
                     'nama_event' => $penjadwalan->event->nama_event,
                 ] : null,
             ],
-            'events' => $events,
             'kategoriSoal' => $kategoriSoal,
+            'events' => $events,
         ]);
     }
 
@@ -178,15 +205,39 @@ class PenjadwalanController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated, $penjadwalan) {
-            // Jika event atau kategori berubah, generate ulang kode jadwal
-            if (
-                $penjadwalan->id_paket_ujian != $validated['id_paket_ujian'] ||
-                $penjadwalan->tipe_ujian != $validated['tipe_ujian']
-            ) {
+            // Validasi bahwa Event yang dipilih memiliki template JadwalUjian
+            $hasTemplate = JadwalUjian::where('kode_kelas', null)
+                ->whereNull('id_penjadwalan')
+                ->where('id_event', $validated['id_paket_ujian'])
+                ->exists();
+
+            if (!$hasTemplate) {
+                return redirect()->back()->with('error', 'Event yang dipilih tidak memiliki template jadwal ujian.');
+            }
+
+            // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
+            if ($penjadwalan->tipe_ujian != $validated['tipe_ujian'] || $penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
                 $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
             }
 
-            $penjadwalan->update($validated);
+            // Jika id_paket_ujian berubah, perlu regenerasi JadwalUjian dan JadwalUjianSoal
+            if ($penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
+                // Hapus JadwalUjian dan JadwalUjianSoal yang lama
+                $oldJadwalUjian = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+                foreach ($oldJadwalUjian as $jadwal) {
+                    JadwalUjianSoal::where('id_ujian', $jadwal->id_ujian)->delete();
+                }
+                JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->delete();
+
+                // Update penjadwalan terlebih dahulu
+                $penjadwalan->update($validated);
+
+                // Regenerasi JadwalUjian dan JadwalUjianSoal dengan paket ujian baru
+                $this->createJadwalUjian($penjadwalan);
+            } else {
+                // Jika id_paket_ujian tidak berubah, hanya update penjadwalan
+                $penjadwalan->update($validated);
+            }
 
             // Ambil data kategori dan event untuk success message dengan null safety
             $kategoriSoal = KategoriSoal::find($validated['tipe_ujian']);
@@ -211,6 +262,12 @@ class PenjadwalanController extends Controller
             // Handle case where event might be null
             $namaEvent = $penjadwalan->event ? $penjadwalan->event->nama_event : 'Event tidak ditemukan';
 
+            // Hapus JadwalUjianSoal yang terkait dengan JadwalUjian dari penjadwalan ini
+            $jadwalUjianIds = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->pluck('id_ujian');
+            if ($jadwalUjianIds->isNotEmpty()) {
+                JadwalUjianSoal::whereIn('id_ujian', $jadwalUjianIds)->delete();
+            }
+
             // Hapus JadwalUjian yang terkait dengan penjadwalan ini
             JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->delete();
 
@@ -218,7 +275,7 @@ class PenjadwalanController extends Controller
             $penjadwalan->delete();
 
             return redirect()->back()
-                ->with('success', "Penjadwalan {$namaEvent} dan jadwal ujian terkait berhasil dihapus.");
+                ->with('success', "Penjadwalan {$namaEvent} dan semua data terkait berhasil dihapus.");
         });
     }
 
@@ -249,6 +306,7 @@ class PenjadwalanController extends Controller
 
         // Query peserta yang terdaftar dengan pagination dan search
         $search = $request->input('search');
+        $pages = $request->query('pages', 10);
         $query = Peserta::with('jurusanRef');
 
         if (!empty($pesertaIds)) {
@@ -266,7 +324,7 @@ class PenjadwalanController extends Controller
         }
 
         $data = $query->orderBy('nama')
-            ->paginate($request->input('per_page', 10))
+            ->paginate((int)$pages)
             ->withQueryString();
 
         // Hitung jumlah peserta terdaftar
@@ -317,6 +375,7 @@ class PenjadwalanController extends Controller
 
         // Query peserta yang tersedia (belum terdaftar) dengan pagination dan search
         $search = $request->input('search');
+        $pages = $request->query('pages', 10);
         $query = Peserta::with('jurusanRef')
             ->where('status', 1); // Hanya peserta aktif
 
@@ -332,7 +391,7 @@ class PenjadwalanController extends Controller
         }
 
         $data = $query->orderBy('nama')
-            ->paginate($request->input('per_page', 10))
+            ->paginate((int)$pages)
             ->withQueryString();
 
         $jumlahTerdaftar = count($registeredPesertaIds);
@@ -404,7 +463,8 @@ class PenjadwalanController extends Controller
         $kodeKelas = implode(',', $allPesertaIds);
         $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
 
-        $kategoriSoal = KategoriSoal::find($penjadwalan->jenis_ujian);
+        // Get kategori name for success message
+        $kategoriSoal = KategoriSoal::find($penjadwalan->tipe_ujian);
         $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori';
 
         // Redirect ke halaman peserta manager setelah berhasil menambahkan
@@ -568,29 +628,165 @@ class PenjadwalanController extends Controller
     }
 
     /**
-     * Buat JadwalUjian otomatis saat Penjadwalan dibuat
+     * Duplicate JadwalUjian records based on event and assign to penjadwalan
      */
     private function createJadwalUjian($penjadwalan)
     {
-        // Load relasi event dan ambil kategori manual
-        $penjadwalan->load(['event']);
-        $kategoriSoal = MBidang::find($penjadwalan->tipe_ujian);
+        // Ambil SEMUA template yang tersedia (tanpa filter id_event)
+        $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
+            ->whereNull('id_penjadwalan') // Template yang belum pernah digunakan
+            ->where('id_event', $penjadwalan->id_paket_ujian) // Hanya ambil template untuk event ini
+            ->get();
 
-        // Ambil nama kategori saja (bagian sebelum tanda "-")
-        $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Tidak Diketahui';
+        if ($templateJadwalUjian->isNotEmpty()) {
+            $jadwalUjianBatch = []; // Array untuk batch insert
 
-        // Jika kategori mengandung tanda "-", ambil bagian sebelumnya saja
-        if (strpos($kategoriNama, '-') !== false) {
-            $kategoriNama = trim(explode('-', $kategoriNama)[0]);
+            // Loop untuk mempersiapkan data duplikasi setiap template yang ditemukan
+            foreach ($templateJadwalUjian as $template) {
+                // Cek duplikasi berdasarkan kombinasi unique untuk menghindari duplikat dalam batch
+                $duplicateKey = $penjadwalan->id_penjadwalan . '-' . $template->id_event . '-' . $template->kode_part . '-' . $template->nama_ujian;
+
+                // Tambahkan ke batch hanya jika belum ada dalam batch
+                $jadwalUjianBatch[$duplicateKey] = [
+                    'nama_ujian' => $template->nama_ujian,
+                    'kode_kelas' => null, // Set untuk penjadwalan baru
+                    'id_event' => $template->id_event, // Dari template
+                    'kode_part' => $template->kode_part, // Dari template
+                    'id_penjadwalan' => $penjadwalan->id_penjadwalan, // Assign ke penjadwalan
+                ];
+            }
+
+            // Batch insert untuk efisiensi
+            if (!empty($jadwalUjianBatch)) {
+                JadwalUjian::insert(array_values($jadwalUjianBatch));
+            }
+
+            // Duplikasi soal untuk semua JadwalUjian yang baru dibuat
+            $this->createJadwalUjianSoal($penjadwalan);
+        } else {
+            // Fallback: Create default JadwalUjian if no template found
+            $kategoriSoal = KategoriSoal::find($penjadwalan->tipe_ujian);
+            $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Tidak Diketahui';
+
+            // Clean kategori name for fallback
+            if (strpos($kategoriNama, '-') !== false) {
+                $kategoriNama = trim(explode('-', $kategoriNama)[0]);
+            }
+
+            $jadwalUjianBaru = JadwalUjian::create([
+                'nama_ujian' => $kategoriNama,
+                'kode_kelas' => null,
+                'id_event' => $penjadwalan->id_paket_ujian,
+                'kode_part' => null,
+                'id_penjadwalan' => $penjadwalan->id_penjadwalan,
+            ]);
+
+            // Duplikasi soal untuk JadwalUjian fallback yang baru dibuat
+            // Note: Mungkin tidak ada template soal untuk fallback case
+            $this->createJadwalUjianSoal($penjadwalan);
+        }
+    }
+
+    /**
+     * Duplicate JadwalUjianSoal records for all JadwalUjian in this penjadwalan
+     */
+    private function createJadwalUjianSoal($penjadwalan)
+    {
+        // Ambil semua JadwalUjian yang baru dibuat untuk penjadwalan ini
+        $jadwalUjianBaru = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+
+        if ($jadwalUjianBaru->isEmpty()) {
+            return; // Tidak ada jadwal ujian, skip duplikasi soal
         }
 
-        // Buat JadwalUjian dengan nama ujian = tipe ujian saja
-        JadwalUjian::create([
-            'nama_ujian' => $kategoriNama,
-            'kode_kelas' => null, // Akan diisi dengan ID peserta yang ikut ujian (format: "1,2,3,4")
-            'id_event' => $penjadwalan->id_paket_ujian,
-            'kode_part' => 1, // Default atau ambil dari logic tertentu
-            'id_penjadwalan' => $penjadwalan->id_penjadwalan,
-        ]);
+        $soalBaruBatch = []; // Array untuk batch insert
+
+        foreach ($jadwalUjianBaru as $jadwalUjian) {
+            // Cek apakah sudah ada soal untuk jadwal ujian ini
+            $existingSoal = JadwalUjianSoal::where('id_ujian', $jadwalUjian->id_ujian)
+                ->where('id_penjadwalan', $penjadwalan->id_penjadwalan)
+                ->exists();
+
+            if ($existingSoal) {
+                continue; // Skip jika sudah ada soal untuk jadwal ujian ini
+            }
+
+            // Cari template JadwalUjian yang sesuai untuk mendapatkan id_ujian template
+            $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
+                ->whereNull('id_penjadwalan')
+                ->where('id_event', $jadwalUjian->id_event)
+                ->where('nama_ujian', $jadwalUjian->nama_ujian)
+                ->where('kode_part', $jadwalUjian->kode_part)
+                ->first();
+
+            if (!$templateJadwalUjian) {
+                // Jika tidak ada template JadwalUjian yang cocok, skip
+                continue;
+            }
+
+            // Cari template soal berdasarkan id_ujian dari template JadwalUjian
+            // Template soal adalah yang id_penjadwalan = null DAN id_ujian = template.id_ujian
+            $templateSoal = JadwalUjianSoal::whereNull('id_penjadwalan')
+                ->where('id_ujian', $templateJadwalUjian->id_ujian)
+                ->get();
+
+            // Ambil semua kombinasi yang sudah ada untuk mencegah duplikasi
+            $existingCombinations = JadwalUjianSoal::where('id_ujian', $jadwalUjian->id_ujian)
+                ->where('id_penjadwalan', $penjadwalan->id_penjadwalan)
+                ->pluck('kd_bidang')
+                ->toArray();
+
+            // Duplikasi setiap template soal yang ditemukan
+            foreach ($templateSoal as $template) {
+                // Cek duplikasi berdasarkan kd_bidang yang sudah ada
+                if (!in_array($template->kd_bidang, $existingCombinations)) {
+                    // Tambahkan ke batch untuk CREATE DUPLIKAT SOAL BARU
+                    $soalBaruBatch[] = [
+                        'id_ujian' => $jadwalUjian->id_ujian, // Link ke JadwalUjian yang baru (bukan template)
+                        'kd_bidang' => $template->kd_bidang,
+                        'total_soal' => $template->total_soal,
+                        'ujian_soal' => $template->ujian_soal,
+                        'id_penjadwalan' => $penjadwalan->id_penjadwalan, // Assign ke penjadwalan
+                        'direction' => $template->direction,
+                        'total_direction' => $template->total_direction,
+                    ];
+
+                    // Tambahkan ke existing combinations untuk mencegah duplikasi dalam batch yang sama
+                    $existingCombinations[] = $template->kd_bidang;
+                }
+            }
+        }
+
+        // Batch insert untuk efisiensi
+        if (!empty($soalBaruBatch)) {
+            JadwalUjianSoal::insert($soalBaruBatch);
+        }
+    }
+
+    /**
+     * Get statistics of JadwalUjian and JadwalUjianSoal for a specific penjadwalan
+     * Useful for debugging and verifying duplication results
+     */
+    private function getDuplikasiStats($penjadwalan)
+    {
+        $jadwalUjianCount = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->count();
+        $jadwalUjianSoalCount = JadwalUjianSoal::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->count();
+
+        return [
+            'jadwal_ujian_count' => $jadwalUjianCount,
+            'jadwal_ujian_soal_count' => $jadwalUjianSoalCount,
+            'penjadwalan_id' => $penjadwalan->id_penjadwalan,
+        ];
+    }
+
+    /**
+     * Check if penjadwalan already has complete duplication (both JadwalUjian and JadwalUjianSoal)
+     */
+    private function isPenjadwalanComplete($penjadwalan)
+    {
+        $hasJadwalUjian = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->exists();
+        $hasJadwalUjianSoal = JadwalUjianSoal::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->exists();
+
+        return $hasJadwalUjian && $hasJadwalUjianSoal;
     }
 }
