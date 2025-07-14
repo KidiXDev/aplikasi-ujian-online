@@ -14,7 +14,7 @@ return new class extends Migration
         if (app()->environment('testing', 'ci')) {
             // Make sure the data_db connection is properly configured for testing
             Config::set('database.connections.data_db.driver', 'sqlite');
-            Config::set('database.connections.data_db.database', database_path('data_db.sqlite'));
+            Config::set('database.connections.data_db.database', ':memory:');
 
             // Purge connections to make sure they're reconnected with new settings
             \Illuminate\Support\Facades\DB::purge('data_db');

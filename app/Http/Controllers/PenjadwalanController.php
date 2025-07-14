@@ -82,11 +82,11 @@ class PenjadwalanController extends Controller
     {
         // Ambil KategoriSoal dan Event yang memiliki template JadwalUjian
         $kategoriSoal = KategoriSoal::all(['id', 'kategori']);
-        
+
         // Ambil Event yang memiliki template JadwalUjian (untuk dropdown paket ujian)
-        $events = Event::whereHas('jadwalUjian', function($query) {
+        $events = Event::whereHas('jadwalUjian', function ($query) {
             $query->where('kode_kelas', null)
-                  ->whereNull('id_penjadwalan');
+                ->whereNull('id_penjadwalan');
         })->get(['id_event', 'nama_event']);
 
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
@@ -136,14 +136,14 @@ class PenjadwalanController extends Controller
 
             // ✅ Debug: Get duplication statistics (optional, can be removed in production)
             $stats = $this->getDuplikasiStats($penjadwalan);
-            
+
             // Prepare nama untuk success message
             $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Ujian';
             $namaEvent = $event ? $event->nama_event : 'Event';
 
             // Enhanced success message with duplication stats
             $successMessage = "Jadwal ujian {$kategoriNama} - {$namaEvent} dengan kode {$kodeJadwal} berhasil ditambahkan. " .
-                             "({$stats['jadwal_ujian_count']} jadwal ujian, {$stats['jadwal_ujian_soal_count']} soal diduplikasi)";
+                "({$stats['jadwal_ujian_count']} jadwal ujian, {$stats['jadwal_ujian_soal_count']} soal diduplikasi)";
 
             return redirect()->route('penjadwalan.index')
                 ->with('success', $successMessage);
@@ -158,11 +158,11 @@ class PenjadwalanController extends Controller
         $penjadwalan->load(['event', 'jenis_ujian']);
 
         $kategoriSoal = KategoriSoal::all(['id', 'kategori']);
-        
+
         // Ambil Event yang memiliki template JadwalUjian (untuk dropdown paket ujian)
-        $events = Event::whereHas('jadwalUjian', function($query) {
+        $events = Event::whereHas('jadwalUjian', function ($query) {
             $query->where('kode_kelas', null)
-                  ->whereNull('id_penjadwalan');
+                ->whereNull('id_penjadwalan');
         })->get(['id_event', 'nama_event']);
 
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
@@ -645,7 +645,7 @@ class PenjadwalanController extends Controller
             foreach ($templateJadwalUjian as $template) {
                 // Cek duplikasi berdasarkan kombinasi unique untuk menghindari duplikat dalam batch
                 $duplicateKey = $penjadwalan->id_penjadwalan . '-' . $template->id_event . '-' . $template->kode_part . '-' . $template->nama_ujian;
-                
+
                 // Tambahkan ke batch hanya jika belum ada dalam batch
                 $jadwalUjianBatch[$duplicateKey] = [
                     'nama_ujian' => $template->nama_ujian,
@@ -663,7 +663,6 @@ class PenjadwalanController extends Controller
 
             // Duplikasi soal untuk semua JadwalUjian yang baru dibuat
             $this->createJadwalUjianSoal($penjadwalan);
-
         } else {
             // Fallback: Create default JadwalUjian if no template found
             $kategoriSoal = KategoriSoal::find($penjadwalan->tipe_ujian);
@@ -772,7 +771,7 @@ class PenjadwalanController extends Controller
     {
         $jadwalUjianCount = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->count();
         $jadwalUjianSoalCount = JadwalUjianSoal::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->count();
-        
+
         return [
             'jadwal_ujian_count' => $jadwalUjianCount,
             'jadwal_ujian_soal_count' => $jadwalUjianSoalCount,
@@ -787,7 +786,7 @@ class PenjadwalanController extends Controller
     {
         $hasJadwalUjian = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->exists();
         $hasJadwalUjianSoal = JadwalUjianSoal::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->exists();
-        
+
         return $hasJadwalUjian && $hasJadwalUjianSoal;
     }
 }
