@@ -130,7 +130,6 @@ class PaketSoalEditController extends Controller
             'ujian_soal' => ''
         ]);
 
-        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $event_id])
-            ->with('success', 'Paket soal berhasil dibuat!');
+        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $event_id]);
     }
 }

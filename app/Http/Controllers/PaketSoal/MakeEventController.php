@@ -46,8 +46,7 @@ class MakeEventController extends Controller
         ]);
 
         // Redirect ke halaman event manager dengan pesan sukses
-        return redirect()->route('master-data.event.getEvent')
-            ->with('success', 'Event berhasil dibuat!');
+        return redirect()->route('master-data.event.getEvent');
     }
 
     public function show($id)
@@ -107,7 +106,7 @@ class MakeEventController extends Controller
         
         $event->save();
 
-        return redirect()->route('master-data.event.getEvent')->with('success', 'Event berhasil diupdate!');
+        return redirect()->route('master-data.event.getEvent');
     }
 
     public function destroy($id)
@@ -128,8 +127,7 @@ class MakeEventController extends Controller
                 // $jadwalUjian->save();
             }
 
-            return redirect()->route('master-data.event.getEvent')
-                ->with('success', 'Event berhasil dinonaktifkan');
+            return redirect()->route('master-data.event.getEvent');
         } catch (\Exception $e) {
             return redirect()->route('master-data.event.getEvent')
                 ->with('error', 'Gagal menonaktifkan event: ' . $e->getMessage());

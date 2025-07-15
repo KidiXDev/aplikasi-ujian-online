@@ -23,7 +23,7 @@ class PaketSoalController extends Controller
             JadwalUjian::destroy($id);
 
             Log::info('Paket soal deleted successfully:', ['id' => $id]);
-            return redirect()->back()->with('success', 'Paket soal berhasil dihapus');
+            return redirect()->back();
         } catch (\Exception $e) {
             Log::error('Error deleting PaketSoal:', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Gagal menghapus paket soal');
@@ -71,8 +71,7 @@ class PaketSoalController extends Controller
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 
-        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
-            ->with(['event:id_event,nama_event', 'bidang:kode,nama']);
+        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part');
 
         if ($search) {
             $jadwalUjianQuery->where(function ($query) use ($search) {
