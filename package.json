@@ -1,4 +1,5 @@
 {
+    "name": "aplikasi-ujian-online",
     "private": true,
     "type": "module",
     "scripts": {
