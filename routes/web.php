@@ -3,7 +3,6 @@
 use App\Http\Controllers\BankSoalController;
 use App\Http\Controllers\KategoriUjianController;
 use App\Http\Controllers\MatkulController;
-use App\Http\Controllers\TestController;
 use App\Http\Controllers\UserManagerController;
 use App\Http\Controllers\UserManagerEditController;
 use App\Http\Controllers\PesertaManagerController;
@@ -11,16 +10,14 @@ use App\Http\Controllers\PesertaManagerEditController;
 use App\Http\Controllers\PesertaImportController;
 use App\Http\Controllers\JenisUjianEditController;
 use App\Http\Controllers\PenjadwalanController;
-use App\Http\Controllers\MonitoringUjianController;
-use App\Http\Controllers\EventController;
 use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\BankSoalControllerCheckbox;
 use App\Http\Controllers\PaketSoal\PaketSoalController;
 use App\Http\Controllers\PaketSoal\PaketSoalEditController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Matakuliah;
-use App\Models\PaketSoal;
 use App\Http\Controllers\DosenManagerController;
 use App\Http\Controllers\DosenManagerEditController;
 use App\Http\Controllers\DosenImportController;
@@ -31,10 +28,8 @@ use App\Http\Controllers\PaketSoal\AddSoalController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 
-
-
 Route::get('/', function () {
-    return Inertia::render('auth/login');
+    return Auth::check() ? redirect()->route('dashboard') : Inertia::render('auth/login');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -43,8 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // jadi nanti di route name-nya jadi monitoring.ujian
 
     Route::get('/paket-soal/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('paket-soal.add-soal');
-    // Login
-    Route::get('/', fn() => Inertia::render('auth/login'))->name('home');
 
     Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
 
@@ -210,21 +203,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
             // Route index untuk menampilkan semua paket soal
             Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
-            
+
             // Route untuk menampilkan paket soal berdasarkan event
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
-            
+
             // Route untuk create dengan id_event otomatis
             Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');
-            
+
             // Route untuk create biasa
             Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
-            
+
             // Route untuk store
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
             Route::post('/{event_id}', [PaketSoalEditController::class, 'store_id'])->name('store_id');
-            
+
             // Route untuk edit, update, destroy, show
             Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
             Route::put('/{paket_soal}', [PaketSoalEditController::class, 'update'])->name('update');

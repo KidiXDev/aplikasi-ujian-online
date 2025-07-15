@@ -180,7 +180,19 @@ class MonitoringUjianController extends Controller
         }
 
         if (empty($participantIds)) {
-            $studentsData = collect([])->paginate((int)$pages);
+            // Create empty paginated response manually
+            $studentsData = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]), // empty collection
+                0, // total items
+                (int)$pages, // per page
+                1, // current page
+                [
+                    'path' => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
+            $studentsData->withQueryString();
+
             $stats = [
                 'total_students' => 0,
                 'active_students' => 0,
