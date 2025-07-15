@@ -16,7 +16,7 @@ import { SearchInputMenu } from '@/components/ui/search-input-menu';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Peserta',
+        title: 'Peserta Manager',
         href: '/master-data/peserta',
     },
 ];
@@ -56,7 +56,7 @@ export default function UserManager() {
                         <CButton
                             className="bg-green-600 px-4 text-white shadow"
                             type="success"
-                            onClick={() => router.visit(route('master-data.import.view'))}
+                            onClick={() => router.visit(route('master-data.peserta.import.view'))}
                         >
                             Import
                         </CButton>

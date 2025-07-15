@@ -140,6 +140,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('create', [PesertaManagerEditController::class, 'create'])->name('create');
             Route::post('/', [PesertaManagerEditController::class, 'store'])->name('store');
             Route::post('import', [PesertaImportController::class, 'import'])->name('import');
+            Route::get('import', [PesertaImportController::class, 'importView'])->name('import.view');
 
             // ✅ Tambahan dari kode kedua:
             Route::put('{peserta}/toggle-status', [PesertaManagerController::class, 'toggleStatus'])->name('toggle-status');
@@ -148,9 +149,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
 
 
-        Route::prefix('import')->name('import.')->group(function () {
-            Route::get('/', [PesertaImportController::class, 'importView'])->name('view');
-        });
+        // Route::prefix('import')->name('import.')->group(function () {
+        //     Route::get('/', [PesertaImportController::class, 'importView'])->name('view');
+        // });
 
         // Route show bank soal
         Route::get('bank-soal', [BankSoalController::class, 'index'])->name('bank.soal');
