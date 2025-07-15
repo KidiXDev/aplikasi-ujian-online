@@ -128,24 +128,16 @@ export default function KategoriUjianManager() {
             // Edit kategori
             put(route('master-data.kategori-soal.update', editData.id), {
                 onSuccess: () => {
-                    toast.success('Kategori ujian berhasil diperbarui');
                     setFormOpen(false);
                     reset();
-                },
-                onError: () => {
-                    toast.error('Gagal memperbarui kategori ujian');
                 },
             });
         } else {
             // Tambah kategori baru
             post(route('master-data.kategori-soal.store'), {
                 onSuccess: () => {
-                    toast.success('Kategori ujian berhasil ditambahkan');
                     setFormOpen(false);
                     reset();
-                },
-                onError: () => {
-                    toast.error('Gagal menambahkan kategori ujian');
                 },
             });
         }
@@ -163,13 +155,11 @@ export default function KategoriUjianManager() {
                         setTargetId(null);
                     },
                     onError: () => {
-                        toast.error('Gagal hapus data kategori ujian');
                         setDeleteOpen(false);
                     }
                 });
             }
         } catch {
-            toast.error('Gagal hapus data');
             setDeleteOpen(false);
         }
     };
