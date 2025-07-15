@@ -172,6 +172,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('bank-soal', [BankSoalController::class, 'store'])->name('bank.soal.store');
 
+        // API route untuk dropdown kategori soal di bank soal
+        Route::get('/kategorisoal', [BankSoalController::class, 'getKategoriSoal']);
+
         // Route untuk matakuliah dipindahkan ke dalam grup master-data
         Route::prefix('matakuliah')->name('matakuliah.')->group(function () {
             Route::get('/', [MatkulController::class, 'index'])->name('index');
