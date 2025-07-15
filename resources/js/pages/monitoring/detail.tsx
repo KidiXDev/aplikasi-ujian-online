@@ -367,6 +367,15 @@ function StudentTable({
 
     const columns = [
         {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (student: Student) => {
+                const index = studentsData.data.findIndex((s) => s.id === student.id);
+                const rowNumber = (studentsData.current_page - 1) * studentsData.per_page + index + 1;
+                return <div className="text-center font-medium">{rowNumber}</div>;
+            },
+        },
+        {
             label: 'Id',
             className: 'w-[80px] text-center',
             render: (student: Student) => {

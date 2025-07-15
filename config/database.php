@@ -63,11 +63,11 @@ return [
         ],
 
         'data_db' => [
-            'driver' => 'mysql',
+            'driver' => in_array(env('APP_ENV'), ['testing', 'ci']) ? 'sqlite' : 'mysql',
             'url' => env('DB2_URL'),
             'host' => env('DB2_HOST', '127.0.0.1'),
             'port' => env('DB2_PORT', '3306'),
-            'database' => env('DB2_DATABASE', 'laravel'),
+            'database' => in_array(env('APP_ENV'), ['testing', 'ci']) ? ':memory:' : env('DB2_DATABASE', 'laravel'),
             'username' => env('DB2_USERNAME', 'root'),
             'password' => env('DB2_PASSWORD', ''),
             'unix_socket' => env('DB2_SOCKET', ''),

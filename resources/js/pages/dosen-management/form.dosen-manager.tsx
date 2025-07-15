@@ -134,9 +134,9 @@ export default function Dashboard() {
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="space-between flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} User</h1>
+                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Tambah'} Data Dosen</h1>
                     <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('master-data.dosen.manager'))}>
-                        Back
+                        Kembali
                     </CButton>
                 </div>
                 <Form {...form}>
@@ -226,7 +226,7 @@ export default function Dashboard() {
                             name="aktif"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Aktif</FormLabel>
+                                    <FormLabel>Status</FormLabel>
                                     <FormControl>
                                         <Select
                                             value={field.value ? 'true' : 'false'}
@@ -236,8 +236,8 @@ export default function Dashboard() {
                                                 <SelectValue placeholder="Pilih status" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="true">Aktif</SelectItem>
-                                                <SelectItem value="false">Tidak Aktif</SelectItem>
+                                                <SelectItem value="true">Active</SelectItem>
+                                                <SelectItem value="false">Non Active</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
@@ -245,7 +245,9 @@ export default function Dashboard() {
                                 </FormItem>
                             )}
                         />
-                        <CButton type="submit">Save</CButton>
+                         <CButton type="submit" className="bg-green-600 hover:bg-green-700 md:w-24">
+                            Save
+                        </CButton>
                     </form>
                 </Form>
             </div>

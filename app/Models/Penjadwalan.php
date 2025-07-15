@@ -30,6 +30,7 @@ class Penjadwalan extends Model
         'kuota',
         'status',
         'jenis_ujian',
+        'kode_jadwal',  // Tambahkan ini
     ];
 
     protected $casts = [
@@ -37,9 +38,10 @@ class Penjadwalan extends Model
         'kuota' => 'integer',
         'status' => 'integer',
         'jenis_ujian' => 'integer',
+        'tipe_ujian' => 'integer',  // Tambahkan casting untuk tipe_ujian
     ];
 
-    // tipe_ujian is id from t_kat_soal
+    // Relasi ke KategoriSoal melalui tipe_ujian
     public function jenis_ujian()
     {
         return $this->belongsTo(KategoriSoal::class, 'tipe_ujian', 'id');
@@ -51,6 +53,14 @@ class Penjadwalan extends Model
     public function event()
     {
         return $this->belongsTo(Event::class, 'id_paket_ujian', 'id_event');
+    }
+
+    /**
+     * Get jadwal ujian yang terkait dengan penjadwalan ini
+     */
+    public function jadwalUjian()
+    {
+        return $this->hasMany(JadwalUjian::class, 'id_penjadwalan', 'id_penjadwalan');
     }
 
     // Accessor to map the field names to match what the UI expects
@@ -109,5 +119,11 @@ class Penjadwalan extends Model
         // Map status to Remidi or Regular based on your business logic
         // This is a placeholder - adjust according to your needs
         return ($this->attributes['status'] ?? 0) == 1 ? 'Regular' : 'Remidi';
+    }
+
+    // Relasi ke MBidang berdasarkan tipe_ujian (kode)
+    public function mbidangRelation()
+    {
+        return $this->hasOne(Mbidang::class, 'kode', 'tipe_ujian');
     }
 }

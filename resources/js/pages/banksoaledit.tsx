@@ -180,7 +180,7 @@ export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
         // Add new fetch for kategori options
         const fetchKategoriOptions = async () => {
             try {
-                const res = await axios.get('/master-data/kategorisoal');
+                const res = await axios.get('/master-data/kategori-soal-dropdown');
                 console.log('Kategori Soal response:', res.data);
                 setKategoriOptions(res.data);
             } catch (error) {
@@ -373,7 +373,7 @@ export default function BankSoalEdit({ soal }: { soal: SoalForm }) {
                             className="w-full rounded border px-3 py-2"
                             value={data.jenis_soal}
                             onChange={(e) => setData('jenis_soal', e.target.value)}
-                            placeholder="Masukkan kode soal"
+                            placeholder="Example: U, A"
                         />
                     </div>
 

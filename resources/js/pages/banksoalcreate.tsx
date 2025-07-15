@@ -1,10 +1,17 @@
-import Editor from '@/components/editor/textrich';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState, lazy, Suspense } from 'react';
 import { toast } from 'sonner';
+
+// Lazy load the Editor component
+const LazyEditor = lazy(() => import('@/components/editor/textrich'));
+
+// Placeholder loading component for Suspense
+const EditorSkeleton = () => (
+    <div className="w-full h-36 bg-gray-100 animate-pulse rounded-lg"></div>
+);
 
 const breadcrumbs = [
     {
@@ -88,32 +95,98 @@ export default function BankSoalCreate() {
     const [bidangOptions, setBidangOptions] = useState<BidangOption[]>([]);
     const [kategoriOptions, setKategoriOptions] = useState<KategoriSoalOption[]>([]);
     const [showUpload, setShowUpload] = useState(false);
+    
+    // Add loading states
+    const [loadingBidang, setLoadingBidang] = useState(true);
+    const [loadingKategori, setLoadingKategori] = useState(true);
+    
+    // Track which editors are visible
+    const [visibleEditors, setVisibleEditors] = useState({
+        header_soal: false,
+        body_soal: false, 
+        footer_soal: false,
+        jw_1: false,
+        jw_2: false,
+        jw_3: false,
+        jw_4: false
+    });
 
-    // Update the useEffect that fetches bidang options
+    // Intersection Observer for editors
     useEffect(() => {
-        const fetchBidangOptions = async () => {
-            try {
-                const res = await axios.get('/master-data/jenisujian');
-                setBidangOptions(res.data);
-            } catch (error) {
-                console.error('Failed to fetch bidang options:', error);
-            }
+        const observerOptions = {
+            root: null,
+            rootMargin: '100px',
+            threshold: 0.1
         };
-        fetchBidangOptions();
+
+        const observerCallback = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach(entry => {
+                const id = entry.target.id;
+                if (entry.isIntersecting) {
+                    setVisibleEditors(prev => ({ ...prev, [id]: true }));
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+        
+        // Observe all editor containers
+        ['header_soal', 'body_soal', 'footer_soal', 'jw_1', 'jw_2', 'jw_3', 'jw_4'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) observer.observe(element);
+        });
+
+        return () => observer.disconnect();
     }, []);
 
-    // Fetch kategori options
+    // Update the useEffect that fetches bidang options with AbortController
     useEffect(() => {
-        const fetchKategoriOptions = async () => {
+        const controller = new AbortController();
+        
+        const fetchBidangOptions = async () => {
+            setLoadingBidang(true);
             try {
-                const res = await axios.get('/master-data/kategorisoal');
-                console.log('Kategori Soal response:', res.data); // Tambahkan logging
-                setKategoriOptions(res.data);
+                const res = await axios.get('/master-data/jenisujian', {
+                    signal: controller.signal
+                });
+                setBidangOptions(res.data);
             } catch (error) {
-                console.error('Failed to fetch kategori options:', error);
+                if (!(error instanceof axios.Cancel)) {
+                    console.error('Failed to fetch bidang options:', error);
+                }
+            } finally {
+                setLoadingBidang(false);
             }
         };
+        
+        fetchBidangOptions();
+        
+        return () => controller.abort();
+    }, []);
+
+    // Fetch kategori options with AbortController
+    useEffect(() => {
+        const controller = new AbortController();
+        
+        const fetchKategoriOptions = async () => {
+            setLoadingKategori(true);
+            try {
+                const res = await axios.get('/master-data/kategori-soal-dropdown', {
+                    signal: controller.signal
+                });
+                setKategoriOptions(res.data);
+            } catch (error) {
+                if (!(error instanceof axios.Cancel)) {
+                    console.error('Failed to fetch kategori options:', error);
+                }
+            } finally {
+                setLoadingKategori(false);
+            }
+        };
+        
         fetchKategoriOptions();
+        
+        return () => controller.abort();
     }, []);
 
     const handleSubmit = async (e: FormEvent) => {
@@ -140,6 +213,21 @@ export default function BankSoalCreate() {
         });
     };
 
+    // Render editor with lazy loading
+    const renderEditor = (id: string, value: string, onChange: (value: string) => void) => (
+        <div id={id} className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
+            <TooltipProvider>
+                {visibleEditors[id as keyof typeof visibleEditors] ? (
+                    <Suspense fallback={<EditorSkeleton />}>
+                        <LazyEditor value={value} onChange={onChange} />
+                    </Suspense>
+                ) : (
+                    <EditorSkeleton />
+                )}
+            </TooltipProvider>
+        </div>
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Soal" />
@@ -152,7 +240,7 @@ export default function BankSoalCreate() {
                         value={data.kategori_soal}
                         onChange={(e) => setData('kategori_soal', e.target.value)}
                         options={[
-                            { value: '', label: 'Pilih Kategori Soal' },
+                            { value: '', label: loadingKategori ? 'Loading...' : 'Pilih Kategori Soal' },
                             ...(kategoriOptions?.map((item) => ({
                                 value: item.kategori,
                                 label: item.kategori,
@@ -162,10 +250,10 @@ export default function BankSoalCreate() {
 
                     <Dropdown
                         label="Jenis Ujian"
-                        value={data.kd_mapel} // Changed from kategori_soal to kd_mapel
+                        value={data.kd_mapel}
                         onChange={(e) => setData('kd_mapel', e.target.value)}
                         options={[
-                            { value: '', label: 'Pilih Jenis Ujian' },
+                            { value: '', label: loadingBidang ? 'Loading...' : 'Pilih Jenis Ujian' },
                             ...(bidangOptions?.map((item) => ({
                                 value: item.kode,
                                 label: `${item.kode} - ${item.nama}`,
@@ -181,7 +269,7 @@ export default function BankSoalCreate() {
                             className="w-full rounded border px-3 py-2"
                             value={data.jenis_soal}
                             onChange={(e) => setData('jenis_soal', e.target.value)}
-                            placeholder="Masukkan kode soal"
+                            placeholder="Example: U, A"
                         />
                     </div>
 
@@ -249,31 +337,19 @@ export default function BankSoalCreate() {
                     {/* Header Soal */}
                     <div>
                         <label className="text-m text-foreground">Header Soal</label>
-                        <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
-                            <TooltipProvider>
-                                <Editor value={data.header_soal} onChange={(value: string) => setData('header_soal', value)} />
-                            </TooltipProvider>
-                        </div>
+                        {renderEditor('header_soal', data.header_soal, (value: string) => setData('header_soal', value))}
                     </div>
 
                     {/* Body Soal */}
                     <div>
                         <label className="text-m text-foreground">Body Soal</label>
-                        <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
-                            <TooltipProvider>
-                                <Editor value={data.body_soal} onChange={(value: string) => setData('body_soal', value)} />
-                            </TooltipProvider>
-                        </div>
+                        {renderEditor('body_soal', data.body_soal, (value: string) => setData('body_soal', value))}
                     </div>
 
                     {/* Footer Soal */}
                     <div>
                         <label className="text-m text-foreground">Footer Soal</label>
-                        <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
-                            <TooltipProvider>
-                                <Editor value={data.footer_soal} onChange={(value: string) => setData('footer_soal', value)} />
-                            </TooltipProvider>
-                        </div>
+                        {renderEditor('footer_soal', data.footer_soal, (value: string) => setData('footer_soal', value))}
                     </div>
 
                     {/* Jawaban Soal */}
@@ -282,14 +358,7 @@ export default function BankSoalCreate() {
                         return (
                             <div key={key}>
                                 <label className="text-m text-foreground">{label}</label>
-                                <div className="bg-background w-full space-y-2 overflow-hidden rounded-lg border">
-                                    <TooltipProvider>
-                                        <Editor
-                                            value={data[key as keyof SoalForm]?.toString() || ''}
-                                            onChange={(value: string) => setData(key as keyof SoalForm, value)}
-                                        />
-                                    </TooltipProvider>
-                                </div>
+                                {renderEditor(key, data[key as keyof SoalForm]?.toString() || '', (value: string) => setData(key as keyof SoalForm, value))}
                             </div>
                         );
                     })}

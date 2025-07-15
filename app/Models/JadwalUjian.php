@@ -49,5 +49,44 @@ class JadwalUjian extends Model
         return $this->belongsTo(Bidang::class, 'kode_part', 'kode');
     }
 
-    
+    /**
+     * Get peserta yang terdaftar dalam ujian ini berdasarkan kode_kelas
+     * kode_kelas berisi ID peserta yang dipisahkan koma (misal: "1,2,3,4")
+     */
+    public function pesertaTerdaftar()
+    {
+        if (!$this->kode_kelas) {
+            return collect();
+        }
+        
+        $pesertaIds = explode(',', $this->kode_kelas);
+        $pesertaIds = array_filter(array_map('trim', $pesertaIds));
+        
+        if (empty($pesertaIds)) {
+            return collect();
+        }
+        
+        return Peserta::whereIn('id', $pesertaIds)->get();
+    }
+
+    /**
+     * Accessor untuk mendapatkan array ID peserta dari kode_kelas
+     */
+    public function getPesertaIdsAttribute()
+    {
+        if (!$this->kode_kelas) {
+            return [];
+        }
+        
+        $pesertaIds = explode(',', $this->kode_kelas);
+        return array_filter(array_map('trim', $pesertaIds));
+    }
+
+    /**
+     * Accessor untuk mendapatkan jumlah peserta terdaftar
+     */
+    public function getJumlahPesertaAttribute()
+    {
+        return count($this->peserta_ids);
+    }
 }
