@@ -8,6 +8,21 @@ export default function ImportPeserta() {
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    type BreadcrumbItem = {
+        title: string;
+        href: string;
+    };
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Peserta Manager',
+            href: '/master-data/peserta',
+        },
+        {
+            title: 'Import',
+            href: '/import-peserta',
+        },
+    ];
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -33,7 +48,7 @@ export default function ImportPeserta() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Import Data Peserta" />
 
             <div className="space-y-4 p-6">

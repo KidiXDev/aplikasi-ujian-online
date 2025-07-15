@@ -48,13 +48,15 @@ export default function PesertaForm() {
         },
     ];
 
+    const defaultJurusan = isEdit ? (peserta?.jurusan ?? 0) : (jurusanList?.[0]?.id_jurusan ?? 0);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             username: peserta?.username ?? '',
             password: isEdit ? '' : 'password123',
-            status: peserta?.status ?? 0,
-            jurusan: peserta?.jurusan ?? 0,
+            status: peserta?.status ?? 1,
+            jurusan: defaultJurusan,
             nis: peserta?.nis ?? '',
             nama: peserta?.nama ?? '',
         },
@@ -166,7 +168,7 @@ export default function PesertaForm() {
                             name="jurusan"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Jurusan</FormLabel>
+                                    <FormLabel>Kategori</FormLabel>
                                     <FormControl>
                                         <Select value={field.value?.toString() ?? ''} onValueChange={(val) => field.onChange(parseInt(val))}>
                                             <SelectTrigger>
