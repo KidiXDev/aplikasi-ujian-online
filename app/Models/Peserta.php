@@ -24,6 +24,7 @@ class Peserta extends Model
         'jurusan',
         'nis',
         'nama',
+        'filter', // tambahkan ini
     ];
 
     // (Opsional) Cast agar tipe data otomatis dikonversi sesuai
@@ -31,6 +32,7 @@ class Peserta extends Model
         'id' => 'integer',
         'status' => 'integer',
         'jurusan' => 'integer',
+        'filter' => 'integer', // tambahkan ini
     ];
 
     public function jurusanRef()

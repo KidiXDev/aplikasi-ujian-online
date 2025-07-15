@@ -1,6 +1,6 @@
 // Penjadwalan Manager Page (migrated from exam-schedule/exam-manager.tsx)
 import AppLayout from '@/layouts/app-layout';
-import { PageFilter, PageProps, PaginatedResponse, type BreadcrumbItem } from '@/types';
+import { PageFilter, PageProps, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -34,8 +34,19 @@ type JadwalUjian = {
     kode_jadwal: string;
     online_offline: number;
     flag: number;
-    paket_ujian: string;  // Data dari JadwalUjian
+    paket_ujian: string; // Data dari JadwalUjian
     jadwal_ujian_count: number;
+};
+
+// Tambahkan pada bagian import atau definisi tipe PaginatedResponse jika belum ada
+type PaginatedResponse<T> = {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from?: number;
+    to?: number;
 };
 
 export default function PenjadwalanManager() {
@@ -51,21 +62,10 @@ export default function PenjadwalanManager() {
             <Head title="Jadwal Ujian" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <ContentTitle 
-                    title="Jadwal Ujian" 
-                    showButton 
-                    onButtonClick={() => router.visit(route('penjadwalan.create'))} 
-                />
+                <ContentTitle title="Jadwal Ujian" showButton onButtonClick={() => router.visit(route('penjadwalan.create'))} />
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector 
-                        currentValue={examData.per_page} 
-                        options={[10, 25, 50, 100]} 
-                        routeName="penjadwalan.index" 
-                    />
-                    <SearchInputMenu 
-                        defaultValue={filters.search} 
-                        routeName="penjadwalan.index" 
-                    />
+                    <EntriesSelector currentValue={examData.per_page} options={[10, 25, 50, 100]} routeName="penjadwalan.index" />
+                    <SearchInputMenu defaultValue={filters.search} routeName="penjadwalan.index" />
                 </div>
                 <PenjadwalanTable data={examData} pageFilters={filters} />
             </div>
@@ -91,7 +91,7 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
                     onSuccess: () => {
                         // Force refresh halaman setelah delete
                         router.reload({ only: ['data'] });
-                    }
+                    },
                 });
             }
         } catch {
@@ -113,6 +113,15 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
     };
 
     const columns = [
+        {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (exam: JadwalUjian) => {
+                const index = examData.data.findIndex((s) => s.id_penjadwalan === exam.id_penjadwalan);
+                const rowNumber = (examData.current_page - 1) * examData.per_page + index + 1;
+                return <div className="text-center font-medium">{rowNumber}</div>;
+            },
+        },
         {
             label: 'Tipe Ujian',
             render: (exam: JadwalUjian) => exam.tipe_ujian,
@@ -142,19 +151,9 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
             className: 'w-[100px] text-center',
             render: (exam: JadwalUjian) => (
                 <div className="flex justify-center gap-2">
-                    <CButtonIcon 
-                        icon={Users} 
-                        onClick={() => router.visit(route('penjadwalan.peserta', exam.id_penjadwalan))} 
-                    />
-                    <CButtonIcon 
-                        icon={Pencil} 
-                        onClick={() => router.visit(route('penjadwalan.edit', exam.id_penjadwalan))} 
-                    />
-                    <CButtonIcon 
-                        icon={Trash2} 
-                        type="danger" 
-                        onClick={() => handleDelete(exam.id_penjadwalan)} 
-                    />
+                    <CButtonIcon icon={Users} onClick={() => router.visit(route('penjadwalan.peserta', exam.id_penjadwalan))} />
+                    <CButtonIcon icon={Pencil} onClick={() => router.visit(route('penjadwalan.edit', exam.id_penjadwalan))} />
+                    <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(exam.id_penjadwalan)} />
                 </div>
             ),
         },
@@ -165,6 +164,7 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
             <div className="flex flex-col gap-4">
                 <CustomTable columns={columns} data={examData.data} />
 
+                {/* Show entries info */}
                 <PaginationWrapper
                     currentPage={examData.current_page}
                     lastPage={examData.last_page}
@@ -178,4 +178,3 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
         </>
     );
 }
-
