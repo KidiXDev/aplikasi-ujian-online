@@ -12,7 +12,7 @@ import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type BreadcrumbItem } from '@/types';
@@ -227,7 +227,7 @@ export default function KategoriUjianManager() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 {/* Judul + tombol tambah */}
                 <div className="flex items-center justify-between">
-                    <ContentTitle title="Kategori Ujian" />
+                    <ContentTitle title="Kategori Ujian" showButton={false} />
                     <Button onClick={handleAdd} className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         Tambah Kategori Ujian
