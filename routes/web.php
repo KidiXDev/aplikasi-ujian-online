@@ -214,11 +214,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Route untuk menampilkan paket soal berdasarkan event
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
             
-            // Route untuk create - PASTIKAN INI ADA DAN BENAR
-            // Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
+            // Route untuk create dengan id_event otomatis
+            Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');
+            
+            // Route untuk create biasa
             Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
+            
+            // Route untuk store
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
+            Route::post('/{event_id}', [PaketSoalEditController::class, 'store_id'])->name('store_id');
             
             // Route untuk edit, update, destroy, show
             Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
@@ -241,6 +246,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/bank-soal-checkbox/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('bank-soal-checkbox.edit');
         Route::put('/bank-soal-checkbox/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('bank-soal-checkbox.update');
+        Route::get('/bank-soal-checkbox/{paket_soal_id}/back', [BankSoalControllerCheckbox::class, 'back'])->name('bank-soal-checkbox.back');
     });
 
     // User Management routes

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\PaketSoal;
 
 use App\Http\Controllers\Controller;
-use App\Models\JadwalUjian;
 use Illuminate\Http\Request;
+use App\Models\JadwalUjian;
 use App\Models\JadwalUjianSoal;
-use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
 use App\Models\Event;
 use App\Models\Bidang;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class PaketSoalController extends Controller
 {
@@ -30,48 +30,50 @@ class PaketSoalController extends Controller
         }
     }
     
+    // Method untuk menampilkan paket soal berdasarkan event
     public function index(Request $request, $id_event)
     {
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 
-        // Query dasar: ambil jadwal ujian berdasarkan id_event
-        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
-            ->where('id_event', $id_event)
-            ->with('event:id_event,nama_event');
+        // Ambil data event
+        $event = Event::findOrFail($id_event);
 
-        // Jika ada pencarian, filter juga
+        // Query jadwal ujian berdasarkan event
+        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
+            ->with(['event:id_event,nama_event', 'bidang:kode,nama'])
+            ->where('id_event', $id_event);
+
         if ($search) {
-            $jadwalUjianQuery->where(function ($query) use ($search) {
-                $query->where('nama_ujian', 'like', '%' . $search . '%')
-                    ->orWhereHas('event', function ($q) use ($search) {
-                        $q->where('nama_event', 'like', '%' . $search . '%');
-                    });
-            });
+            $jadwalUjianQuery->where('nama_ujian', 'like', '%' . $search . '%');
         }
 
-        // Pagination
         $jadwalUjian = $jadwalUjianQuery->paginate($pages);
 
-        // Ambil data total soal untuk semua ujian
-        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
+        // Preserve query parameters untuk pagination
+        $jadwalUjian->appends($request->query());
+
+        // Ambil data total soal
+        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')
+            ->whereIn('id_ujian', $jadwalUjian->pluck('id_ujian'))
+            ->get();
 
         return Inertia::render('master-data/paket-soal/paket-soal-manager', [
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
+            'event' => $event, // Kirim data event ke frontend
         ]);
     }
 
+    // Method untuk menampilkan semua paket soal
     public function indexAll(Request $request)
     {
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 
-        // Query untuk menampilkan semua paket soal
         $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
-            ->with('event:id_event,nama_event');
+            ->with(['event:id_event,nama_event', 'bidang:kode,nama']);
 
-        // Filter search jika ada
         if ($search) {
             $jadwalUjianQuery->where(function ($query) use ($search) {
                 $query->where('nama_ujian', 'like', '%' . $search . '%')
@@ -81,15 +83,17 @@ class PaketSoalController extends Controller
             });
         }
 
-        // Pagination
         $jadwalUjian = $jadwalUjianQuery->paginate($pages);
 
-        // Ambil data total soal
+        // Preserve query parameters untuk pagination
+        $jadwalUjian->appends($request->query());
+
         $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
 
         return Inertia::render('master-data/paket-soal/paket-soal-manager', [
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
+            // Tidak ada event untuk index all
         ]);
     }
 

@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 
 import { CAlertDialog } from '@/components/c-alert-dialog';
 import { ContentTitle } from '@/components/content-title';
@@ -34,17 +34,21 @@ export default function PaketSoalManager() {
   const [targetId, setTargetId] = useState<number | null>(null);
 
   // Ambil data dari props inertia
-  const { jadwalUjian = { data: [], current_page: 1, last_page: 1, per_page: 10, total: 0 }, jadwalUjianSoal = [] } =
-    usePage().props as unknown as {
-      jadwalUjian: {
-        data: JadwalUjianType[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-      };
-      jadwalUjianSoal: JadwalUjianSoalType[];
+  const { 
+    jadwalUjian = { data: [], current_page: 1, last_page: 1, per_page: 10, total: 0 }, 
+    jadwalUjianSoal = [],
+    event // Tambahkan event dari props
+  } = usePage().props as unknown as {
+    jadwalUjian: {
+      data: JadwalUjianType[];
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
     };
+    jadwalUjianSoal: JadwalUjianSoalType[];
+    event?: { id_event: number; nama_event: string };
+  };
 
   // Gabungkan data jadwalUjian dan jadwalUjianSoal berdasarkan id_ujian
   const data = jadwalUjian.data.map((item) => {
@@ -53,7 +57,7 @@ export default function PaketSoalManager() {
       id: item.id_ujian,
       nama: item.nama_ujian,
       event: item.event?.nama_event ?? item.id_event,
-      bidang: item.bidang?.nama ?? item.kode_part, // tampilkan nama bidang jika ada
+      bidang: item.bidang?.nama ?? item.kode_part,
       jumlah: soal ? soal.total_soal : 0,
     };
   });
@@ -84,9 +88,8 @@ export default function PaketSoalManager() {
   };
 
   const handleBack = () => {
-    // Gunakan window.history.back() untuk kembali ke state sebelumnya
-    window.history.back();
-  };
+    router.visit(route('master-data.event.getEvent'));
+    };
 
   // Perbaiki breadcrumbs
   const breadcrumbs = [
@@ -114,10 +117,6 @@ export default function PaketSoalManager() {
             onClick={() => router.visit(`/master-data/bank-soal-checkbox/${d.id}/edit`)}
           />
           <CButtonIcon
-            icon={Pencil}
-            onClick={() => router.visit(`/master-data/paket-soal/${d.id}`)}
-          />
-          <CButtonIcon
             icon={Trash2}
             type="danger"
             onClick={() => handleDelete(d.id)}
@@ -143,22 +142,32 @@ export default function PaketSoalManager() {
         </button>
 
         <ContentTitle 
-          title="Part" 
+          title={event ? `Paket Soal - ${event.nama_event}` : "Data Paket Soal"} 
           showButton 
-          onButtonClick={() => router.visit(route('master-data.create'))} 
+          onButtonClick={() => {
+            // Jika ada event dari props, gunakan untuk create dengan event ID
+            if (event?.id_event) {
+              router.visit(`/master-data/paket-soal/create/${event.id_event}`);
+            } else {
+              // Jika tidak ada event, gunakan create biasa
+              router.visit('/master-data/paket-soal/create-event');
+            }
+          }}
         />
 
         <div className="mt-4 flex items-center justify-between">
           <EntriesSelector
             currentValue={jadwalUjian.per_page}
             options={[10, 25, 50]}
-            routeName="master-data.paket-soal.index"
+            routeName={event ? "master-data.paket-soal.show-by-event" : "master-data.paket-soal.index"}
             paramName="pages"
+            routeParams={event ? { id_event: event.id_event } : {}}
           />
           <SearchInputMenu
             defaultValue={''}
-            routeName="master-data.paket-soal.index"
+            routeName={event ? "master-data.paket-soal.show-by-event" : "master-data.paket-soal.index"}
             paramName="search"
+            routeParams={event ? { id_event: event.id_event } : {}}
           />
         </div>
 
@@ -170,15 +179,10 @@ export default function PaketSoalManager() {
           perPage={jadwalUjian.per_page}
           total={jadwalUjian.total}
           onNavigate={(page) => {
-            // Gunakan URL yang benar untuk pagination
-            const currentUrl = window.location.pathname;
-            const isEventSpecific = currentUrl.includes('/master-data/paket-soal/') && 
-                                   currentUrl.split('/').length > 4;
-            
-            if (isEventSpecific) {
-              // Jika sedang di halaman event specific
-              const idEvent = currentUrl.split('/').pop();
-              router.visit(`/master-data/paket-soal/${idEvent}`, {
+            // Perbaiki logika pagination berdasarkan keberadaan event
+            if (event && event.id_event) {
+              // Jika ada event, gunakan route show-by-event
+              router.visit(route('master-data.paket-soal.show-by-event', event.id_event), {
                 data: {
                   pages: jadwalUjian.per_page,
                   page
@@ -186,8 +190,8 @@ export default function PaketSoalManager() {
                 preserveScroll: true
               });
             } else {
-              // Jika di halaman index semua paket soal
-              router.visit('/master-data/paket-soal', {
+              // Jika tidak ada event, gunakan route index
+              router.visit(route('master-data.paket-soal.index'), {
                 data: {
                   pages: jadwalUjian.per_page,
                   page
