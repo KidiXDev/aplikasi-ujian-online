@@ -5,12 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\MatchSoal;
-use App\Models\PaketSoal;
-use Illuminate\Support\Facades\Log;
 use App\Models\JadwalUjian;
 use App\Models\JadwalUjianSoal;
-use App\Models\Bidang;
 
 class BankSoalControllerCheckbox extends Controller
 {
@@ -144,4 +140,17 @@ class BankSoalControllerCheckbox extends Controller
             ->back()
             ->with('success', 'Soal berhasil diperbarui');
     }
-}
+
+    public function back($paket_soal_id)
+    {
+        // Cari jadwal ujian berdasarkan id_ujian_ujian
+        $jadwalUjian = JadwalUjian::findOrFail($paket_soal_id);
+        $id_event = $jadwalUjian->id_event;   $id_event = $jadwalUjian->id_event;
+                
+        // Redirect ke halaman paket soal berdasarkan event       // Redirect ke halaman paket soal berdasarkan event
+        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $id_event]);        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $id_event]);
+    }    
+}    
+
+
+

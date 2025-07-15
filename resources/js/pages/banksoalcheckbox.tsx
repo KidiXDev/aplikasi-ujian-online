@@ -91,12 +91,16 @@ export default function BankSoalCheckbox() {
     if (props.flash?.error) toast.error(props.flash.error);
   }, [props.flash]);
 
-  /** Fetch paket list -----------------------------------------------------*/
-  // Removed unused paketList state and effect
-
-  /** Save checked soal ----------------------------------------------------*/
-  // Removed unused handleSave function
-
+  /** Handle back navigation -----------------------------------------------*/
+  const handleBack = () => {
+    if (paketSoal?.id_ujian) {
+      // Gunakan route back yang sudah ada
+      router.visit(route('master-data.bank-soal-checkbox.back', paketSoal.id_ujian));
+    } else {
+      // Fallback ke history back
+      window.history.back();
+    }
+  };
 
   /** Render ---------------------------------------------------------------*/
   return (
@@ -105,14 +109,15 @@ export default function BankSoalCheckbox() {
 
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         {/* Tombol Kembali */}
-        {paketSoal && (
-          <button
-            onClick={() => router.visit('/master-data/paket-soal')}
-            className="mb-4 self-start rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700"
-          >
-            Kembali
-          </button>
-        )}
+        <button
+          onClick={handleBack}
+          className="mb-4 self-start flex items-center gap-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700 transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Kembali
+        </button>
 
         <ContentTitleNoadd title="Bank Soal Check Box" />
 
@@ -134,9 +139,6 @@ export default function BankSoalCheckbox() {
                   {selectedSoalIds.length} soal
                 </p>
               </div>
-            </div>
-            <div className="mt-3 text-sm text-blue-600">
-              <strong>Info:</strong> Menampilkan soal dengan kode mapel: {paketSoal.kode_part}
             </div>
           </div>
         )}
