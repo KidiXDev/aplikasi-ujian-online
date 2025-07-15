@@ -82,12 +82,16 @@ export default function Banksoal() {
     // Store all data locally for client-side filtering
     const [soalData, setSoalData] = useState(dataSoal.data);
     const [filteredData, setFilteredData] = useState(dataSoal.data);
+    // Add a flag to track if filters are active
+    const [filtersActive, setFiltersActive] = useState(false);
     
     // Update data when props change
     useEffect(() => {
         setSoalData(dataSoal.data);
         setFilteredData(dataSoal.data);
-    }, [dataSoal.data]);
+        // Only consider search as a filter that resets numbering
+        setFiltersActive(!!filters.search);
+    }, [dataSoal.data, filters]);
     
     // Filter data when search query changes
     useEffect(() => {
@@ -148,6 +152,7 @@ export default function Banksoal() {
                     }} 
                     pageFilters={filters}
                     searchQuery={searchQuery}
+                    filtersActive={filtersActive}
                 />
             </div>
         </AppLayout>
@@ -186,6 +191,8 @@ function OrderFilter({ defaultValue }: { defaultValue: string }) {
                 search: filters.search || '',
                 pages: perPage,
                 kd_mapel: selectedKdMapel,
+                // Reset to page 1 when changing filters
+                page: 1
             },
             preserveState: true,
             preserveScroll: true,
@@ -200,6 +207,8 @@ function OrderFilter({ defaultValue }: { defaultValue: string }) {
                 search: filters.search || '',
                 pages: perPage,
                 kd_mapel: selected,
+                // Reset to page 1 when changing filters
+                page: 1
             },
             preserveState: true,
             preserveScroll: true,
@@ -324,11 +333,13 @@ function renderContentWithBase64(content: string | null, searchQuery: string = '
 function BankSoalTable({ 
     data, 
     pageFilters,
-    searchQuery = '' 
+    searchQuery = '',
+    filtersActive = false
 }: { 
     data: PaginatedResponse<Soal>; 
     pageFilters: PageFilter;
     searchQuery?: string;
+    filtersActive?: boolean;
 }) {
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
@@ -365,11 +376,53 @@ function BankSoalTable({
         });
     };
 
+    // Modified: Get offset value based on filters, order, and filter type
+    const getStartingNumber = () => {
+        // For descending order (newest first), we need to calculate from total items
+        if (pageFilters.order === 'desc') {
+            // Calculate the position of the first item on this page from the end
+            const totalItems = data.total;
+            const firstItemPosition = totalItems - (data.current_page - 1) * data.per_page;
+            return firstItemPosition;
+        }
+        
+        // For search filters, we want to restart numbering from 1
+        if (filtersActive) {
+            // If using search, restart numbering
+            if (data.current_page === 1) return 1;
+            return (data.current_page - 1) * data.per_page + 1;
+        }
+        
+        // For non-search filters like kd_mapel, maintain the numbering
+        // If we're on the first page, return 1
+        if (data.current_page === 1) return 1;
+        
+        // Otherwise calculate based on current page and per_page
+        return (data.current_page - 1) * data.per_page + 1;
+    };
+    
+    const startNumber = getStartingNumber();
+    
+    // Add this manual numbering array to use in the table with correct ordering
+    const itemsWithNumbers = data.data.map((item, index) => {
+        // For descending order, we need to decrease numbers as we go
+        const sequentialNumber = pageFilters.order === 'desc' 
+            ? startNumber - index 
+            : startNumber + index;
+            
+        return {
+            ...item,
+            sequentialNumber
+        };
+    });
+
     const columns = [
         {
             label: 'No',
             className: 'w-[60px] text-center',
-            render: (item: Soal) => <div className="text-center">{item.ids}</div>,
+            render: (item: Soal & { sequentialNumber: number }) => (
+                <div className="text-center">{item.sequentialNumber}</div>
+            ),
         },
         {
             label: 'Kode Soal',
@@ -429,7 +482,7 @@ function BankSoalTable({
     return (
         <>
             <div className="flex flex-col gap-4">
-                <CustomTable columns={columns} data={data.data} />
+                <CustomTable columns={columns} data={itemsWithNumbers} />
                 <PaginationWrapper
                     currentPage={data.current_page}
                     lastPage={data.last_page}
