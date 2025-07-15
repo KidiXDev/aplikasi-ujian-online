@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { ContentTitle } from '@/components/content-title';
@@ -57,14 +57,16 @@ export default function Monitoring({ ujianList, filters, flash }: Props) {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector 
-                        currentValue={ujianList.per_page} 
-                        options={[10, 25, 50, 100]} 
-                        routeName="monitoring.ujian" 
+                    <EntriesSelector
+                        currentValue={ujianList.per_page}
+                        options={[10, 25, 50, 100]}
+                        routeName="monitoring.ujian.index"
+                        routeParams={{ page: ujianList.current_page }}
                     />
-                    <SearchInputMenu 
-                        defaultValue={filters.search} 
-                        routeName="monitoring.ujian" 
+                    <SearchInputMenu
+                        defaultValue={filters.search}
+                        routeName="monitoring.ujian.index"
+                        routeParams={{ page: ujianList.current_page, per_page: ujianList.per_page, search: filters.search }}
                     />
                 </div>
 
@@ -73,7 +75,6 @@ export default function Monitoring({ ujianList, filters, flash }: Props) {
         </AppLayout>
     );
 }
-
 
 function UjianTable({ data: ujianList, pageFilters: filters }: { data: PaginatedResponse<Ujian>; pageFilters: PageFilter }) {
     // Sort data by newest date
@@ -85,7 +86,8 @@ function UjianTable({ data: ujianList, pageFilters: filters }: { data: Paginated
 
     // Helper function to navigate with preserved search parameters
     const navigateToPage = (page: number) => {
-        router.visit(route('monitoring.ujian'), {
+        router.visit(route('monitoring.ujian.index'), {
+            method: 'get',
             data: {
                 page: page,
                 search: filters.search,
@@ -97,6 +99,15 @@ function UjianTable({ data: ujianList, pageFilters: filters }: { data: Paginated
     };
 
     const columns = [
+        {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (ujian: Ujian) => {
+                const index = sortedData.findIndex((u) => u.id === ujian.id);
+                const rowNumber = (ujianList.current_page - 1) * ujianList.per_page + index + 1;
+                return <div className="text-center font-medium">{rowNumber}</div>;
+            },
+        },
         {
             label: 'Tipe Ujian',
             className: 'w-[150px] text-center',
