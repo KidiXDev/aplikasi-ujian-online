@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { List, Pencil, Trash2 } from 'lucide-react';
+import { List, Pencil} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { CAlertDialog } from '@/components/c-alert-dialog';
@@ -50,53 +50,78 @@ export default function EventManager() {
                     showButton
                     onButtonClick={() => router.visit(route('master-data.event.create'))}
                 />
+                
                 <div className="mt-4 flex items-center justify-between gap-4">
-    <EntriesSelector
-        currentValue={events.per_page}
-        options={[10, 25, 50]}
-        routeName="master-data.event.getEvent"
-        paramName="pages"
-        routeParams={{
-            search: params.get('search') || '',
-            status: params.get('status') || '',
-        }}
-    />
-
-    <div className="flex gap-2 items-center">
-        <select
-            className="rounded-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-            value={params.get('status') || ''}
-            onChange={(e) => {
-                router.visit(
-                    route('master-data.event.getEvent', {
-                        pages: params.get('pages') || events.per_page,
-                        search: params.get('search') || '',
-                        status: e.target.value,
-                    }),
-                    { preserveScroll: true, only: ['events'] }
-                );
-            }}
-        >
-            <option value="">Semua Status</option>
-            <option value="1">Aktif</option>
-            <option value="0">Tidak Aktif</option>
-        </select>
-
-        <SearchInputMenu
-            defaultValue={params.get('search') || ''}
-            routeName="master-data.event.getEvent"
-            paramName="search"
-            routeParams={{
-                pages: params.get('pages') || events.per_page.toString(),
-                status: params.get('status') || '',
-            }}
-        />
-    </div>
-</div>
+                    <div className="flex items-center gap-4">
+                        <EntriesSelector
+                            currentValue={events.per_page}
+                            options={[10, 25, 50]}
+                            routeName="master-data.event.getEvent"
+                            paramName="pages"
+                            routeParams={{
+                                search: params.get('search') || '',
+                                status: params.get('status') || '',
+                            }}
+                        />
+                        
+                        <StatusFilter 
+                            currentValue={params.get('status') || ''}
+                            routeParams={{
+                                search: params.get('search') || '',
+                                pages: params.get('pages') || events.per_page.toString(),
+                            }}
+                        />
+                    </div>
+                    
+                    <SearchInputMenu
+                        defaultValue={params.get('search') || ''}
+                        routeName="master-data.event.getEvent"
+                        paramName="search"
+                        routeParams={{
+                            pages: params.get('pages') || events.per_page.toString(),
+                            status: params.get('status') || '',
+                        }}
+                    />
+                </div>
 
                 <EventTable data={data} events={events} queryParams={params} />
             </div>
         </AppLayout>
+    );
+}
+
+// Status Filter Component
+function StatusFilter({ 
+    currentValue, 
+    routeParams 
+}: { 
+    currentValue: string;
+    routeParams: { [key: string]: string };
+}) {
+    const handleStatusChange = (status: string) => {
+        router.visit(route('master-data.event.getEvent'), {
+            data: {
+                ...routeParams,
+                status: status,
+            },
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Status:</label>
+            <select
+                value={currentValue}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+                <option value="">Semua Status</option>
+                <option value="1">Aktif</option>
+                <option value="0">Tidak Aktif</option>
+            </select>
+        </div>
     );
 }
 
@@ -111,31 +136,57 @@ function EventTable({
 }) {
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
-    const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-    const [statusTarget, setStatusTarget] = useState<{ id: number; status: number } | null>(null);
+    const [actionType, setActionType] = useState<'delete' | 'toggle'>('delete');
     const [tableData, setTableData] = useState<EventType[]>(data);
 
     useEffect(() => {
         setTableData(data);
     }, [data]);
 
-    const handleDelete = (id: number) => {
+    const handleToggleStatus = (id: number) => {
         setTargetId(id);
+        setActionType('toggle');
         setOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmAction = () => {
         if (!targetId) return;
-        router.delete(route('master-data.event.destroy', targetId), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                toast.success('Event berhasil dihapus');
-            },
-            onError: () => {
-                toast.error('Gagal menghapus event');
-            },
-        });
+        
+        if (actionType === 'delete') {
+            router.delete(route('master-data.event.destroy', targetId), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Event berhasil dihapus');
+                    // Remove from local state
+                    setTableData(prev => prev.filter(ev => ev.id_event !== targetId));
+                },
+                onError: () => {
+                    toast.error('Gagal menghapus event');
+                },
+            });
+        } else {
+            // Toggle status
+            router.put(route('master-data.event.updateStatus', targetId), {}, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Update local state
+                    setTableData(prev =>
+                        prev.map(ev => {
+                            if (ev.id_event === targetId) {
+                                return { ...ev, status: ev.status === 1 ? 0 : 1 };
+                            }
+                            return ev;
+                        })
+                    );
+                },
+                onError: () => {
+                    toast.error('Gagal mengubah status event');
+                },
+            });
+        }
+        
         setOpen(false);
     };
 
@@ -158,13 +209,12 @@ function EventTable({
             render: (event: EventType) => (
                 <div className="flex justify-center">
                     <button
-                        className={`px-3 py-1 rounded text-white font-semibold text-sm min-w-[100px] text-center focus:outline-none transition-colors duration-200 ${
-                            event.status === 1 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                        className={`px-3 py-1 rounded text-white font-semibold text-sm min-w-[100px] text-center transition-colors duration-200 ${
+                            event.status === 1 
+                                ? 'bg-green-600 hover:bg-green-700' 
+                                : 'bg-red-600 hover:bg-red-700'
                         }`}
-                        onClick={() => {
-                            setStatusTarget({ id: event.id_event, status: event.status });
-                            setStatusDialogOpen(true);
-                        }}
+                        onClick={() => handleToggleStatus(event.id_event)}
                     >
                         {event.status === 1 ? 'Aktif' : 'Tidak Aktif'}
                     </button>
@@ -203,7 +253,7 @@ function EventTable({
         },
         {
             label: 'Action',
-            className: 'text-center w-[150px]',
+            className: 'text-center w-[180px]',
             render: (event: EventType) => (
                 <div className="flex justify-center gap-2">
                     <CButtonIcon
@@ -217,42 +267,32 @@ function EventTable({
                             router.visit(route('master-data.event.edit', event.id_event))
                         }
                     />
-                    <CButtonIcon
-                        icon={Trash2}
-                        type="danger"
-                        onClick={() => handleDelete(event.id_event)}
-                    />
                 </div>
             ),
         },
     ];
 
-    const confirmStatusChange = () => {
-        if (!statusTarget) return;
-        router.put(
-            route('master-data.event.toggleStatus', statusTarget.id),
-            { status: statusTarget.status === 1 ? 0 : 1 },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('Status event berhasil diubah');
-                    setTableData(prev =>
-                        prev.map(ev =>
-                            ev.id_event === statusTarget.id
-                                ? { ...ev, status: statusTarget.status === 1 ? 0 : 1 }
-                                : ev
-                        )
-                    );
-                },
-                onError: () => {
-                    toast.error('Gagal mengubah status event');
-                },
-            }
-        );
-        setStatusDialogOpen(false);
-        setStatusTarget(null);
+    const getDialogContent = () => {
+        switch (actionType) {
+            case 'delete':
+                return {
+                    title: 'Hapus Event',
+                    description: 'Apakah Anda yakin ingin menghapus event ini? Tindakan ini tidak dapat dibatalkan.'
+                };
+            case 'toggle':
+                return {
+                    title: 'Ubah Status Event',
+                    description: 'Apakah Anda yakin ingin mengubah status event ini?'
+                };
+            default:
+                return {
+                    title: 'Konfirmasi',
+                    description: 'Apakah Anda yakin ingin melanjutkan?'
+                };
+        }
     };
+
+    const dialogContent = getDialogContent();
 
     return (
         <>
@@ -267,21 +307,20 @@ function EventTable({
                         route('master-data.event.getEvent', {
                             pages: queryParams.get('pages') || events.per_page,
                             search: queryParams.get('search') || '',
+                            status: queryParams.get('status') || '',
                             page,
                         }),
-                        { preserveScroll: true, only: ['events'] }
+                        { preserveScroll: true }
                     );
                 }}
             />
-            <CAlertDialog open={open} setOpen={setOpen} onContinue={confirmDelete} />
-            <CAlertDialog
-                open={statusDialogOpen}
-                setOpen={setStatusDialogOpen}
-                onContinue={confirmStatusChange}
-                title="Konfirmasi Ubah Status"
-                description={`Apakah Anda yakin ingin mengubah status event menjadi ${
-                    statusTarget?.status === 1 ? 'Tidak Aktif' : 'Aktif'
-                }?`}
+            
+            <CAlertDialog 
+                open={open} 
+                setOpen={setOpen} 
+                onContinue={confirmAction}
+                title={dialogContent.title}
+                description={dialogContent.description}
             />
         </>
     );

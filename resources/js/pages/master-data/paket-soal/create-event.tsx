@@ -71,7 +71,6 @@ export default function FormEvent() {
         } else {
             router.post(route('master-data.event.store'), values, {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Event berhasil ditambahkan!'),
                 onError: handleErrors,
             });
         }

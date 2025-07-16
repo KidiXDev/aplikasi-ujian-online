@@ -141,6 +141,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{id}', [MakeEventController::class, 'destroy'])->name('destroy');
             // Tambah route toggle status event
             Route::put('/{id}/toggle-status', [MakeEventController::class, 'toggleStatus'])->name('toggleStatus');
+            Route::put('/{id}/status', [MakeEventController::class, 'change_status'])->name('updateStatus');
         });
 
         // Paket Soal

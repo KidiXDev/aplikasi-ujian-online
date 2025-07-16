@@ -33,10 +33,6 @@ interface JadwalUjianSoalType {
 export default function PaketSoalManager() {
   const [open, setOpen] = useState(false);
   const [targetId, setTargetId] = useState<number | null>(null);
-<<<<<<< HEAD
-  const { jadwalUjian = [], jadwalUjianSoal = [] } = (usePage().props as unknown) as {
-    jadwalUjian: JadwalUjianType[];
-=======
 
   // Ambil data dari props inertia
   const { 
@@ -51,25 +47,10 @@ export default function PaketSoalManager() {
       per_page: number;
       total: number;
     };
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
     jadwalUjianSoal: JadwalUjianSoalType[];
     event?: { id_event: number; nama_event: string };
   };
 
-<<<<<<< HEAD
-  const [data, setData] = useState(() =>
-    jadwalUjian.map((item) => {
-      const soal = jadwalUjianSoal.find((s) => s.id_ujian === item.id_ujian);
-      return {
-        id: item.id_ujian,
-        nama: item.nama_ujian,
-        event: item.event?.nama_event ?? item.id_event,
-        bidang: item.bidang?.nama ?? item.kode_part,
-        jumlah: soal ? soal.total_soal : 0,
-      };
-    })
-  );
-=======
   // Gabungkan data jadwalUjian dan jadwalUjianSoal berdasarkan id_ujian
   const data = jadwalUjian.data.map((item) => {
     const soal = jadwalUjianSoal.find((s) => s.id_ujian === item.id_ujian);
@@ -85,7 +66,6 @@ export default function PaketSoalManager() {
   useEffect(() => {
     toast.success('Paket soal dimuat');
   }, []);
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
 
   const handleDelete = (id: number) => {
     setTargetId(id);
@@ -94,23 +74,6 @@ export default function PaketSoalManager() {
 
   // PERBAIKI: Fungsi ini HARUS di luar render kolom!
   const confirmDelete = () => {
-<<<<<<< HEAD
-    if (targetId === null) return;
-
-    router.delete(`/master-data/paket-soal/${targetId}`, {
-      preserveState: true,
-      onSuccess: () => {
-        toast.success(`Paket soal dengan ID ${targetId} berhasil dihapus`);
-        setData((prev) => prev.filter((item) => item.id !== targetId));
-        setOpen(false);
-        setTargetId(null);
-      },
-      onError: (err) => {
-        toast.error('Gagal menghapus paket soal');
-        console.error(err);
-      },
-    });
-=======
     if (!targetId) return;
     router.delete(route('master-data.paket-soal.destroy', targetId), {
       preserveState: true,
@@ -123,7 +86,6 @@ export default function PaketSoalManager() {
       },
     });
     setOpen(false);
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
   };
 
   const handleBack = () => {
@@ -137,32 +99,9 @@ export default function PaketSoalManager() {
   ];
 
   const columns = [
-<<<<<<< HEAD
-    {
-      label: 'ID',
-      className: 'text-center w-[80px]',
-      render: (d: typeof data[0]) => <div className="text-center">{d.id}</div>,
-    },
-    {
-      label: 'Nama Paket Soal',
-      className: 'w-[300px]',
-      render: (d: typeof data[0]) => d.nama,
-    },
-    {
-      label: 'Event',
-      className: 'w-[200px]',
-      render: (d: typeof data[0]) => d.event,
-    },
-    {
-      label: 'Bidang',
-      className: 'w-[150px]',
-      render: (d: typeof data[0]) => d.bidang,
-    },
-=======
     { label: 'ID', className: 'text-center w-[80px]', render: (d: typeof data[0]) => <div className="text-center">{d.id}</div> },
     { label: 'Nama Paket Soal', className: 'w-[300px]', render: (d: typeof data[0]) => d.nama },
     { label: 'Event', className: 'w-[200px]', render: (d: typeof data[0]) => d.event },
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
     {
       label: 'Jumlah Soal',
       className: 'text-center w-[150px]',
@@ -179,22 +118,10 @@ export default function PaketSoalManager() {
             onClick={() => router.visit(`/master-data/bank-soal-checkbox/${d.id}/edit`)}
           />
           <CButtonIcon
-<<<<<<< HEAD
-            icon={List}
-            className="bg-yellow-500"
-            onClick={() => router.visit(`/master-data/paket-soal/${d.id}/detail`)}
-          />
-          <CButtonIcon
-            icon={Pencil}
-            onClick={() => router.visit(`/master-data/paket-soal/${d.id}/edit`)}
-          />
-          <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(d.id)} />
-=======
             icon={Trash2}
             type="danger"
             onClick={() => handleDelete(d.id)}
           />
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
         </div>
       ),
     },
@@ -204,12 +131,6 @@ export default function PaketSoalManager() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Data Paket Soal" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-<<<<<<< HEAD
-        <ContentTitle
-          title="Data Paket Soal"
-          showButton
-          onButtonClick={() => router.visit('/master-data/paket-soal/create')}
-=======
         {/* Tombol Kembali */}
         <button
           onClick={handleBack}
@@ -233,7 +154,6 @@ export default function PaketSoalManager() {
               router.visit('/master-data/paket-soal/create-event');
             }
           }}
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
         />
 
         <div className="mt-4 flex items-center justify-between">

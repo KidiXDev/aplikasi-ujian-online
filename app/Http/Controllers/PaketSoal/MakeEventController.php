@@ -9,26 +9,6 @@ use Inertia\Inertia;
 
 class MakeEventController extends Controller
 {
-    public function getEvent(Request $request)
-{
-    $events = Event::query();
-
-    if ($request->search) {
-        $events->where('nama_event', 'like', '%' . $request->search . '%');
-    }
-
-    if (!is_null($request->status) && $request->status !== '') {
-        $events->where('status', $request->status);
-    }
-
-    $data = $events->paginate($request->pages ?? 10)->withQueryString();
-
-    return Inertia::render('master-data/event/EventManager', [
-        'events' => $data
-    ]);
-}
-
-
     // public function create()
     // {
     //     return Inertia::render('master-data/event/CreateEvent');
@@ -91,7 +71,16 @@ class MakeEventController extends Controller
     public function edit($id)
     {
         $event = Event::findOrFail($id);
-        return Inertia::render('master-data/event/EditEvent', ['event' => $event]);
+
+        $eventData = [
+            'id_event' => $event->id_event,
+            'nama_event' => $event->nama_event,
+            'status' => $event->status ? 'aktif' : 'tidak-aktif',
+            'event_mulai' => $event->mulai_event ? $event->mulai_event->format('Y-m-d') : null,
+            'event_akhir' => $event->akhir_event ? $event->akhir_event->format('Y-m-d') : null,
+        ];
+        
+        return Inertia::render('master-data/paket-soal/create-event', ['event' => $event]);
     }
 
     // public function store(Request $request)
@@ -125,5 +114,42 @@ class MakeEventController extends Controller
     {
         Event::findOrFail($id)->delete();
         return redirect()->back();
+    }
+
+    public function change_status($id, Request $request)
+    {
+        try {
+            $event = Event::findOrFail($id);
+            
+            // Toggle status
+            $event->status = $event->status === 1 ? 0 : 1;
+            $event->save();
+            
+            $statusText = $event->status === 1 ? 'diaktifkan' : 'dinonaktifkan';
+
+            return redirect()->route('master-data.event.getEvent');            
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.event.getEvent')
+                ->with('error', 'Gagal mengubah status event: ' . $e->getMessage());
+        }
+    }
+
+public function getEvent(Request $request)
+    {
+        $events = Event::query();
+
+        if ($request->search) {
+            $events->where('nama_event', 'like', '%' . $request->search . '%');
+        }
+
+        if (!is_null($request->status) && $request->status !== '') {
+            $events->where('status', $request->status);
+        }
+
+        $data = $events->paginate($request->pages ?? 10)->withQueryString();
+
+        return Inertia::render('master-data/event/EventManager', [
+            'events' => $data
+        ]);
     }
 }
