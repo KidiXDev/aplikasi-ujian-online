@@ -90,7 +90,6 @@ export default function Monitoring({ ujianList, examCategories, filters, flash }
                             options={[
                                 { value: 'newest', label: 'Newest First' },
                                 { value: 'oldest', label: 'Oldest First' },
-                                { value: 'tipe_ujian', label: 'By Type' },
                                 { value: 'kuota_asc', label: 'Kuota (Low to High)' },
                                 { value: 'kuota_desc', label: 'Kuota (High to Low)' },
                             ]}
