@@ -29,7 +29,7 @@ class DosenManagerController extends Controller
 
         return Inertia::render('dosen-management/dosen-manager', [
             'data' => $data,
-            'filters' => $request->only('search', 'status   '),
+            'filters' => $request->only('search', 'status'),
         ]);
     }
 

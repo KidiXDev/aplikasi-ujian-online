@@ -2,8 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { PageFilter, PageProps, PaginatedResponse, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 
-import { Pencil, Trash2, ChevronDown } from 'lucide-react';
-import { Listbox } from '@headlessui/react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -30,13 +29,6 @@ interface Dosen {
     password?: string;
 }
 
-const statusOptions = [
-    { label: 'Semua', value: '' },
-    { label: 'Aktif', value: '1' },
-    { label: 'Tidak Aktif', value: '0' },
-];
-
-
 export default function UserManager() {
     const { data: userData, filters, flash } = usePage<PageProps<Dosen>>().props;
 
@@ -44,23 +36,6 @@ export default function UserManager() {
         if (flash.success) toast.success(flash.success);
         if (flash.error) toast.error(flash.error);
     }, [flash]);
-
-     // State untuk filter status
-    const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
-
-    // Handler filter status
-    const handleStatusChange = (selected: string) => {
-        setSelectedStatus(selected);
-        router.visit(route('master-data.dosen.manager'), {
-            data: {
-                ...filters,
-                status: selected,
-                page: 1,
-            },
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -81,42 +56,10 @@ export default function UserManager() {
                         </CButton>
                     }
                 />
-                
                 <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
                     <EntriesSelector currentValue={userData.per_page} options={[10, 12, 25, 50, 100]} routeName="master-data.dosen.manager" />
-
-                    {/* Filter Status */}
-                    <div className="relative w-[150px]">
-                        <Listbox value={selectedStatus} onChange={handleStatusChange}>
-                            <div className="relative">
-                                <Listbox.Button className="flex w-full rounded-lg border border-gray-300 px-3 py-2 text-left text-sm text-gray-700">
-                                    {statusOptions.find((o) => o.value === selectedStatus)?.label || 'Semua'}
-                                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-                                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                                    </span>
-                                </Listbox.Button>
-                                <Listbox.Options className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow">
-                                    {statusOptions.map((option) => (
-                                        <Listbox.Option
-                                            key={option.value}
-                                            value={option.value}
-                                            className={({ active }) =>
-                                                `cursor-pointer px-4 py-2 text-sm ${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`
-                                            }
-                                        >
-                                            {option.label}
-                                        </Listbox.Option>
-                                    ))}
-                                </Listbox.Options>
-                            </div>
-                    </Listbox>
+                    <SearchInputMenu defaultValue={filters.search} routeName="master-data.dosen.manager" />
                 </div>
-            </div>
-
-                <SearchInputMenu defaultValue={filters.search} routeName="master-data.dosen.manager" />
-            </div>
-
                 <UserTable data={userData} pageFilters={filters} />
             </div>
         </AppLayout>
@@ -191,7 +134,6 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             data: {
                 page: page,
                 search: filters.search,
-                status: filters.status,
             },
             preserveState: true,
             preserveScroll: true,
