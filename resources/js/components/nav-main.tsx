@@ -96,11 +96,7 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                     // Kalau gak ada submenu, langsung jadi link
                     return (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton
-                                asChild
-                                tooltip={item.title}
-                                isActive={Boolean(item.href && (item.href === page.url || page.url.startsWith(item.href + '/')))}
-                            >
+                            <SidebarMenuButton asChild tooltip={item.title} isActive={Boolean(item.href && item.href === page.url)}>
                                 <Link href={item.href ?? '#'}>
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
