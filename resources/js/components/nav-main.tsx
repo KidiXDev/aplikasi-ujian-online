@@ -153,6 +153,8 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                                         <SidebarMenuSub>
                                             {item.subitem.map((subItem) => {
                                                 const isSubItemActive = isActiveItem(subItem.href, false, false);
+                                                // Debug logging removed as per best practices
+
                                                 return (
                                                     <SidebarMenuSubItem key={subItem.title}>
                                                         <SidebarMenuSubButton asChild isActive={isSubItemActive}>
