@@ -91,6 +91,19 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
 
+    const handleToggleStatus = (peserta: Peserta) => {
+        router.put(
+            route('master-data.peserta.toggle-status', peserta.id),
+            { status: peserta.status ? 0 : 1 },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                // onSuccess: () => toast.success('Status berhasil diubah'),
+                // onError: () => toast.error('Gagal mengubah status'),
+            },
+        );
+    };
+
     const handleDelete = (id: number) => {
         setTargetId(id);
         setOpen(true);
@@ -128,7 +141,11 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
         {
             label: 'No.',
             className: 'w-[100px] text-center',
-            render: (peserta: Peserta) => <div className="text-center font-medium">{peserta.id}</div>,
+            render: (peserta: Peserta) => {
+                // Find the index of the current peserta in the data array
+                const idx = userData.data.findIndex((item) => item.id === peserta.id);
+                return <div className="text-center font-medium">{idx + 1}</div>;
+            },
         },
         {
             label: 'NIS',
@@ -163,11 +180,15 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             className: 'w-[150px] text-center',
             render: (peserta: Peserta) => (
                 <div className="flex items-center justify-center">
-                    {peserta.status ? (
-                        <span className="rounded bg-green-600 p-2 text-white shadow">Active</span>
-                    ) : (
-                        <span className="bg-button-danger rounded p-2 text-white shadow">Non Active</span>
-                    )}
+                    <button
+                        className={`rounded p-2 text-white shadow transition ${
+                            peserta.status ? 'bg-green-600 hover:bg-green-700' : 'bg-button-danger hover:bg-red-700'
+                        }`}
+                        onClick={() => handleToggleStatus(peserta)}
+                        title="Klik untuk ubah status"
+                    >
+                        {peserta.status ? 'Active' : 'Non Active'}
+                    </button>
                 </div>
             ),
         },

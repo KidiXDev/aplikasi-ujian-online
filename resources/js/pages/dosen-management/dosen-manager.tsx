@@ -5,6 +5,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 import { CAlertDialog } from '@/components/c-alert-dialog';
 import { ContentTitle } from '@/components/content-title';
@@ -91,6 +92,11 @@ const RoleDecorator: React.FC<{ role: string }> = ({ role }) => {
 function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedResponse<Dosen>; pageFilters: PageFilter }) {
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
+    const [users, setUsers] = useState(userData.data);
+
+    useEffect(() => {
+        setUsers(userData.data);
+    }, [userData.data]);
 
     const handleDelete = (id: number) => {
         setTargetId(id);
@@ -124,7 +130,36 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
         });
     };
 
+    const handleToggleStatus = async (user: Dosen) => {
+        try {
+            const res = await axios.put(route('master-data.dosen.toggle-status', user.id));
+            if (res.data.success) {
+                setUsers((prev) =>
+                    prev.map((u) =>
+                        u.id === user.id
+                            ? { ...u, dosen: { ...u.dosen, aktif: res.data.aktif } }
+                            : u
+                    )
+                );
+            }
+        } catch {
+            toast.error('Gagal mengubah status');
+        }
+    };
+
     const columns = [
+        {
+            label: 'No',
+            className: 'w-[60px] text-center',
+            render: (user: Dosen) => {
+                const idx = users.findIndex(u => u.id === user.id);
+                return (
+                    <div className="text-center">
+                        {(userData.per_page * (userData.current_page - 1)) + idx + 1}
+                    </div>
+                );
+            },
+        },
         {
             label: 'ID',
             className: 'w-[100px] text-center',
@@ -135,7 +170,7 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             render: (user: Dosen) => user.dosen?.nip,
         },
         {
-            label: 'Name',
+            label: 'Nama',
             className: 'w-[400px]',
             render: (user: Dosen) => user.name,
         },
@@ -149,11 +184,13 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             className: 'w-[100px] text-center',
             render: (user: Dosen) => (
                 <div className="flex justify-center">
-                    {user.dosen?.aktif ? (
-                        <span className="inline-block w-[80px] rounded bg-green-500 px-2 py-1 text-center text-xs text-white shadow">Aktif</span>
-                    ) : (
-                        <span className="inline-block w-[80px] rounded bg-red-500 px-2 py-1 text-center text-xs text-white shadow">Tidak Aktif</span>
-                    )}
+                    <button
+                        className={`inline-block w-[80px] rounded px-2 py-1 text-center text-xs text-white shadow
+                            ${user.dosen?.aktif ? 'bg-green-500 hover:bg-green-700' : 'bg-red-500 hover:bg-red-700'}`}
+                        onClick={() => handleToggleStatus(user)}
+                    >
+                        {user.dosen?.aktif ? 'Aktif' : 'Tidak Aktif'}
+                    </button>
                 </div>
             ),
         },
@@ -184,7 +221,7 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
     return (
         <>
             <div className="flex flex-col gap-4">
-                <CustomTable columns={columns} data={userData.data} />
+                <CustomTable columns={columns} data={users} />
 
                 <PaginationWrapper
                     currentPage={userData.current_page}

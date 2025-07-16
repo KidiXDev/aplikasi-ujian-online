@@ -13,19 +13,49 @@ use App\Models\Bidang;
 
 class PaketSoalController extends Controller
 {
+    public function destroy($id)
+    {
+        try {
+            // Hapus data terkait di tabel jadwal_ujian_soal
+            JadwalUjianSoal::where('id_ujian', $id)->delete();
+
+            // Hapus data di tabel jadwal_ujian
+            JadwalUjian::destroy($id);
+
+            Log::info('Paket soal deleted successfully:', ['id' => $id]);
+            return redirect()->back()->with('success', 'Paket soal berhasil dihapus');
+        } catch (\Exception $e) {
+            Log::error('Error deleting PaketSoal:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Gagal menghapus paket soal');
+        }
+    }
     public function index(Request $request)
     {
-        $jadwalUjian = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
-            ->with('event:id_event,nama_event')
-            ->get();
+        $pages = $request->query('pages', 10);
+        $search = $request->query('search', null);
 
-        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian','total_soal')->get();
+        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
+            ->with('event:id_event,nama_event');
+
+        if ($search) {
+            $jadwalUjianQuery->where('nama_ujian', 'like', '%' . $search . '%')
+                ->orWhereHas('event', function ($query) use ($search) {
+                    $query->where('nama_event', 'like', '%' . $search . '%');
+                });
+        }
+
+        // Ini dia yang paging bener!
+        $jadwalUjian = $jadwalUjianQuery->paginate($pages);
+
+        // Ambil soal terpisah aja, nggak usah dipaginasi kalau cuman tambahan info
+        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
 
         return Inertia::render('master-data/paket-soal/paket-soal-manager', [
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
         ]);
     }
+
     
     public function list()
     {
@@ -61,6 +91,34 @@ class PaketSoalController extends Controller
             'paketSoal' => $paketSoal,
             'events' => $events,
             'bidangs' => $bidangs,
+        ]);
+    }
+
+    public function show($paketSoalId)
+    {
+        // Ambil data paket soal beserta relasi event dan bidang
+        $paketSoal = JadwalUjian::with([
+            'event:id_event,nama_event',
+            'bidang:kode,nama'
+        ])->findOrFail($paketSoalId);
+
+        // Ambil soal terkait dengan paket soal ini
+        $jadwalUjianSoal = JadwalUjianSoal::where('id_ujian', $paketSoal->id_ujian)->first();
+
+        // Susun data detail untuk dikirim ke FE
+        $detail = [
+            'id_ujian'    => $paketSoal->id_ujian,
+            'nama_ujian'  => $paketSoal->nama_ujian,
+            'event'       => $paketSoal->event ? $paketSoal->event->nama_event : '-',
+            'bidang'      => $paketSoal->bidang ? $paketSoal->bidang->nama : '-',
+            'total_soal'  => $jadwalUjianSoal ? $jadwalUjianSoal->total_soal : 0,
+            'created_at'  => $paketSoal->created_at,
+            'updated_at'  => $paketSoal->updated_at,
+        ];
+
+        // Tampilkan halaman detail paket soal
+        return Inertia::render('master-data/paket-soal/PaketSoalDetail', [
+            'paketSoal' => $detail,
         ]);
     }
 }

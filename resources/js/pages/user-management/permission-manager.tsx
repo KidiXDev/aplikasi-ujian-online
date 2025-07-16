@@ -1,37 +1,34 @@
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { Permission, Role, type BreadcrumbItem } from '@/types';
+import { Permission, type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { KeyIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Role Manager',
-        href: '/roles',
+        title: 'Permission Manager',
+        href: '/permissions',
     },
 ];
 
 interface Props {
-    roles: Role[];
     permissions: Permission[];
 }
 
-export default function RoleManagerPage({ roles, permissions }: Props) {
+export default function PermissionManager({ permissions }: Props) {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
-    const [editingRole, setEditingRole] = useState<Role | null>(null);
-    const [permissionRole, setPermissionRole] = useState<Role | null>(null);
+    const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         guard_name: 'web',
     });
+
     const {
         data: editData,
         setData: setEditData,
@@ -44,18 +41,9 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
         guard_name: 'web',
     });
 
-    const {
-        data: permissionData,
-        setData: setPermissionData,
-        post: postPermissions,
-        processing: permissionProcessing,
-        reset: resetPermissions,
-    } = useForm({
-        permissions: [] as number[],
-    });
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('user-management.roles.store'), {
+        post(route('user-management.permissions.store'), {
             onSuccess: () => {
                 reset();
                 setIsCreateDialogOpen(false);
@@ -63,86 +51,57 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
         });
     };
 
-    const handleEdit = (role: Role) => {
-        setEditingRole(role);
+    const handleEdit = (permission: Permission) => {
+        setEditingPermission(permission);
         setEditData({
-            name: role.name,
-            guard_name: role.guard_name,
+            name: permission.name,
+            guard_name: permission.guard_name,
         });
         setIsEditDialogOpen(true);
     };
 
     const handleEditSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingRole) return;
+        if (!editingPermission) return;
 
-        put(route('user-management.roles.update', editingRole.id), {
+        put(route('user-management.permissions.update', editingPermission.id), {
             onSuccess: () => {
                 resetEdit();
                 setIsEditDialogOpen(false);
-                setEditingRole(null);
-            },
-        });
-    };
-    const handleDelete = (role: Role) => {
-        if (confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
-            router.delete(route('user-management.roles.destroy', role.id));
-        }
-    };
-
-    const handleManagePermissions = (role: Role) => {
-        setPermissionRole(role);
-        const rolePermissionIds = role.permissions?.map((p) => p.id) || [];
-        setPermissionData('permissions', rolePermissionIds);
-        setIsPermissionDialogOpen(true);
-    };
-
-    const handlePermissionSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!permissionRole) return;
-
-        postPermissions(route('user-management.roles.assign-permissions', permissionRole.id), {
-            onSuccess: () => {
-                resetPermissions();
-                setIsPermissionDialogOpen(false);
-                setPermissionRole(null);
+                setEditingPermission(null);
             },
         });
     };
 
-    const handlePermissionChange = (permissionId: number, checked: boolean) => {
-        const currentPermissions = permissionData.permissions;
-        if (checked) {
-            setPermissionData('permissions', [...currentPermissions, permissionId]);
-        } else {
-            setPermissionData(
-                'permissions',
-                currentPermissions.filter((id) => id !== permissionId),
-            );
+    const handleDelete = (permission: Permission) => {
+        if (confirm(`Are you sure you want to delete the permission "${permission.name}"?`)) {
+            router.delete(route('user-management.permissions.destroy', permission.id));
         }
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Role Manager" />
+            <Head title="Permission Manager" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Role Manager</h1>
-                        <p className="text-muted-foreground">Manage system roles and permissions</p>
+                        <h1 className="text-2xl font-bold">Permission Manager</h1>
+                        <p className="text-muted-foreground">Manage system permissions and access control</p>
                     </div>
 
                     <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                         <DialogTrigger asChild>
                             <Button>
                                 <PlusIcon className="mr-2 h-4 w-4" />
-                                Create Role
+                                Create Permission
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
-                                <DialogTitle>Create New Role</DialogTitle>
-                                <DialogDescription>Create a new role for the application. Enter a unique name for the role.</DialogDescription>
+                                <DialogTitle>Create New Permission</DialogTitle>
+                                <DialogDescription>
+                                    Create a new permission for the application. Enter a unique name for the permission.
+                                </DialogDescription>
                             </DialogHeader>
                             <form onSubmit={handleSubmit}>
                                 <div className="grid gap-4 py-4">
@@ -155,7 +114,7 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
                                                 id="name"
                                                 value={data.name}
                                                 onChange={(e) => setData('name', e.target.value)}
-                                                placeholder="Enter role name"
+                                                placeholder="e.g. create-users, edit-posts"
                                                 className={errors.name ? 'border-red-500' : ''}
                                             />
                                             {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -182,19 +141,19 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
                                         Cancel
                                     </Button>
                                     <Button type="submit" disabled={processing}>
-                                        {processing ? 'Creating...' : 'Create Role'}
+                                        {processing ? 'Creating...' : 'Create Permission'}
                                     </Button>
                                 </DialogFooter>
                             </form>
-                        </DialogContent>{' '}
+                        </DialogContent>
                     </Dialog>
 
-                    {/* Edit Role Dialog */}
+                    {/* Edit Permission Dialog */}
                     <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                         <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
-                                <DialogTitle>Edit Role</DialogTitle>
-                                <DialogDescription>Edit the role details. Make sure the name is unique.</DialogDescription>
+                                <DialogTitle>Edit Permission</DialogTitle>
+                                <DialogDescription>Edit the permission details. Make sure the name is unique.</DialogDescription>
                             </DialogHeader>
                             <form onSubmit={handleEditSubmit}>
                                 <div className="grid gap-4 py-4">
@@ -207,7 +166,7 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
                                                 id="edit-name"
                                                 value={editData.name}
                                                 onChange={(e) => setEditData('name', e.target.value)}
-                                                placeholder="Enter role name"
+                                                placeholder="e.g. create-users, edit-posts"
                                                 className={editErrors.name ? 'border-red-500' : ''}
                                             />
                                             {editErrors.name && <p className="mt-1 text-sm text-red-500">{editErrors.name}</p>}
@@ -234,46 +193,7 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
                                         Cancel
                                     </Button>
                                     <Button type="submit" disabled={editProcessing}>
-                                        {editProcessing ? 'Updating...' : 'Update Role'}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>{' '}
-                    </Dialog>
-
-                    {/* Permissions Dialog */}
-                    <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
-                        <DialogContent className="sm:max-w-[500px]">
-                            <DialogHeader>
-                                <DialogTitle>Manage Permissions</DialogTitle>
-                                <DialogDescription>
-                                    Assign permissions to the role "{permissionRole?.name}". Select the permissions you want to grant to this role.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handlePermissionSubmit}>
-                                <div className="grid max-h-96 gap-4 overflow-y-auto py-4">
-                                    {permissions.map((permission) => (
-                                        <div key={permission.id} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`permission-${permission.id}`}
-                                                checked={permissionData.permissions.includes(permission.id)}
-                                                onCheckedChange={(checked) => handlePermissionChange(permission.id, checked as boolean)}
-                                            />
-                                            <Label htmlFor={`permission-${permission.id}`} className="text-sm font-normal">
-                                                {permission.name}
-                                            </Label>
-                                        </div>
-                                    ))}
-                                    {permissions.length === 0 && (
-                                        <p className="text-muted-foreground text-center">No permissions available. Create some permissions first.</p>
-                                    )}
-                                </div>
-                                <DialogFooter>
-                                    <Button type="button" variant="outline" onClick={() => setIsPermissionDialogOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={permissionProcessing}>
-                                        {permissionProcessing ? 'Assigning...' : 'Assign Permissions'}
+                                        {editProcessing ? 'Updating...' : 'Update Permission'}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -284,31 +204,28 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
                 <div className="grid gap-4">
                     <div className="rounded-lg border">
                         <div className="p-4">
-                            <h2 className="text-lg font-semibold">Existing Roles</h2>
-                            <p className="text-muted-foreground text-sm">Manage and view all system roles</p>
+                            <h2 className="text-lg font-semibold">Existing Permissions</h2>
+                            <p className="text-muted-foreground text-sm">Manage and view all system permissions</p>
                         </div>
                         <div className="border-t">
-                            {roles.length > 0 ? (
+                            {permissions.length > 0 ? (
                                 <div className="divide-y">
-                                    {roles.map((role) => (
-                                        <div key={role.id} className="flex items-center justify-between p-4">
+                                    {permissions.map((permission) => (
+                                        <div key={permission.id} className="flex items-center justify-between p-4">
                                             <div>
-                                                <h3 className="font-medium">{role.name}</h3>
+                                                <h3 className="font-medium">{permission.name}</h3>
                                                 <p className="text-muted-foreground text-sm">
-                                                    Guard: {role.guard_name} • Permissions: {role.permissions?.length || 0}
+                                                    Guard: {permission.guard_name} • Used by {permission.roles?.length || 0} role(s)
                                                 </p>
-                                            </div>{' '}
+                                            </div>
                                             <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm" onClick={() => handleManagePermissions(role)}>
-                                                    <KeyIcon className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="outline" size="sm" onClick={() => handleEdit(role)}>
+                                                <Button variant="outline" size="sm" onClick={() => handleEdit(permission)}>
                                                     <PencilIcon className="h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => handleDelete(role)}
+                                                    onClick={() => handleDelete(permission)}
                                                     className="text-red-600 hover:text-red-700"
                                                 >
                                                     <Trash2Icon className="h-4 w-4" />
@@ -319,7 +236,7 @@ export default function RoleManagerPage({ roles, permissions }: Props) {
                                 </div>
                             ) : (
                                 <div className="p-8 text-center">
-                                    <p className="text-muted-foreground">No roles found. Create your first role to get started.</p>
+                                    <p className="text-muted-foreground">No permissions found. Create your first permission to get started.</p>
                                 </div>
                             )}
                         </div>

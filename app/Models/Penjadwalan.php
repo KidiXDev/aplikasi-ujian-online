@@ -30,6 +30,7 @@ class Penjadwalan extends Model
         'kuota',
         'status',
         'jenis_ujian',
+        'kode_jadwal',  // Tambahkan ini
     ];
 
     protected $casts = [
@@ -37,12 +38,13 @@ class Penjadwalan extends Model
         'kuota' => 'integer',
         'status' => 'integer',
         'jenis_ujian' => 'integer',
+        'tipe_ujian' => 'integer',  // Tambahkan casting untuk tipe_ujian
     ];
 
-    // tipe_ujian is kode from mbidang
+    // Relasi ke KategoriSoal melalui tipe_ujian
     public function jenis_ujian()
     {
-        return $this->belongsTo(MBidang::class, 'tipe_ujian', 'kode');
+        return $this->belongsTo(KategoriSoal::class, 'tipe_ujian', 'id');
     }
 
     /**
@@ -53,24 +55,32 @@ class Penjadwalan extends Model
         return $this->belongsTo(Event::class, 'id_paket_ujian', 'id_event');
     }
 
+    /**
+     * Get jadwal ujian yang terkait dengan penjadwalan ini
+     */
+    public function jadwalUjian()
+    {
+        return $this->hasMany(JadwalUjian::class, 'id_penjadwalan', 'id_penjadwalan');
+    }
+
     // Accessor to map the field names to match what the UI expects
     public function getTipeUjianAttribute()
     {
         // If jenis_ujian is an integer (likely jenis_ujian field being used instead of relation)
         if (isset($this->attributes['tipe_ujian']) && is_int($this->attributes['tipe_ujian'])) {
-            $mbidang = MBidang::find($this->attributes['tipe_ujian']);
-            return $mbidang ? $mbidang->nama : (string)$this->attributes['tipe_ujian'];
+            $kategoriSoal = KategoriSoal::find($this->attributes['tipe_ujian']);
+            return $kategoriSoal ? $kategoriSoal->kategori : (string)$this->attributes['tipe_ujian'];
         }
 
-        // Load the related MBidang model and get its name
+        // Load the related KategoriSoal model and get its kategori
         if ($this->relationLoaded('jenis_ujian') && $this->jenis_ujian) {
-            return $this->jenis_ujian->nama;
+            return $this->jenis_ujian->kategori;
         }
 
         // If relation is not loaded, try to load it
         if (isset($this->attributes['tipe_ujian'])) {
-            $mbidang = MBidang::where('kode', $this->attributes['tipe_ujian'])->first();
-            return $mbidang ? $mbidang->nama : (string)$this->attributes['tipe_ujian'];
+            $kategoriSoal = KategoriSoal::where('id', $this->attributes['tipe_ujian'])->first();
+            return $kategoriSoal ? $kategoriSoal->kategori : (string)$this->attributes['tipe_ujian'];
         }
 
         return '';
