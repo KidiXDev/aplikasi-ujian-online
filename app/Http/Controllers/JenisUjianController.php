@@ -20,7 +20,7 @@ class JenisUjianController extends Controller
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 
-        $query = MBidang::query()->orderBy('nama', 'asc');
+        $query = MBidang::query()->orderBy('kode', 'desc');
 
         if ($search) {
             $query->where('nama', 'like', '%' . $search . '%');
