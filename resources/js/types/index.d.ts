@@ -88,6 +88,11 @@ export interface PageFilter {
     search: string;
     pages: number;
     status?: string;
+    sort?: string;
+}
+
+export interface MonitoringPageFilter extends PageFilter {
+    tipe_ujian?: string;
     exam_id?: string;
 }
 

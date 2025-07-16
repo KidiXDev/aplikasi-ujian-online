@@ -3,7 +3,6 @@
 use App\Http\Controllers\BankSoalController;
 use App\Http\Controllers\KategoriUjianController;
 use App\Http\Controllers\MatkulController;
-use App\Http\Controllers\TestController;
 use App\Http\Controllers\UserManagerController;
 use App\Http\Controllers\UserManagerEditController;
 use App\Http\Controllers\PesertaManagerController;
@@ -11,16 +10,14 @@ use App\Http\Controllers\PesertaManagerEditController;
 use App\Http\Controllers\PesertaImportController;
 use App\Http\Controllers\JenisUjianEditController;
 use App\Http\Controllers\PenjadwalanController;
-use App\Http\Controllers\MonitoringUjianController;
-use App\Http\Controllers\EventController;
 use App\Http\Controllers\JenisUjianController;
 use App\Http\Controllers\BankSoalControllerCheckbox;
 use App\Http\Controllers\PaketSoal\PaketSoalController;
 use App\Http\Controllers\PaketSoal\PaketSoalEditController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Matakuliah;
-use App\Models\PaketSoal;
 use App\Http\Controllers\DosenManagerController;
 use App\Http\Controllers\DosenManagerEditController;
 use App\Http\Controllers\DosenImportController;
@@ -30,21 +27,20 @@ use App\Http\Controllers\PaketSoal\MakeEventController;
 use App\Http\Controllers\PaketSoal\AddSoalController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
-
-
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MonitoringUjianController;
 
 Route::get('/', function () {
-    return Inertia::render('auth/login');
+    return Auth::check() ? redirect()->route('dashboard') : Inertia::render('auth/login');
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Dashboard prefix routes
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
     // yang perlu diinget, buat name yang punya nama lebih dari 1 kata, contohnya monitoring-ujian
     // itu harus diubah jadi pake titik, contoh monitoring.ujian
     // jadi nanti di route name-nya jadi monitoring.ujian
 
     Route::get('/paket-soal/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('paket-soal.add-soal');
-    // Login
-    Route::get('/', fn() => Inertia::render('auth/login'))->name('home');
 
     Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
 
@@ -60,17 +56,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return \App\Models\JadwalUjianSoal::where('id_ujian', $value)->firstOrFail();
     });
 
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
-        Route::get('/', [App\Http\Controllers\MonitoringUjianController::class, 'index'])->name('index');
-        Route::get('/{id}/preview', [App\Http\Controllers\MonitoringUjianController::class, 'preview'])->name('preview');
-        Route::get('/{id}', [App\Http\Controllers\MonitoringUjianController::class, 'show'])->name('detail');
-        Route::post('/{id}/reset-participant', [App\Http\Controllers\MonitoringUjianController::class, 'resetParticipant'])->name('reset');
-        Route::post('/{id}/delete-participant', [App\Http\Controllers\MonitoringUjianController::class, 'deleteParticipant'])->name('delete');
+        Route::get('/', [MonitoringUjianController::class, 'index'])->name('index');
+        Route::get('/{id}/preview', [MonitoringUjianController::class, 'preview'])->name('preview');
+        Route::get('/{id}', [MonitoringUjianController::class, 'show'])->name('detail');
+        Route::post('/{id}/reset-participant', [MonitoringUjianController::class, 'resetParticipant'])->name('reset');
+        Route::post('/{id}/delete-participant', [MonitoringUjianController::class, 'deleteParticipant'])->name('delete');
     });
 
     // Penjadwalan
@@ -210,21 +204,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
             // Route index untuk menampilkan semua paket soal
             Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
-            
+
             // Route untuk menampilkan paket soal berdasarkan event
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
-            
+
             // Route untuk create dengan id_event otomatis
             Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');
-            
+
             // Route untuk create biasa
             Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
-            
+
             // Route untuk store
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
             Route::post('/{event_id}', [PaketSoalEditController::class, 'store_id'])->name('store_id');
-            
+
             // Route untuk edit, update, destroy, show
             Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
             Route::put('/{paket_soal}', [PaketSoalEditController::class, 'update'])->name('update');
@@ -285,6 +279,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/events/list', [MakeEventController::class, 'list']);
+});
+
+// Backward compatibility redirects for old routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    // WARNING
+    // JANGAN BIKIN ROUTE BARU DI SINI
+    // Gunakan prefix 'dashboard' untuk semua route baru
+
+    // Redirect old monitoring-ujian routes
+    Route::get('/monitoring-ujian', fn() => redirect('/dashboard/monitoring-ujian'));
+    Route::get('/monitoring-ujian/{any}', fn($any) => redirect("/dashboard/monitoring-ujian/{$any}"))->where('any', '.*');
+
+    // Redirect old penjadwalan routes
+    Route::get('/penjadwalan', fn() => redirect('/dashboard/penjadwalan'));
+    Route::get('/penjadwalan/{any}', fn($any) => redirect("/dashboard/penjadwalan/{$any}"))->where('any', '.*');
+
+    // Redirect old rekap-nilai routes
+    Route::get('/rekap-nilai', fn() => redirect('/dashboard/rekap-nilai'));
+    Route::get('/rekap-nilai/{any}', fn($any) => redirect("/dashboard/rekap-nilai/{$any}"))->where('any', '.*');
+
+    // Redirect old master-data routes
+    Route::get('/master-data', fn() => redirect('/dashboard/master-data'));
+    Route::get('/master-data/{any}', fn($any) => redirect("/dashboard/master-data/{$any}"))->where('any', '.*');
+
+    // Redirect old user-management routes
+    Route::get('/user-management', fn() => redirect('/dashboard/user-management'));
+    Route::get('/user-management/{any}', fn($any) => redirect("/dashboard/user-management/{$any}"))->where('any', '.*');
+
+    // Redirect old token routes
+    Route::get('/token', fn() => redirect('/dashboard/token'));
+    Route::get('/token/{any}', fn($any) => redirect("/dashboard/token/{$any}"))->where('any', '.*');
+
+    // Redirect old paket-soal routes
+    Route::get('/paket-soal/{any}', fn($any) => redirect("/dashboard/paket-soal/{$any}"))->where('any', '.*');
+
+    // Redirect old bidangs route
+    Route::get('/bidangs', fn() => redirect('/dashboard/bidangs'));
+
+    // Redirect old events routes
+    Route::get('/events/{any}', fn($any) => redirect("/dashboard/events/{$any}"))->where('any', '.*');
 });
 
 require __DIR__ . '/settings.php';
