@@ -245,7 +245,9 @@ export default function Dashboard() {
                                 </FormItem>
                             )}
                         />
-                        <CButton type="submit">Save</CButton>
+                         <CButton type="submit" className="bg-green-600 hover:bg-green-700 md:w-24">
+                            Save
+                        </CButton>
                     </form>
                 </Form>
             </div>

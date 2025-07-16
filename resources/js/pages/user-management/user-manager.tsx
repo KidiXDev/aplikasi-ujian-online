@@ -59,7 +59,7 @@ const RoleDecorator: React.FC<{ role: string }> = ({ role }) => {
         case 'admin':
             return <span className="mr-2 rounded bg-yellow-500 p-2 text-white shadow">{role}</span>;
         default:
-            return <span className="mr-2 text-white">{role}</span>;
+            return <span className="mr-2 rounded bg-blue-500 p-2 text-white shadow">{role}</span>;
     }
 };
 
