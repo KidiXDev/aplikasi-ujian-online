@@ -3,7 +3,6 @@ import { Listbox } from '@headlessui/react';
 import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { toast } from 'sonner';
 
 // Components
@@ -59,6 +58,7 @@ interface PageProps {
   paketSoal?: {
     id_ujian: number;
     nama_ujian: string;
+    kode_part: string;
   };
 }
 
@@ -84,12 +84,6 @@ export default function BankSoalCheckbox() {
   const [selectedSoalIds, setSelectedSoalIds] = useState<number[]>(
     props.matchedSoalIds || []
   );
-  const [paketList, setPaketList] = useState<
-    { id_ujian: number; nama_ujian: string }[]
-  >([]);
-  const [selectedPaketId, setSelectedPaketId] = useState<number | null>(
-    paketSoal?.id_ujian ?? null // ➜ pilih otomatis ketika datang dari /edit
-  );
 
   /** Notifications --------------------------------------------------------*/
   useEffect(() => {
@@ -97,20 +91,14 @@ export default function BankSoalCheckbox() {
     if (props.flash?.error) toast.error(props.flash.error);
   }, [props.flash]);
 
-  /** Fetch paket list -----------------------------------------------------*/
-  useEffect(() => {
-    axios.get('/paket-soal/list').then((res) => setPaketList(res.data));
-  }, []);
-
-  /** Save checked soal ----------------------------------------------------*/
-  // Removed unused handleSave function
-
-  /** Dropdown change ------------------------------------------------------*/
-  const handlePaketChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = Number(e.target.value);
-    setSelectedPaketId(id);
-    if (id) {
-      window.location.href = route('master-data.bank-soal-checkbox.edit', id);
+  /** Handle back navigation -----------------------------------------------*/
+  const handleBack = () => {
+    if (paketSoal?.id_ujian) {
+      // Gunakan route back yang sudah ada
+      router.visit(route('master-data.bank-soal-checkbox.back', paketSoal.id_ujian));
+    } else {
+      // Fallback ke history back
+      window.history.back();
     }
   };
 
@@ -120,34 +108,40 @@ export default function BankSoalCheckbox() {
       <Head title="Bank Soal Check Box" />
 
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        {/* Tombol Kembali di atas */}
-        {paketSoal && (
-          <button
-            onClick={() => router.visit('/master-data/paket-soal')}
-            className="mb-4 self-start rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700"
-          >
-            Kembali
-          </button>
-        )}
+        {/* Tombol Kembali */}
+        <button
+          onClick={handleBack}
+          className="mb-4 self-start flex items-center gap-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700 transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Kembali
+        </button>
 
         <ContentTitleNoadd title="Bank Soal Check Box" />
 
-        {/* Dropdown Pilih Paket Ujian */}
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">Pilih Paket Ujian</label>
-          <select
-            value={selectedPaketId ?? ''}
-            onChange={handlePaketChange}
-            className="w-full rounded border px-3 py-2"
-          >
-            <option value="">-- Pilih Paket Ujian --</option>
-            {paketList.map((paket) => (
-              <option key={paket.id_ujian} value={paket.id_ujian}>
-                {paket.nama_ujian}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Info Paket Soal dan Filter */}
+        {paketSoal && (
+          <div className="mb-4 rounded border bg-blue-50 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Nama Paket</label>
+                <p className="mt-1 text-base font-semibold">{paketSoal.nama_ujian}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Kode Bidang</label>
+                <p className="mt-1 text-base font-semibold">{paketSoal.kode_part}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Soal Terpilih</label>
+                <p className="mt-1 text-base font-semibold text-green-600">
+                  {selectedSoalIds.length} soal
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
@@ -155,14 +149,14 @@ export default function BankSoalCheckbox() {
             <EntriesSelector
               currentValue={dataSoal.per_page}
               options={[10, 15, 25, 50]}
-              routeName="master-data.bank.soal"
+              routeName="master-data.bank-soal-checkbox.edit"
               paramName="pages"
             />
             <OrderFilter defaultValue={filters?.order ?? 'asc'} />
           </div>
           <SearchInputMenu
             defaultValue={filters?.search}
-            routeName="master-data.bank.soal"
+            routeName="master-data.bank-soal-checkbox.edit"
           />
         </div>
 
@@ -287,7 +281,6 @@ function BankSoalTable({
 }) {
   const paketSoal = usePage<PageProps>().props.paketSoal;
 
-  // Handler untuk update ke backend setiap kali checklist berubah
   const handleChecklistChange = (id: number, checked: boolean) => {
     let newIds: number[];
     if (checked) {
@@ -298,7 +291,7 @@ function BankSoalTable({
 
     setSelectedSoalIds(newIds);
 
-    // Langsung update ke backend dengan array terbaru
+    // Update ke backend jika ada paket yang dipilih
     if (paketSoal && newIds.length > 0) {
       router.put(
         route('master-data.bank-soal-checkbox.update', paketSoal.id_ujian),
@@ -374,15 +367,18 @@ function BankSoalTable({
   ];
 
   const navigateToPage = (page: number) => {
-    router.visit(route('master-data.bank.soal'), {
-      data: {
-        page,
-        search: pageFilters?.search,
-        pages: data.per_page,
-      },
-      preserveState: true,
-      preserveScroll: true,
-    });
+    if (paketSoal) {
+      router.visit(route('master-data.bank-soal-checkbox.edit', paketSoal.id_ujian), {
+        data: {
+          page,
+          search: pageFilters?.search,
+          pages: data.per_page,
+          order: pageFilters?.order || 'asc',
+        },
+        preserveState: true,
+        preserveScroll: true,
+      });
+    }
   };
 
   return (

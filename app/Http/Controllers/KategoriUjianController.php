@@ -81,17 +81,13 @@ class KategoriUjianController extends Controller
     /**
      * DISPLAY CREATE FORM - KATEGORI UJIAN
      * 
-     * Menampilkan form untuk membuat kategori ujian baru
-     * 
-     * Frontend: resources/js/pages/master-data/kategori-soal/form.kategori-soal.tsx
-     * Route: GET /master-data/kategori-soal/create
+     * CATATAN: Method ini tidak digunakan lagi karena form sekarang menggunakan dialog
+     * di halaman utama. Tetap dipertahankan untuk kompatibilitas route.
      */
     public function create()
     {
-        return Inertia::render('master-data/kategori-soal/form.kategori-soal', [
-            'isEdit' => false,
-            'kategori' => null,
-        ]);
+        // Redirect ke halaman utama karena form sekarang menggunakan dialog
+        return redirect()->route('master-data.kategori-soal.index');
     }
 
     /**
@@ -126,19 +122,13 @@ class KategoriUjianController extends Controller
     /**
      * DISPLAY EDIT FORM - KATEGORI UJIAN
      * 
-     * Menampilkan form edit untuk kategori ujian yang sudah ada
-     * 
-     * Frontend: resources/js/pages/master-data/kategori-soal/form.kategori-soal.tsx
-     * Route: GET /master-data/kategori-soal/{id}/edit
+     * CATATAN: Method ini tidak digunakan lagi karena form sekarang menggunakan dialog
+     * di halaman utama. Tetap dipertahankan untuk kompatibilitas route.
      */
     public function edit($id)
     {
-        $kategori = KategoriSoal::findOrFail($id);
-
-        return Inertia::render('master-data/kategori-soal/form.kategori-soal', [
-            'isEdit' => true,
-            'kategori' => $kategori,
-        ]);
+        // Redirect ke halaman utama karena form sekarang menggunakan dialog
+        return redirect()->route('master-data.kategori-soal.index');
     }
 
     /**

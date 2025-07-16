@@ -120,4 +120,10 @@ class Penjadwalan extends Model
         // This is a placeholder - adjust according to your needs
         return ($this->attributes['status'] ?? 0) == 1 ? 'Regular' : 'Remidi';
     }
+
+    // Relasi ke MBidang berdasarkan tipe_ujian (kode)
+    public function mbidangRelation()
+    {
+        return $this->hasOne(Mbidang::class, 'kode', 'tipe_ujian');
+    }
 }

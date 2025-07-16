@@ -1,4 +1,5 @@
 import { CButton } from '@/components/ui/c-button';
+import { ContentTitle } from '@/components/content-title';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -7,6 +8,22 @@ import { toast } from 'sonner';
 export default function ImportPeserta() {
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    type BreadcrumbItem = {
+        title: string;
+        href: string;
+    };
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Peserta Manager',
+            href: '/master-data/peserta',
+        },
+        {
+            title: 'Import',
+            href: '/import-peserta',
+        },
+    ];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,30 +43,32 @@ export default function ImportPeserta() {
                 const lastPage = localStorage.getItem('peserta_last_page') || 1;
                 router.visit(route('master-data.peserta.manager', { page: lastPage }), { replace: true });
                 localStorage.removeItem('peserta_last_page');
-                // console.log('Import peserta berhasil!');
             },
             onError: () => toast.error('Import gagal, periksa format file.'),
         });
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Import Data Peserta" />
 
-            <div className="space-y-4 p-6">
-                <div className="mb-4 flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Import Data Peserta</h1>
-                    <CButton
-                        type="primary"
-                        className="md:w-24"
-                        onClick={() => {
-                            const lastPage = localStorage.getItem('peserta_last_page') || 1;
-                            router.visit(route('master-data.peserta.manager', { page: lastPage }));
-                        }}
-                    >
-                        Kembali
-                    </CButton>
-                </div>
+            <div className="space-y-4 p-4">
+                <ContentTitle
+                    title="Import Data Peserta"
+                    extraButtons={
+                        <CButton
+                            type="primary"
+                            className="md:w-24"
+                            onClick={() => {
+                                const lastPage = localStorage.getItem('peserta_last_page') || 1;
+                                router.visit(route('master-data.peserta.manager', { page: lastPage }));
+                            }}
+                        >
+                            Kembali
+                        </CButton>
+                    }
+                    showButton={false}
+                />
 
                 <form onSubmit={handleSubmit} className="space-y-2">
                     <label htmlFor="fileInput" className="text-md block pt-15 font-medium text-gray-700">
@@ -65,7 +84,6 @@ export default function ImportPeserta() {
                         className="w-full cursor-pointer rounded border border-gray-300 p-[8px] text-sm file:mr-4 file:rounded file:border-0 file:bg-gray-100 file:px-4 file:py-1 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200"
                     />
 
-                    {/* Tombol Sample & Import */}
                     <div className="flex gap-4 pt-2">
                         <CButton href="/sample/import-peserta.xlsx" download type="success" className="bg-green-600 px-4 text-sm">
                             Sample

@@ -49,9 +49,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
 
     Route::get('/bidangs', [BidangController::class, 'index']); // dropdown bidang
-    Route::get('/paket-soal/create', function () {
-        return Inertia::render('master-data/paket-soal/CreatePaketSoal');
-    })->name('paket-soal.create');
 
     Route::post('/paket-soal', [PaketSoalEditController::class, 'store'])->name('paket-soal.store');
 
@@ -143,17 +140,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('create', [PesertaManagerEditController::class, 'create'])->name('create');
             Route::post('/', [PesertaManagerEditController::class, 'store'])->name('store');
             Route::post('import', [PesertaImportController::class, 'import'])->name('import');
+            Route::get('import', [PesertaImportController::class, 'importView'])->name('import.view');
 
             // ✅ Tambahan dari kode kedua:
             Route::put('{peserta}/toggle-status', [PesertaManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
+        Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
 
 
-
-        Route::prefix('import')->name('import.')->group(function () {
-            Route::get('/', [PesertaImportController::class, 'importView'])->name('view');
-        });
+        // Route::prefix('import')->name('import.')->group(function () {
+        //     Route::get('/', [PesertaImportController::class, 'importView'])->name('view');
+        // });
 
         // Route show bank soal
         Route::get('bank-soal', [BankSoalController::class, 'index'])->name('bank.soal');
@@ -174,6 +172,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('bank-soal/{id}/edit', [BankSoalController::class, 'edit'])->name('bank.soal.edit');
 
         Route::post('bank-soal', [BankSoalController::class, 'store'])->name('bank.soal.store');
+
+        // API route untuk dropdown kategori soal di bank soal
+        Route::get('/kategorisoal', [BankSoalController::class, 'getKategoriSoal']);
 
         // Route untuk matakuliah dipindahkan ke dalam grup master-data
         Route::prefix('matakuliah')->name('matakuliah.')->group(function () {
@@ -207,15 +208,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Route untuk paket soal
         Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
-
-            Route::get('/', [PaketSoalController::class, 'index'])->name('index');
-            Route::get('/create', [PaketSoalEditController::class, 'create'])->name('create');
+            // Route index untuk menampilkan semua paket soal
+            Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
+            
+            // Route untuk menampilkan paket soal berdasarkan event
+            Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
+            
+            // Route untuk create dengan id_event otomatis
+            Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');
+            
+            // Route untuk create biasa
             Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
+            
+            // Route untuk store
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
-            Route::get('/{paket_soal}', [PaketSoalEditController::class, 'edit'])->name('edit');
+            Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
+            Route::post('/{event_id}', [PaketSoalEditController::class, 'store_id'])->name('store_id');
+            
+            // Route untuk edit, update, destroy, show
+            Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
             Route::put('/{paket_soal}', [PaketSoalEditController::class, 'update'])->name('update');
             Route::delete('/{paket_soal}', [PaketSoalController::class, 'destroy'])->name('destroy');
-            Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
             Route::get('/{paket_soal}/detail', [PaketSoalController::class, 'show'])->name('show');
         });
 
@@ -233,6 +246,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/bank-soal-checkbox/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('bank-soal-checkbox.edit');
         Route::put('/bank-soal-checkbox/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('bank-soal-checkbox.update');
+        Route::get('/bank-soal-checkbox/{paket_soal_id}/back', [BankSoalControllerCheckbox::class, 'back'])->name('bank-soal-checkbox.back');
     });
 
     // User Management routes
