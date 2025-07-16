@@ -11,7 +11,7 @@ import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { Listbox } from '@headlessui/react';
 import { ChevronDown, Search } from 'lucide-react';
-import { useState, useEffect, JSX } from 'react';
+import { useState, useEffect, JSX, useMemo } from 'react';
 
 interface BreadcrumbItem {
     title: string;
