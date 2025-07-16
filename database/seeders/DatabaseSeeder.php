@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            PesertaFilterSeeder::class,
         ]);
 
         // Create 500 users and assign random roles to each
