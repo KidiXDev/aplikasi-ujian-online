@@ -8,6 +8,7 @@ use App\Models\JadwalUjianSoal;
 use App\Models\Pengerjaan;
 use App\Models\PengerjaanJawaban;
 use App\Models\Peserta;
+use App\Models\KategoriSoal;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,6 +21,8 @@ class MonitoringUjianController extends Controller
     {
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
+        $tipeUjian = $request->query('tipe_ujian', null);
+        $sort = $request->query('sort', 'newest');
 
         // Eager load both event and jenis_ujian relationships
         $query = Penjadwalan::with(['event', 'jenis_ujian']);
@@ -29,8 +32,39 @@ class MonitoringUjianController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('event', function ($q) use ($search) {
                     $q->where('nama_event', 'like', "%{$search}%");
-                });
+                })
+                    ->orWhere('paket_ujian', 'like', "%{$search}%")
+                    ->orWhere('kelas_prodi', 'like', "%{$search}%");
             });
+        }
+
+        // Apply tipe ujian filter if provided
+        if ($tipeUjian) {
+            $query->whereHas('jenis_ujian', function ($q) use ($tipeUjian) {
+                $q->where('kategori', $tipeUjian);
+            });
+        }
+
+        // Apply sorting
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('tanggal', 'asc');
+                break;
+            case 'tipe_ujian':
+                $query->join('data_db.t_kat_soal as kat', 'penjadwalan.tipe_ujian', '=', 'kat.id')
+                    ->orderBy('kat.kategori', 'asc')
+                    ->select('penjadwalan.*'); // Ensure we only select from penjadwalan table
+                break;
+            case 'kuota_asc':
+                $query->orderBy('kuota', 'asc');
+                break;
+            case 'kuota_desc':
+                $query->orderBy('kuota', 'desc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('tanggal', 'desc');
+                break;
         }
 
         $ujianList = $query->paginate((int)$pages)->withQueryString();
@@ -50,11 +84,17 @@ class MonitoringUjianController extends Controller
             ];
         });
 
+        // Get available exam categories for filter dropdown
+        $examCategories = KategoriSoal::select('id', 'kategori')->orderBy('kategori')->get();
+
         return Inertia::render('monitoring/monitoring', [
             'ujianList' => $ujianList,
+            'examCategories' => $examCategories,
             'filters' => [
                 'search' => $search,
                 'pages' => $pages,
+                'tipe_ujian' => $tipeUjian,
+                'sort' => $sort,
             ],
         ]);
     }
