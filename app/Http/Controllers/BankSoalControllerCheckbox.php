@@ -147,7 +147,7 @@ class BankSoalControllerCheckbox extends Controller
         $jadwalUjian = JadwalUjian::findOrFail($paket_soal_id);
         $id_event = $jadwalUjian->id_event;   $id_event = $jadwalUjian->id_event;
                 
-        // Redirect ke halaman paket soal berdasarkan event       // Redirect ke halaman paket soal berdasarkan event
+        // Redirect ke halaman paket soal berdasarkan event       
         return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $id_event]);        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $id_event]);
     }    
 }    

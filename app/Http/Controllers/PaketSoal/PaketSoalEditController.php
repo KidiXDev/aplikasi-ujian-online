@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\JadwalUjianSoal;
 use App\Models\JadwalUjian;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class PaketSoalEditController extends Controller
 {
@@ -60,6 +61,16 @@ class PaketSoalEditController extends Controller
             'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
         ]);
 
+        // Cek apakah kombinasi event dan kode_part sudah ada
+        $existing = JadwalUjian::where('id_event', $request->input('id_event'))
+            ->where('kode_part', $request->input('kode_part'))
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()
+                ->withErrors(['bidang' => 'Bidang ini sudah ada dalam event tersebut.']);
+        }
+
         $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
         $jadwalUjian = JadwalUjian::create([
             'nama_ujian' => $namaUjian,
@@ -75,24 +86,29 @@ class PaketSoalEditController extends Controller
             'ujian_soal' => 0
         ]);
 
-        // REDIRECT KE ROUTE YANG BENAR
         return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $request->input('id_event')])->with('success', 'Paket soal berhasil dibuat!');
     }
 
     // Method untuk create dengan event ID yang sudah ditentukan
     public function createWithEvent($id_event)
     {
-        $events = Event::select('id_event', 'nama_event')->get();
-        $bidangs = Bidang::select('kode', 'nama')->get();
+        // Ambil data event
+        $event = Event::findOrFail($id_event);
         
-        // Ambil data event yang dipilih
-        $selectedEvent = Event::findOrFail($id_event);
+        // Ambil semua kode_part yang sudah digunakan dalam event ini
+        $usedKodeParts = JadwalUjian::where('id_event', $id_event)
+            ->pluck('kode_part')
+            ->toArray();
+        
+        // Ambil bidang yang belum digunakan dalam event ini
+        $bidangs = Bidang::select('kode', 'nama')
+            ->whereNotIn('kode', $usedKodeParts)
+            ->get();
 
         return Inertia::render('master-data/paket-soal/create-paket-soal', [
-            'events' => $events,
             'bidangs' => $bidangs,
-            'selectedEventId' => (int)$id_event,
-            'selectedEvent' => $selectedEvent,
+            'selectedEventId' => $id_event,
+            'selectedEvent' => $event,
         ]);
     }
 
@@ -115,11 +131,21 @@ class PaketSoalEditController extends Controller
             'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
         ]);
 
+        // Cek apakah kombinasi event dan kode_part sudah ada
+        $existing = JadwalUjian::where('id_event', $event_id)
+            ->where('kode_part', $request->input('kode_part'))
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()
+                ->withErrors(['bidang' => 'Bidang ini sudah ada dalam event tersebut.']);
+        }
+
         $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
         $jadwalUjian = JadwalUjian::create([
             'nama_ujian' => $namaUjian,
             'kode_kelas' => 1,
-            'id_event' => $event_id, // Gunakan event_id dari parameter URL
+            'id_event' => $event_id,
             'kode_part' => $request->input('kode_part'),
         ]);
 
@@ -131,5 +157,91 @@ class PaketSoalEditController extends Controller
         ]);
 
         return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $event_id]);
+    }
+
+    
+
+    public function list_event_to_copy_part($id_event_tujuan){
+        try {
+            // Ambil event kecuali event tujuan dan hanya yang aktif
+            $eventList = Event::where('id_event', '!=', $id_event_tujuan)
+                ->where('status', 1)
+                ->select('id_event', 'nama_event')
+                ->get();
+            
+            Log::info('Event list for copy:', ['count' => $eventList->count(), 'data' => $eventList->toArray()]);
+            
+            return response()->json($eventList);
+        } catch (\Exception $e) {
+            Log::error('Error in list_event_to_copy_part: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function copyPart(Request $request){
+        try {
+            $request->validate([
+                'event_asal' => 'required|integer|exists:data_db.t_event,id_event',
+                'event_tujuan' => 'required|integer|exists:data_db.t_event,id_event',
+            ]);
+
+            $id_event_asal = $request->input('event_asal');
+            $id_event_tujuan = $request->input('event_tujuan');
+
+            // ambil kode part event asal
+            $kodePartAsal = JadwalUjian::where('id_event', $id_event_asal)->pluck('kode_part')->toArray();
+
+            //  ambil kode part event tujuan
+            $kodePartTujuan = JadwalUjian::where('id_event', $id_event_tujuan)->pluck('kode_part')->toArray();
+
+            // ambil kode part yang belum ada di event tujuan
+            $kodePartAvailable = array_diff($kodePartAsal, $kodePartTujuan);
+
+            if (empty($kodePartAvailable)) {
+                return redirect()->back()
+                    ->with('error', 'Tidak ada paket soal yang dapat disalin. Semua bidang sudah ada di event tujuan.');
+            }
+
+            // ambil jadwal ujian yang kodepartnya tersedia aja
+            $jadwalList = JadwalUjian::where('id_event', $id_event_asal)
+                ->whereIn('kode_part', $kodePartAvailable)
+                ->get();
+
+            $copiedCount = 0;
+
+            // Loop untuk setiap jadwal ujian yang akan disalin
+            foreach ($jadwalList as $jadwal) {
+                // copy jadwal ujian
+                $jadwalUjianNew = JadwalUjian::create([
+                    'nama_ujian' => $jadwal->nama_ujian,
+                    'kode_kelas' => $jadwal->kode_kelas,
+                    'id_event' => $id_event_tujuan,
+                    'kode_part' => $jadwal->kode_part,
+                ]);
+                
+                // Ambil JadwalUjianSoal dari jadwal asal
+                $jadwalUjianSoal = JadwalUjianSoal::where('id_ujian', $jadwal->id_ujian)->first();
+                
+                if ($jadwalUjianSoal) {
+                    // Buat JadwalUjianSoal baru untuk JadwalUjian baru
+                    JadwalUjianSoal::create([
+                        'id_ujian' => $jadwalUjianNew->id_ujian,
+                        'kd_bidang' => $jadwalUjianSoal->kd_bidang,
+                        'total_soal' => $jadwalUjianSoal->total_soal,
+                        'ujian_soal' => $jadwalUjianSoal->ujian_soal
+                    ]);
+                }
+
+                $copiedCount++;
+            }
+
+            return redirect()->back()
+                ->with('success', "Berhasil menyalin {$copiedCount} paket soal ke event tujuan.");
+
+        } catch (\Exception $e) {
+            Log::error('Error in copyPart: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menyalin paket soal: ' . $e->getMessage());
+        }
     }
 }

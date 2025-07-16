@@ -40,9 +40,10 @@ class PaketSoalController extends Controller
         $event = Event::findOrFail($id_event);
 
         // Query jadwal ujian berdasarkan event
-        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
+        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part', 'id_penjadwalan')
             ->with(['event:id_event,nama_event', 'bidang:kode,nama'])
-            ->where('id_event', $id_event);
+            ->where('id_event', $id_event)
+            ->where('id_penjadwalan', null);
 
         if ($search) {
             $jadwalUjianQuery->where('nama_ujian', 'like', '%' . $search . '%');
@@ -104,13 +105,17 @@ class PaketSoalController extends Controller
         return response()->json($paketSoal);
     }
 
-    public function create()
+    public function create($id_event)
     {
-        $events = Event::select('id_event', 'nama_event')->get();
-        $bidangs = Bidang::select('id_bidang', 'nama_bidang')->get();
+        $JadwalUjian = JadwalUjian::where('id_event', $id_event)->first();
+        $kode_part = $JadwalUjian->kode_part;
+
+        //Ambil bidang yang id nya beda dengan $kode_part
+        $bidangs = Bidang::select('id_bidang', 'nama_bidang')
+            ->where('kode', '!=', $kode_part)
+            ->get();
 
         return Inertia::render('master-data/paket-soal/create-paket-soal', [
-            'events' => $events,
             'bidangs' => $bidangs,
         ]);
     }

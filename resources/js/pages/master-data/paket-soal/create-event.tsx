@@ -65,7 +65,6 @@ export default function FormEvent() {
         if (isEdit && event?.id_event) {
             router.put(route('master-data.event.update', event.id_event), values, {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Event berhasil diubah!'),
                 onError: handleErrors,
             });
         } else {
@@ -88,7 +87,7 @@ export default function FormEvent() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isEdit ? 'Edit Event' : 'Create Event'} />
+            <Head title={isEdit ? 'Edit Paket Soal' : 'Buat Paket Soal'} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} Event</h1>

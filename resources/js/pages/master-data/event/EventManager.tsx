@@ -152,8 +152,17 @@ function EventTable({
     const confirmAction = () => {
         if (!targetId) return;
         
+        // Ambil parameter saat ini untuk mempertahankan filter
+        const currentParams = {
+            pages: queryParams.get('pages') || events.per_page.toString(),
+            search: queryParams.get('search') || '',
+            status: queryParams.get('status') || '',
+            page: queryParams.get('page') || '1'
+        };
+        
         if (actionType === 'delete') {
             router.delete(route('master-data.event.destroy', targetId), {
+                data: currentParams,
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
@@ -167,10 +176,11 @@ function EventTable({
             });
         } else {
             // Toggle status
-            router.put(route('master-data.event.updateStatus', targetId), {}, {
+            router.put(route('master-data.event.updateStatus', targetId), currentParams, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    toast.success('Status event berhasil diubah');
                     // Update local state
                     setTableData(prev =>
                         prev.map(ev => {
@@ -180,6 +190,11 @@ function EventTable({
                             return ev;
                         })
                     );
+                    // Refresh halaman dengan parameter yang sama untuk mempertahankan filter
+                    router.visit(route('master-data.event.getEvent'), {
+                        data: currentParams,
+                        preserveScroll: true
+                    });
                 },
                 onError: () => {
                     toast.error('Gagal mengubah status event');

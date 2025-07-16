@@ -149,9 +149,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
             Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');
-            Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
+            Route::get('/create-event/{id_event}', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
+            Route::post('/copy-part', [PaketSoalEditController::class, 'copyPart'])->name('copy_part');
+            Route::get('/list-event-to-copy/{id_event_tujuan}', [PaketSoalEditController::class, 'list_event_to_copy_part'])->name('list-event-to-copy');
             Route::post('/{event_id}', [PaketSoalEditController::class, 'store_id'])->name('store_id');
             Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
             Route::put('/{paket_soal}', [PaketSoalEditController::class, 'update'])->name('update');

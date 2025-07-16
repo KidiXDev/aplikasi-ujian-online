@@ -36,19 +36,25 @@ class MakeEventController extends Controller
             'event_akhir' => 'nullable|date',
         ]);
 
-        // Gunakan nilai dari request atau default
-        $event_mulai = $request->input('event_mulai') ?? now();
-        $event_akhir = $request->input('event_akhir') ?? now()->addYears(5);
+        try {
+            // Gunakan nilai dari request atau default
+            $event_mulai = $request->input('event_mulai') ?? now();
+            $event_akhir = $request->input('event_akhir') ?? now()->addYears(5);
 
-        $event = Event::create([
-            'nama_event' => $request->input('nama_event'),
-            'status' => $request->input('status', 1),
-            'mulai_event' => $event_mulai,
-            'akhir_event' => $event_akhir,
-        ]);
+            $event = Event::create([
+                'nama_event' => $request->input('nama_event'),
+                'status' => $request->input('status', 1),
+                'mulai_event' => $event_mulai,
+                'akhir_event' => $event_akhir,
+            ]);
 
-        // Redirect ke halaman event manager dengan pesan sukses
-        return redirect()->route('master-data.event.getEvent');
+            // Redirect ke halaman event manager dengan pesan sukses
+            return redirect()->route('master-data.event.getEvent')
+                ->with('success', 'Event berhasil dibuat');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.event.getEvent')
+                ->with('error', 'Gagal membuat event: ' . $e->getMessage());
+        }
     }
 
     public function show($id)
@@ -79,8 +85,8 @@ class MakeEventController extends Controller
             'event_mulai' => $event->mulai_event ? $event->mulai_event->format('Y-m-d') : null,
             'event_akhir' => $event->akhir_event ? $event->akhir_event->format('Y-m-d') : null,
         ];
-        
-        return Inertia::render('master-data/paket-soal/create-event', ['event' => $event]);
+
+        return Inertia::render('master-data/paket-soal/create-event', ['event' => $eventData]);
     }
 
     // public function store(Request $request)
@@ -95,10 +101,16 @@ class MakeEventController extends Controller
 
     public function update($id, Request $request)
     {
-        $event = Event::findOrFail($id);
-        $event->update($request->all());
+        try {
+            $event = Event::findOrFail($id);
+            $event->update($request->all());
 
-        return redirect()->route('master-data.event.getEvent');
+            return redirect()->route('master-data.event.getEvent')
+                ->with('success', 'Event berhasil diupdate');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.event.getEvent')
+                ->with('error', 'Gagal mengupdate event: ' . $e->getMessage());
+        }
     }
 
     public function toggleStatus($id, Request $request)
@@ -110,10 +122,20 @@ class MakeEventController extends Controller
         return redirect()->back();
     }
 
-    public function destroy($id)
+    public function destroy($id, Request $request)
     {
-        Event::findOrFail($id)->delete();
-        return redirect()->back();
+        try {
+            Event::findOrFail($id)->delete();
+            
+            // Ambil parameter dari request untuk mempertahankan filter
+            $params = $request->only(['pages', 'search', 'status', 'page']);
+            
+            return redirect()->route('master-data.event.getEvent', $params)
+                ->with('success', 'Event berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.event.getEvent')
+                ->with('error', 'Gagal menghapus event: ' . $e->getMessage());
+        }
     }
 
     public function change_status($id, Request $request)
@@ -127,7 +149,11 @@ class MakeEventController extends Controller
             
             $statusText = $event->status === 1 ? 'diaktifkan' : 'dinonaktifkan';
 
-            return redirect()->route('master-data.event.getEvent');            
+            // Ambil parameter dari request untuk mempertahankan filter
+            $params = $request->only(['pages', 'search', 'status', 'page']);
+            
+            return redirect()->route('master-data.event.getEvent', $params)
+                ->with('success', "Status event berhasil {$statusText}");            
         } catch (\Exception $e) {
             return redirect()->route('master-data.event.getEvent')
                 ->with('error', 'Gagal mengubah status event: ' . $e->getMessage());
