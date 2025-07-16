@@ -34,17 +34,20 @@ class MakeEventController extends Controller
             'event_akhir' => 'nullable|date',
         ]);
 
-        $event_mulai = now();
-        $event_akhir = now()->addYears(5);
+        // Gunakan nilai dari request atau default
+        $event_mulai = $request->input('event_mulai') ?? now();
+        $event_akhir = $request->input('event_akhir') ?? now()->addYears(5);
 
         $event = Event::create([
             'nama_event' => $request->input('nama_event'),
             'status' => $request->input('status', 1),
-            'mulai_event' => $request->input('event_mulai', $event_mulai),
-            'akhir_event' => $request->input('event_akhir', $event_akhir),
+            'mulai_event' => $event_mulai,
+            'akhir_event' => $event_akhir,
         ]);
 
-       
+        // Redirect ke halaman event manager dengan pesan sukses
+        return redirect()->route('master-data.event.getEvent')
+            ->with('success', 'Event berhasil dibuat!');
     }
 
     public function show($id)
@@ -94,12 +97,14 @@ class MakeEventController extends Controller
         $event = Event::findOrFail($id);
         $event->nama_event = $request->input('nama_event');
         $event->status = $request->input('status');
+        
         if ($request->has('event_mulai')) {
             $event->mulai_event = $request->input('event_mulai');
         }
         if ($request->has('event_akhir')) {
             $event->akhir_event = $request->input('event_akhir');
         }
+        
         $event->save();
 
         return redirect()->route('master-data.event.getEvent')->with('success', 'Event berhasil diupdate!');
@@ -107,18 +112,28 @@ class MakeEventController extends Controller
 
     public function destroy($id)
     {
-        // Hapus semua jadwal ujian yang terkait dengan event ini
-        $jadwalUjians = JadwalUjian::where('id_event', $id)->get();
-        foreach ($jadwalUjians as $jadwalUjian) {
-            JadwalUjianSoal::where('id_ujian', $jadwalUjian->id_ujian)->delete();
-            $jadwalUjian->delete();
+        try {
+            // Cari event berdasarkan ID
+            $event = Event::findOrFail($id);
+            
+            // Nonaktifkan event dengan mengubah status menjadi 0
+            $event->status = 0;
+            $event->save();
+
+            // Nonaktifkan semua jadwal ujian yang terkait dengan event ini
+            $jadwalUjians = JadwalUjian::where('id_event', $id)->get();
+            foreach ($jadwalUjians as $jadwalUjian) {
+                // Bisa tambahkan field status pada jadwal ujian jika diperlukan
+                // $jadwalUjian->status = 0;
+                // $jadwalUjian->save();
+            }
+
+            return redirect()->route('master-data.event.getEvent')
+                ->with('success', 'Event berhasil dinonaktifkan');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.event.getEvent')
+                ->with('error', 'Gagal menonaktifkan event: ' . $e->getMessage());
         }
-
-        $event = Event::findOrFail($id);
-        $event->delete();
-
-        return redirect()->route('master-data.event.getEvent')
-            ->with('success', 'Event berhasil dihapus');
     }
 
     public function list()
@@ -128,7 +143,8 @@ class MakeEventController extends Controller
         return response()->json($events);
     }
 
-    public function getEvent(Request $request){
+    public function getEvent(Request $request)
+    {
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 

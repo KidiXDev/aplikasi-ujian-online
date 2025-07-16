@@ -4,6 +4,7 @@ import { Link } from '@inertiajs/react';
 import {
     Book,
     CalendarClock,
+    Github,
     GraduationCap,
     Home,
     Monitor,
@@ -21,7 +22,7 @@ import { NavCollabsibleMain } from './nav-main';
 const footerItem: NavItem[] = [
     {
         title: 'Repository',
-        icon: Book,
+        icon: Github,
         href: 'https://github.com/KidiXDev/aplikasi-ujian-online',
     },
     {
@@ -43,39 +44,39 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'Peserta',
-                href: '/master-data/peserta',
+                href: `/master-data/peserta`,
                 icon: UserRound,
             },
             {
                 title: 'Dosen',
-                href: '/master-data/dosen',
+                href: `/master-data/dosen`,
                 icon: UsersRound,
             },
             {
                 title: 'Kategori Ujian',
-                href: '/master-data/kategori-soal',
+                href: `/master-data/kategori-soal`,
                 icon: Book,
             },
             {
                 title: 'Jenis Ujian',
-                href: '/master-data/jenis-ujian',
+                href: `/master-data/jenis-ujian`,
                 icon: Book,
             },
             {
                 title: 'Bank Soal',
-                href: '/master-data/bank-soal',
-                icon: Book,
-            },            
-            {
-                title: 'Event',
-                href: '/master-data/event',
+                href: `/master-data/bank-soal`,
                 icon: Book,
             },
             {
                 title: 'Paket Soal',
-                href: '/master-data/paket-soal',
+                href: `/master-data/event`,
                 icon: Book,
             },
+            // {
+            //     title: 'Paket Soal',
+            //     href: `/master-data/paket-soal`,
+            //     icon: Book,
+            // },
         ],
     },
     {
@@ -84,17 +85,17 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'User',
-                href: '/user-management/user',
+                href: `/user-management/user`,
                 icon: UserRound,
             },
             {
                 title: 'Roles',
-                href: '/user-management/roles',
+                href: `/user-management/roles`,
                 icon: ShieldCheck,
             },
             {
                 title: 'Permissions',
-                href: '/user-management/permissions',
+                href: `/user-management/permissions`,
                 icon: ShieldAlert,
             },
         ],
@@ -102,17 +103,17 @@ const items: MainNavItem[] = [
     {
         title: 'Jadwal Ujian',
         icon: CalendarClock,
-        href: '/penjadwalan',
+        href: `/penjadwalan`,
     },
     {
         title: 'Monitoring',
         icon: Monitor,
-        href: '/monitoring-ujian',
+        href: `/monitoring-ujian`,
     },
     {
         title: 'Rekap Nilai',
         icon: GraduationCap,
-        href: '/rekap-nilai',
+        href: `/rekap-nilai`,
     },
 ];
 
@@ -131,7 +132,7 @@ const items: MainNavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" defaultChecked variant="inset" className="shadow-xl shadow-black/50">
+        <Sidebar collapsible="icon" defaultChecked={false} variant="inset" className="shadow-xl shadow-black/50">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>

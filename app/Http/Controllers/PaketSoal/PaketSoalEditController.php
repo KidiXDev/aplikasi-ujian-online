@@ -53,7 +53,6 @@ class PaketSoalEditController extends Controller
     }
 
     // PaketSoalEditController.php
-
     public function store(Request $request)
     {
         $request->validate([
@@ -61,29 +60,43 @@ class PaketSoalEditController extends Controller
             'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
         ]);
 
-        $kode_kelas = null;
-
         $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
         $jadwalUjian = JadwalUjian::create([
             'nama_ujian' => $namaUjian,
-            'kode_kelas' => $kode_kelas,
+            'kode_kelas' => 1,
             'id_event' => $request->input('id_event'),
             'kode_part' => $request->input('kode_part'),
         ]);
 
-        $ujiaSoal = 0;
-        $totalSoal = 0;
-        $jadwalUjianSoal = JadwalUjianSoal::create([
+        JadwalUjianSoal::create([
             'id_ujian' => $jadwalUjian->id_ujian,
             'kd_bidang' => $request->input('kode_part'),
-            'total_soal' => $totalSoal,
-            'ujian_soal' => $ujiaSoal
+            'total_soal' => 0,
+            'ujian_soal' => 0
         ]);
 
-        // Redirect ke halaman index atau create lagi
-        return redirect()->route('master-data.paket-soal.index')->with('success', 'Paket soal berhasil dibuat!');
+        // REDIRECT KE ROUTE YANG BENAR
+        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $request->input('id_event')])->with('success', 'Paket soal berhasil dibuat!');
     }
 
+    // Method untuk create dengan event ID yang sudah ditentukan
+    public function createWithEvent($id_event)
+    {
+        $events = Event::select('id_event', 'nama_event')->get();
+        $bidangs = Bidang::select('kode', 'nama')->get();
+        
+        // Ambil data event yang dipilih
+        $selectedEvent = Event::findOrFail($id_event);
+
+        return Inertia::render('master-data/paket-soal/create-paket-soal', [
+            'events' => $events,
+            'bidangs' => $bidangs,
+            'selectedEventId' => (int)$id_event,
+            'selectedEvent' => $selectedEvent,
+        ]);
+    }
+
+    // Method create biasa (tanpa event ID)
     public function create()
     {
         $events = Event::select('id_event', 'nama_event')->get();
@@ -93,5 +106,31 @@ class PaketSoalEditController extends Controller
             'events' => $events,
             'bidangs' => $bidangs,
         ]);
+    }
+
+    // Update method store_id untuk handle event ID dari URL
+    public function store_id(Request $request, $event_id)
+    {
+        $request->validate([
+            'kode_part' => 'required|integer|exists:data_db.m_bidang,kode',
+        ]);
+
+        $namaUjian = Bidang::where('kode', $request->input('kode_part'))->value('nama');
+        $jadwalUjian = JadwalUjian::create([
+            'nama_ujian' => $namaUjian,
+            'kode_kelas' => 1,
+            'id_event' => $event_id, // Gunakan event_id dari parameter URL
+            'kode_part' => $request->input('kode_part'),
+        ]);
+
+        JadwalUjianSoal::create([
+            'id_ujian' => $jadwalUjian->id_ujian,
+            'kd_bidang' => $request->input('kode_part'),
+            'total_soal' => 0,
+            'ujian_soal' => ''
+        ]);
+
+        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $event_id])
+            ->with('success', 'Paket soal berhasil dibuat!');
     }
 }
