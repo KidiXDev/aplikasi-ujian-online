@@ -44,37 +44,37 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'Peserta',
-                href: '/master-data/peserta',
+                href: '/dashboard/master-data/peserta',
                 icon: UserRound,
             },
             {
                 title: 'Dosen',
-                href: '/master-data/dosen',
+                href: '/dashboard/master-data/dosen',
                 icon: UsersRound,
             },
             {
                 title: 'Kategori Ujian',
-                href: '/master-data/kategori-soal',
+                href: '/dashboard/master-data/kategori-soal',
                 icon: Book,
             },
             {
                 title: 'Jenis Ujian',
-                href: '/master-data/jenis-ujian',
+                href: '/dashboard/master-data/jenis-ujian',
                 icon: Book,
             },
             {
                 title: 'Bank Soal',
-                href: '/master-data/bank-soal',
+                href: '/dashboard/master-data/bank-soal',
                 icon: Book,
             },
             {
                 title: 'Paket Soal',
-                href: '/master-data/event',
+                href: '/dashboard/master-data/event',
                 icon: Book,
             },
             // {
             //     title: 'Paket Soal',
-            //     href: '/master-data/paket-soal',
+            //     href: '/dashboard/master-data/paket-soal',
             //     icon: Book,
             // },
         ],
@@ -85,17 +85,17 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'User',
-                href: '/user-management/user',
+                href: '/dashboard/user-management/user',
                 icon: UserRound,
             },
             {
                 title: 'Roles',
-                href: '/user-management/roles',
+                href: '/dashboard/user-management/roles',
                 icon: ShieldCheck,
             },
             {
                 title: 'Permissions',
-                href: '/user-management/permissions',
+                href: '/dashboard/user-management/permissions',
                 icon: ShieldAlert,
             },
         ],
@@ -103,17 +103,17 @@ const items: MainNavItem[] = [
     {
         title: 'Jadwal Ujian',
         icon: CalendarClock,
-        href: '/penjadwalan',
+        href: '/dashboard/penjadwalan',
     },
     {
         title: 'Monitoring',
         icon: Monitor,
-        href: '/monitoring-ujian',
+        href: '/dashboard/monitoring-ujian',
     },
     {
         title: 'Rekap Nilai',
         icon: GraduationCap,
-        href: '/rekap-nilai',
+        href: '/dashboard/rekap-nilai',
     },
 ];
 
