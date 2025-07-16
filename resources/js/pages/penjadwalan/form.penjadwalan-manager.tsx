@@ -305,20 +305,36 @@ export default function PenjadwalanForm() {
                         <FormField
                             control={form.control}
                             name="kuota"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Kuota</FormLabel>
-                                    <FormControl>
-                                        <Input 
-                                            type="number" 
-                                            placeholder="Masukkan kuota peserta" 
-                                            {...field} 
-                                            onChange={e => field.onChange(parseInt(e.target.value))} 
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
+                            render={({ field }) => {
+                                // Ambil jumlah peserta terdaftar jika edit
+                                const jumlahTerdaftar = penjadwalan && (penjadwalan as any).jumlahTerdaftar ? (penjadwalan as any).jumlahTerdaftar : 0;
+                                const handleKuotaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const value = parseInt(e.target.value);
+                                    if (isEdit && jumlahTerdaftar > 0 && value < jumlahTerdaftar) {
+                                        toast.error(`Kuota tidak boleh kurang dari jumlah peserta terdaftar (${jumlahTerdaftar}).`);
+                                    }
+                                    field.onChange(value);
+                                };
+                                return (
+                                    <FormItem>
+                                        <FormLabel>Kuota</FormLabel>
+                                        <FormControl>
+                                            <Input 
+                                                type="number" 
+                                                placeholder="Masukkan kuota peserta" 
+                                                {...field} 
+                                                onChange={handleKuotaChange}
+                                            />
+                                        </FormControl>
+                                        {isEdit && jumlahTerdaftar > 0 && (
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                Minimal kuota: {jumlahTerdaftar} (jumlah peserta terdaftar)
+                                            </div>
+                                        )}
+                                        <FormMessage />
+                                    </FormItem>
+                                );
+                            }}
                         />
 
                         <CButton type="submit" className="w-full md:w-32">

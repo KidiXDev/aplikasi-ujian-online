@@ -173,6 +173,19 @@ class PenjadwalanController extends Controller
                 ->whereNull('id_penjadwalan');
         })->get(['id_event', 'nama_event']);
 
+        // Hitung jumlah peserta terdaftar untuk penjadwalan ini
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+        $existingPesertaIds = [];
+        foreach ($jadwalUjians as $jadwalUjian) {
+            if ($jadwalUjian->kode_kelas) {
+                $ids = explode(',', $jadwalUjian->kode_kelas);
+                $ids = array_filter(array_map('trim', $ids));
+                $existingPesertaIds = array_merge($existingPesertaIds, $ids);
+            }
+        }
+        $existingPesertaIds = array_unique($existingPesertaIds);
+        $jumlahTerdaftar = count($existingPesertaIds);
+
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
             'penjadwalan' => [
                 'id_penjadwalan' => $penjadwalan->id_penjadwalan,
@@ -192,6 +205,7 @@ class PenjadwalanController extends Controller
                     'id_event' => $penjadwalan->event->id_event,
                     'nama_event' => $penjadwalan->event->nama_event,
                 ] : null,
+                'jumlahTerdaftar' => $jumlahTerdaftar,
                 // 'kategori_soal' dihapus sesuai permintaan
             ],
             'kategoriSoal' => $kategoriSoal,
@@ -288,13 +302,15 @@ class PenjadwalanController extends Controller
             // Handle case where event might be null
             $namaEvent = $penjadwalan->event ? $penjadwalan->event->nama_event : 'Event tidak ditemukan';
 
-            // Hapus JadwalUjianSoal yang terkait dengan JadwalUjian dari penjadwalan ini
+            // Hapus semua JadwalUjianSoal yang diduplikat (bukan template) untuk penjadwalan ini
             $jadwalUjianIds = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->pluck('id_ujian');
             if ($jadwalUjianIds->isNotEmpty()) {
-                JadwalUjianSoal::whereIn('id_ujian', $jadwalUjianIds)->delete();
+                JadwalUjianSoal::whereIn('id_ujian', $jadwalUjianIds)
+                    ->where('id_penjadwalan', $penjadwalan->id_penjadwalan)
+                    ->delete();
             }
 
-            // Hapus JadwalUjian yang terkait dengan penjadwalan ini
+            // Hapus semua JadwalUjian yang terkait dengan penjadwalan ini
             JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->delete();
 
             // Hapus penjadwalan
@@ -736,7 +752,7 @@ class PenjadwalanController extends Controller
                 // Tambahkan ke batch hanya jika belum ada dalam batch
                 $jadwalUjianBatch[$duplicateKey] = [
                     'nama_ujian' => $template->nama_ujian,
-                    'kode_kelas' => null, // Set untuk penjadwalan baru
+                    'kode_kelas' => $template->kode_kelas, // Set untuk penjadwalan baru
                     'id_event' => $template->id_event, // Dari template
                     'kode_part' => $template->kode_part, // Dari template
                     'id_penjadwalan' => $penjadwalan->id_penjadwalan, // Assign ke penjadwalan
