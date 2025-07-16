@@ -130,7 +130,7 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                     // Get the current state for this item - use saved state if available, otherwise use auto-open logic
                     const isCollapsibleOpen = collapsibleStates[item.title] !== undefined ? collapsibleStates[item.title] : isAutoOpen;
 
-                    // Kalau ada submenu
+                    // If there are sub-items
                     if (item.subitem && item.subitem.length > 0) {
                         return (
                             <Collapsible
@@ -153,15 +153,6 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                                         <SidebarMenuSub>
                                             {item.subitem.map((subItem) => {
                                                 const isSubItemActive = isActiveItem(subItem.href, false, false);
-                                                // Debug logging - remove this after fixing
-                                                if (process.env.NODE_ENV === 'development') {
-                                                    console.log(`Checking sub-item: ${subItem.title}`, {
-                                                        href: subItem.href,
-                                                        currentPath: page.url.split('?')[0],
-                                                        isActive: isSubItemActive,
-                                                    });
-                                                }
-
                                                 return (
                                                     <SidebarMenuSubItem key={subItem.title}>
                                                         <SidebarMenuSubButton asChild isActive={isSubItemActive}>
@@ -180,7 +171,7 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                         );
                     }
 
-                    // Kalau gak ada submenu, langsung jadi link
+                    // If there are no sub-items, this is a standalone item
                     return (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton asChild tooltip={item.title} isActive={Boolean(item.href && isActiveItem(item.href, false, true))}>
