@@ -15,20 +15,20 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // bikin role
-        $admin = Role::create(['name' => 'admin']);
-        $superAdmin = Role::create(['name' => 'super_admin']);
+        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
 
-        $dosen = Role::create(['name' => 'dosen']);
+        $dosen = Role::firstOrCreate(['name' => 'dosen']);
 
         // bikin permission
-        Permission::create(['name' => 'kelola-soal']);
-        Permission::create(['name' => 'lihat-nilai']);
-        Permission::create(['name' => 'atur-jadwal']);
+        Permission::firstOrCreate(['name' => 'kelola-soal']);
+        Permission::firstOrCreate(['name' => 'lihat-nilai']);
+        Permission::firstOrCreate(['name' => 'atur-jadwal']);
 
         // assign permission ke role (gatau bener apa gk, tapi kurang lebihnya gitu)
-        $admin->givePermissionTo(['lihat-nilai', 'atur-jadwal']);
-        $superAdmin->givePermissionTo(Permission::all());
-        $dosen->givePermissionTo(Permission::all());
+        $admin->syncPermissions(['lihat-nilai', 'atur-jadwal']);
+        $superAdmin->syncPermissions(Permission::all());
+        $dosen->syncPermissions(Permission::all());
 
         $user = User::updateOrCreate(
             ['email' => 'admin@admin.com'],
