@@ -307,7 +307,9 @@ export default function PenjadwalanForm() {
                             name="kuota"
                             render={({ field }) => {
                                 // Ambil jumlah peserta terdaftar jika edit
-                                const jumlahTerdaftar = penjadwalan && (penjadwalan as any).jumlahTerdaftar ? (penjadwalan as any).jumlahTerdaftar : 0;
+                                const jumlahTerdaftar = penjadwalan && typeof penjadwalan === 'object' && 'jumlahTerdaftar' in penjadwalan && typeof penjadwalan.jumlahTerdaftar === 'number'
+                                    ? penjadwalan.jumlahTerdaftar
+                                    : 0;
                                 const handleKuotaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                     const value = parseInt(e.target.value);
                                     if (isEdit && jumlahTerdaftar > 0 && value < jumlahTerdaftar) {

@@ -76,7 +76,7 @@ export default function Banksoal() {
         total: 0,
     };
 
-    const filters = props.filters || { search: '' };
+    const filters = useMemo(() => props.filters || { search: '' }, [props.filters]);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     
     // Store all data locally for client-side filtering
