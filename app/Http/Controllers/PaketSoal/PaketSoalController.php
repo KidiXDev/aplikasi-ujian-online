@@ -4,11 +4,6 @@ namespace App\Http\Controllers\PaketSoal;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-<<<<<<< HEAD
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Log;
-=======
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
 use App\Models\JadwalUjian;
 use App\Models\JadwalUjianSoal;
 use App\Models\Event;
@@ -24,9 +19,6 @@ class PaketSoalController extends Controller
             // Hapus data terkait di tabel jadwal_ujian_soal
             JadwalUjianSoal::where('id_ujian', $id)->delete();
 
-<<<<<<< HEAD
-        $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
-=======
             // Hapus data di tabel jadwal_ujian
             JadwalUjian::destroy($id);
 
@@ -65,7 +57,6 @@ class PaketSoalController extends Controller
         $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')
             ->whereIn('id_ujian', $jadwalUjian->pluck('id_ujian'))
             ->get();
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
 
         return Inertia::render('master-data/paket-soal/paket-soal-manager', [
             'jadwalUjian' => $jadwalUjian,
@@ -74,11 +65,6 @@ class PaketSoalController extends Controller
         ]);
     }
 
-<<<<<<< HEAD
-    public function list()
-    {
-        $paketSoal = JadwalUjian::select('id_ujian', 'nama_ujian')->get();
-=======
     // Method untuk menampilkan semua paket soal
     public function indexAll(Request $request)
     {
@@ -116,7 +102,6 @@ class PaketSoalController extends Controller
     {
         // Ambil semua paket soal (bisa tambahkan filter sesuai kebutuhan)
         $paketSoal = JadwalUjian::findOrFail('id_ujian', 'nama_ujian')->get();
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
         return response()->json($paketSoal);
     }
 
@@ -144,27 +129,6 @@ class PaketSoalController extends Controller
         ]);
     }
 
-<<<<<<< HEAD
-    public function delete(Request $request, $id)
-    {
-        try {
-            Log::info("Menghapus paket soal ID: $id");
-
-            // Hapus semua soal terkait
-            JadwalUjianSoal::where('id_ujian', $id)->delete();
-
-            // Hapus paket soal
-            JadwalUjian::destroy($id);
-
-            Log::info("Paket soal ID $id berhasil dihapus");
-
-            // FIX PALING BENER: langsung redirect back, biar Inertia happy
-            return redirect()->back()->with('success', 'Paket soal berhasil dihapus.');
-        } catch (\Exception $e) {
-            Log::error("Gagal hapus paket soal ID $id", ['error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Gagal menghapus paket soal: ' . $e->getMessage());
-        }
-=======
     public function show($paketSoalId)
     {
         // Ambil data paket soal beserta relasi event dan bidang
@@ -191,6 +155,5 @@ class PaketSoalController extends Controller
         return Inertia::render('master-data/paket-soal/PaketSoalDetail', [
             'paketSoal' => $detail,
         ]);
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
     }
 }

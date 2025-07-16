@@ -34,24 +34,15 @@ class PaketSoalController extends Controller
         );
     }
 
-<<<<<<< HEAD
     /**
      * DELETE paket soal (via API / AJAX / Inertia)
      */
     public function delete($id)
-=======
-    public function destroy(PaketSoal $paketSoal)
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
     {
         try {
             Log::info('Delete route called with ID:', ['id' => $id]);
 
-<<<<<<< HEAD
             $paket_soal = PaketSoal::findOrFail($id);
-=======
-            // Hapus data terkait di tabel match_soals
-            \App\Models\MatchSoal::where('paket_id', $paketSoal->id)->delete();
->>>>>>> a0ebe7cf54f361afbc02439052b553691eb10882
 
             // Hapus relasi match soal dulu
             MatchSoal::where('paket_id', $paket_soal->id)->delete();
