@@ -21,7 +21,11 @@ export function NavMain({ items = [], label = 'Platform' }: { items: NavItem[]; 
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={item.href === page.url} tooltip={{ children: item.title }}>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={Boolean(item.href && (item.href === page.url || page.url.startsWith(item.href + '/')))}
+                            tooltip={{ children: item.title }}
+                        >
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
@@ -51,7 +55,8 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
             <SidebarGroupLabel>{label}</SidebarGroupLabel>
             <SidebarMenu>
                 {visibleItems.map((item) => {
-                    const isOpen = item.subitem?.some((sub) => sub.href === page.url);
+                    // Check if current URL matches any subitem or starts with subitem href
+                    const isOpen = item.subitem?.some((sub) => sub.href === page.url || page.url.startsWith(sub.href + '/'));
 
                     // Kalau ada submenu
                     if (item.subitem && item.subitem.length > 0) {
@@ -70,7 +75,10 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                                         <SidebarMenuSub>
                                             {item.subitem.map((subItem) => (
                                                 <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton asChild isActive={subItem.href === page.url}>
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={subItem.href === page.url || page.url.startsWith(subItem.href + '/')}
+                                                    >
                                                         <Link href={subItem.href} prefetch>
                                                             {subItem.icon && <subItem.icon />}
                                                             <span>{subItem.title}</span>
@@ -88,7 +96,11 @@ export function NavCollabsibleMain({ items, label = 'Dashboard' }: { items: Main
                     // Kalau gak ada submenu, langsung jadi link
                     return (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild tooltip={item.title} isActive={item.href === page.url}>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={item.title}
+                                isActive={Boolean(item.href && (item.href === page.url || page.url.startsWith(item.href + '/')))}
+                            >
                                 <Link href={item.href ?? '#'}>
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>

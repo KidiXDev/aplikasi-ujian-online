@@ -4,6 +4,7 @@ import { Link } from '@inertiajs/react';
 import {
     Book,
     CalendarClock,
+    Github,
     GraduationCap,
     Home,
     Monitor,
@@ -21,7 +22,7 @@ import { NavCollabsibleMain } from './nav-main';
 const footerItem: NavItem[] = [
     {
         title: 'Repository',
-        icon: Book,
+        icon: Github,
         href: 'https://github.com/KidiXDev/aplikasi-ujian-online',
     },
     {
@@ -65,7 +66,7 @@ const items: MainNavItem[] = [
                 title: 'Bank Soal',
                 href: '/master-data/bank-soal',
                 icon: Book,
-            },            
+            },
             {
                 title: 'Paket Soal',
                 href: '/master-data/event',
@@ -131,7 +132,7 @@ const items: MainNavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" defaultChecked variant="inset" className="shadow-xl shadow-black/50">
+        <Sidebar collapsible="icon" defaultChecked={false} variant="inset" className="shadow-xl shadow-black/50">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
