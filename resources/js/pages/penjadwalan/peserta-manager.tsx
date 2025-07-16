@@ -6,7 +6,7 @@ interface PageFilter {
     page?: number;
     pages?: number;
     filter?: string;
-    [key: string]: any;
+    // Add more known filter fields here if needed
 }
 import { Head, router, usePage } from '@inertiajs/react';
 import { BookOpen, Calendar, Clock, Trash2, UserMinus, UserPlus, Users, UserX } from 'lucide-react'; // Hapus ArrowLeft
@@ -347,7 +347,9 @@ function PesertaTable({
             // Klik header kolom Filter untuk sort
             headerClassName: 'cursor-pointer select-none',
             className: 'cursor-pointer select-none',
-            render: (peserta: Peserta) => <span className="font-medium">{(peserta as any).filter ?? '-'}</span>,
+            render: (peserta: Peserta & { filter?: string | number }) => (
+                <span className="font-medium">{peserta.filter ?? '-'}</span>
+            ),
             onHeaderClick: () => handleSort('filter'),
         },
         {
