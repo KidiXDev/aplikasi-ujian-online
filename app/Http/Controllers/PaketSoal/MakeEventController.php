@@ -29,9 +29,11 @@ class MakeEventController extends Controller
 }
 
 
-    public function create()
-    {
-        return Inertia::render('master-data/event/CreateEvent');
+    // public function create()
+    // {
+    //     return Inertia::render('master-data/event/CreateEvent');
+    // }
+
     public function index()
     {
         $event = Event::get();
@@ -92,15 +94,15 @@ class MakeEventController extends Controller
         return Inertia::render('master-data/event/EditEvent', ['event' => $event]);
     }
 
-    public function store(Request $request)
-    {
-        Event::create([
-            'nama_event' => $request->nama_event,
-            'status' => 1
-        ]);
+    // public function store(Request $request)
+    // {
+    //     Event::create([
+    //         'nama_event' => $request->nama_event,
+    //         'status' => 1
+    //     ]);
 
-        return redirect()->route('master-data.event.getEvent');
-    }
+    //     return redirect()->route('master-data.event.getEvent');
+    // }
 
     public function update($id, Request $request)
     {
@@ -117,59 +119,11 @@ class MakeEventController extends Controller
         $event->save();
 
         return redirect()->back();
-        return redirect()->route('master-data.event.getEvent');
     }
 
     public function destroy($id)
     {
         Event::findOrFail($id)->delete();
         return redirect()->back();
-        try {
-            // Cari event berdasarkan ID
-            $event = Event::findOrFail($id);
-            
-            // Nonaktifkan event dengan mengubah status menjadi 0
-            $event->status = 0;
-            $event->save();
-
-            // Nonaktifkan semua jadwal ujian yang terkait dengan event ini
-            $jadwalUjians = JadwalUjian::where('id_event', $id)->get();
-            foreach ($jadwalUjians as $jadwalUjian) {
-                // Bisa tambahkan field status pada jadwal ujian jika diperlukan
-                // $jadwalUjian->status = 0;
-                // $jadwalUjian->save();
-            }
-
-            return redirect()->route('master-data.event.getEvent');
-        } catch (\Exception $e) {
-            return redirect()->route('master-data.event.getEvent')
-                ->with('error', 'Gagal menonaktifkan event: ' . $e->getMessage());
-        }
-    }
-
-    public function list()
-    {
-        // Ambil semua event, bisa tambahkan where jika ingin filter tertentu
-        $events = Event::select('id_event', 'nama_event')->get();
-        return response()->json($events);
-    }
-
-    public function getEvent(Request $request)
-    {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
-
-        $eventQuery = Event::select('id_event', 'nama_event', 'status', 'mulai_event', 'akhir_event')
-            ->orderBy('id_event', 'desc');
-
-        if ($search) {
-            $eventQuery->where('nama_event', 'like', '%' . $search . '%');
-        }
-
-        $events = $eventQuery->paginate($pages);
-
-        return Inertia::render('master-data/event/EventManager', [
-            'events' => $events,
-        ]);
     }
 }
