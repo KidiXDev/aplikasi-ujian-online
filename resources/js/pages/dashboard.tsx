@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle, Copy, FileText, Monitor, RefreshCw, Users, Settings, Clock } from 'lucide-react';
+import { CheckCircle, Clock, Copy, FileText, Monitor, RefreshCw, Settings, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -29,10 +29,10 @@ export default function Dashboard() {
 
     // Shortcuts data
     const shortcuts = [
-        { title: 'Kelola Soal', href: 'master-data/paket-soal', description: 'Tambah dan edit soal ujian', icon: FileText },
+        { title: 'Kelola Jenis Ujian', href: 'master-data/jenis-ujian', description: 'Tambah dan edit jenis ujian', icon: FileText },
         { title: 'Kelola Peserta', href: 'master-data/peserta', description: 'Manajemen data peserta ujian', icon: Users },
         { title: 'Laporan Nilai', href: 'rekap-nilai', description: 'Melihat hasil dan keluaran nilai ujian', icon: CheckCircle },
-        { title: 'Kelola Ujian', href: 'penjadwalan', description: 'Melihat dan mengatur jadwal ujian', icon: Monitor },
+        { title: 'Kelola Jadwal Ujian', href: 'penjadwalan', description: 'Melihat dan mengatur jadwal ujian', icon: Monitor },
         { title: 'Kelola Event', href: 'master-data/event', description: 'Melihat event ujian yang sedang berjalan', icon: FileText },
         { title: 'Monitoring Ujian', href: 'monitoring-ujian', description: 'Mengelola dan memantau jalannya ujian', icon: Settings },
     ];
@@ -40,7 +40,7 @@ export default function Dashboard() {
     // Fetch current token on component mount
     useEffect(() => {
         fetchCurrentToken();
-        
+
         // Update clock every second
         const timer = setInterval(() => {
             setCurrentTime(new Date());
@@ -87,7 +87,6 @@ export default function Dashboard() {
                     waktu: data.waktu,
                     status: 1,
                 });
-                toast.success(data.message || 'Token berhasil diperbarui');
                 fetchCurrentToken();
             } else {
                 toast.error(data.message || 'Gagal memperbarui token');
@@ -120,14 +119,14 @@ export default function Dashboard() {
             time: currentTime.toLocaleTimeString('id-ID', {
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit'
+                second: '2-digit',
             }),
             date: currentTime.toLocaleDateString('id-ID', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
-            })
+                day: 'numeric',
+            }),
         };
     };
 
@@ -142,11 +141,16 @@ export default function Dashboard() {
                             <h1 className="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
                             <p className="text-gray-600">Selamat datang di sistem ujian online</p>
                         </div>
-                        <div className="flex items-center gap-3 rounded-lg bg-green-200 border border-blue-200 p-4 shadow-sm">
-                            <Clock className="h-6 w-6 text-black-600" />
+                        <div className="flex items-center gap-4 rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 via-green-100 to-blue-50 p-4 shadow-md transition-all duration-300">
+                            <div className="relative flex items-center justify-center">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-200 opacity-60"></span>
+                                <Clock className="h-8 w-8 text-blue-600 drop-shadow" />
+                            </div>
                             <div className="text-center">
-                                <p className="text-2xl text-gray-900 font-mono">{formatCurrentTime().time}</p>
-                                <p className="text-xs text-gray-600 mt-1">{formatCurrentTime().date}</p>
+                                <p className="font-mono text-3xl font-bold tracking-widest text-gray-900 drop-shadow-sm">
+                                    {formatCurrentTime().time}
+                                </p>
+                                <p className="mt-1 text-xs font-medium text-gray-700">{formatCurrentTime().date}</p>
                             </div>
                         </div>
                     </div>
@@ -159,14 +163,16 @@ export default function Dashboard() {
                             <Link
                                 key={index}
                                 href={shortcut.href}
-                                className="rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md hover:border-blue-200 group"
+                                className="group rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:border-blue-200 hover:shadow-md"
                             >
                                 <div className="mb-4 flex items-center justify-between">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 transition-colors group-hover:bg-blue-100">
                                         <shortcut.icon className="h-6 w-6 text-blue-600" />
                                     </div>
                                 </div>
-                                <h3 className="mb-1 text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{shortcut.title}</h3>
+                                <h3 className="mb-1 text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+                                    {shortcut.title}
+                                </h3>
                                 <p className="text-sm text-gray-600">{shortcut.description}</p>
                             </Link>
                         ))}
@@ -232,6 +238,30 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* New Help Section */}
+                <div className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-gray-900">Bantuan</h2>
+                    <div className="rounded-lg border border-gray-200 bg-white p-4">
+                        <ul className="space-y-1 text-sm text-blue-700">
+                            <li>
+                                <a href="/faq" className="hover:underline">
+                                    FAQ Ujian Online
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/help" className="hover:underline">
+                                    Panduan Penggunaan
+                                </a>
+                            </li>
+                            <li>
+                                <a href="mailto:support@example.com" className="hover:underline">
+                                    Kontak Admin
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>

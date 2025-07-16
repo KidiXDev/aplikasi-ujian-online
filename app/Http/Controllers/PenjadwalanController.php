@@ -647,7 +647,10 @@ class PenjadwalanController extends Controller
     private function createJadwalUjian($penjadwalan)
     {
         // Ambil SEMUA template yang tersedia (tanpa filter id_event)
-        $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
+        $templateJadwalUjian = JadwalUjian::where(function ($q) {
+            $q->where('kode_kelas', null)
+                ->orWhere('kode_kelas', 1);
+        })
             ->whereNull('id_penjadwalan') // Template yang belum pernah digunakan
             ->where('id_event', $penjadwalan->id_paket_ujian) // Hanya ambil template untuk event ini
             ->get();
@@ -726,7 +729,10 @@ class PenjadwalanController extends Controller
             }
 
             // Cari template JadwalUjian yang sesuai untuk mendapatkan id_ujian template
-            $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
+            $templateJadwalUjian = JadwalUjian::where(function ($q) {
+                $q->where('kode_kelas', null)
+                    ->orWhere('kode_kelas', 1);
+            })
                 ->whereNull('id_penjadwalan')
                 ->where('id_event', $jadwalUjian->id_event)
                 ->where('nama_ujian', $jadwalUjian->nama_ujian)

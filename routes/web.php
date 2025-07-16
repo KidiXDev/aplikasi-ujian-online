@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Matakuliah;
 use App\Http\Controllers\{
@@ -27,19 +28,21 @@ use App\Http\Controllers\{
     PaketSoal\AddSoalController,
     MasterData\BidangController,
     RoleController,
-    PermissionController
+    PermissionController,
+    DashboardController
 };
 
 // Home route
-Route::get('/', fn () => Inertia::render('auth/login'))->name('home');
+Route::get('/', function () {
+    return Auth::check() ? redirect()->route('dashboard') : Inertia::render('auth/login');
+})->name('home');
 
-// Group: auth & verified
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
 
     Route::bind('matakuliah', fn($value) => Matakuliah::where('id_mk', $value)->firstOrFail());
     Route::bind('paket_soal', fn($value) => \App\Models\JadwalUjianSoal::where('id_ujian', $value)->firstOrFail());
 
-    Route::get('dashboard', fn() => Inertia::render('dashboard'))->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
@@ -83,7 +86,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('matakuliah', [MatkulController::class, 'index'])->name('matakuliah');
         Route::get('jenisujian', [JenisUjianController::class, 'index']);
 
-        // Dosen
         Route::prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/', [DosenManagerController::class, 'index'])->name('manager');
             Route::get('create', [DosenManagerEditController::class, 'create'])->name('create');
@@ -95,9 +97,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('{dosen}/toggle-status', [DosenManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
-        Route::get('import-dosen', [DosenImportController::class, 'importViewDosen'])->name('import-dosen.view');
-
-        // Peserta
         Route::prefix('peserta')->name('peserta.')->group(function () {
             Route::get('/', [PesertaManagerController::class, 'index'])->name('manager');
             Route::get('create', [PesertaManagerEditController::class, 'create'])->name('create');
@@ -110,7 +109,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('{peserta}/toggle-status', [PesertaManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
-        // Bank Soal
         Route::get('bank-soal', [BankSoalController::class, 'index'])->name('bank.soal');
         Route::get('bank-soal/create', fn() => Inertia::render('banksoalcreate'))->name('bank.soal.create');
         Route::post('bank-soal', [BankSoalController::class, 'store'])->name('bank.soal.store');
@@ -119,7 +117,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('bank-soal/{id}', [BankSoalController::class, 'destroy'])->name('bank.soal.destroy');
         Route::get('kategorisoal', [BankSoalController::class, 'getKategoriSoal']);
 
-        // Matakuliah
         Route::prefix('matakuliah')->name('matakuliah.')->group(function () {
             Route::get('/', [MatkulController::class, 'index'])->name('index');
             Route::get('/create', [MatkulController::class, 'create'])->name('create');
@@ -129,7 +126,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{matakuliah}', [MatkulController::class, 'destroy'])->name('destroy');
         });
 
-        // Event
         Route::prefix('event')->name('event.')->group(function () {
             Route::get('/', [MakeEventController::class, 'getEvent'])->name('getEvent');
             Route::get('/list', [MakeEventController::class, 'index'])->name('list');
@@ -139,11 +135,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{id}/edit', [MakeEventController::class, 'edit'])->name('edit');
             Route::put('/{id}', [MakeEventController::class, 'update'])->name('update');
             Route::delete('/{id}', [MakeEventController::class, 'destroy'])->name('destroy');
-            // Tambah route toggle status event
             Route::put('/{id}/toggle-status', [MakeEventController::class, 'toggleStatus'])->name('toggleStatus');
         });
 
-        // Paket Soal
         Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
             Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
@@ -158,7 +152,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{paket_soal}/detail', [PaketSoalController::class, 'show'])->name('show');
         });
 
-        // Kategori Soal
         Route::prefix('kategori-soal')->name('kategori-soal.')->group(function () {
             Route::get('/', [\App\Http\Controllers\KategoriUjianController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\KategoriUjianController::class, 'create'])->name('create');
@@ -167,13 +160,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\KategoriUjianController::class, 'update'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\KategoriUjianController::class, 'destroy'])->name('destroy');
         });
+
         Route::get('/kategori-soal-dropdown', [\App\Http\Controllers\KategoriUjianController::class, 'getKategoriList'])->name('kategori-soal.dropdown');
         Route::get('/bank-soal-checkbox/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('bank-soal-checkbox.edit');
         Route::put('/bank-soal-checkbox/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('bank-soal-checkbox.update');
         Route::get('/bank-soal-checkbox/{paket_soal_id}/back', [BankSoalControllerCheckbox::class, 'back'])->name('bank-soal-checkbox.back');
     });
 
-    // User Management
     Route::middleware(['role:super_admin'])->prefix('user-management')->name('user-management.')->group(function () {
         Route::get('/', fn() => redirect()->route('dashboard'))->name('index');
         Route::prefix('user')->name('user.')->group(function () {
@@ -199,19 +192,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Token
     Route::prefix('token')->name('token.')->group(function () {
         Route::get('/current', [TokenController::class, 'getCurrentToken'])->name('current');
         Route::get('/generate', [TokenController::class, 'generateNewToken'])->name('generate');
         Route::get('/copy', [TokenController::class, 'copyToken'])->name('copy');
     });
 
-    // Paket Soal Extra Routes
     Route::get('/paket-soal/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('paket-soal.add-soal');
     Route::get('/bidangs', [BidangController::class, 'index']);
     Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
 });
 
-// Tambahkan setting & auth Laravel
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
