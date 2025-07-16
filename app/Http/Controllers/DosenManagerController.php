@@ -13,43 +13,32 @@ class DosenManagerController extends Controller
 {
     function index(Request $request)
     {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
+        $dosen = Dosen::query();
 
-        $usersQuery = User::role('dosen')->with(['roles', 'dosen']);
-        
-        if ($search) {
-            $usersQuery->where('name', 'like', '%' . $search . '%')
-                ->orWhere('email', 'like', '%' . $search . '%');
+        // filter, search, pagination sesuai kebutuhan
+        if ($request->search) {
+            $dosen->where('nama', 'like', '%' . $request->search . '%');
         }
 
-        return Inertia::render(
-            'dosen-management/dosen-manager',
-            [
-                'data' => $usersQuery->paginate((int)$pages)->withQueryString(),
-                'filters' => [
-                    'search' => $search,
-                    'pages' => $pages,
-                ],
-            ]
-        );
+          // Filter status aktif/tidak aktif
+        if ($request->filled('status')) {
+            $dosen->where('aktif', $request->status);
+        }
+
+        $data = $dosen->orderBy('nama', 'asc')->paginate(10);
+
+        return Inertia::render('dosen-management/dosen-manager', [
+            'data' => $data,
+            'filters' => $request->only('search', 'status   '),
+        ]);
     }
 
-    public function delete(Request $request, User $user)
+    public function delete($nip)
     {
-        if ($request->user()->id === $user->id) {
-            return redirect()->back()->with('error', 'You cannot delete your own account');
-        }
+        $dosen = \App\Models\Dosen::findOrFail($nip); // nip sebagai primary key
+        $dosen->delete();
 
-        $dosen = \App\Models\Dosen::where('nip', $user->nip)->first();
-        if ($dosen) {
-            $dosen->delete();
-        }
-
-
-        $user->delete();
-
-        return redirect()->back()->with('success', 'Dosen dan data terkait berhasil dihapus');
+        return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil dihapus');
     }
 
     public function update(Request $request, User $user)
@@ -67,7 +56,8 @@ class DosenManagerController extends Controller
 
         try {
             Excel::import(new DosenImport, $request->file('file'));
-            return redirect()->back()->with('success', 'Import data dosen berhasil.');
+            return redirect()->route('master-data.dosen.manager')
+                ->with('success', 'Import data dosen berhasil.');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             return redirect()->back()->with('error', 'Validasi file gagal.')->with('failures', $e->failures());
         } catch (\Exception $e) {
@@ -84,21 +74,15 @@ class DosenManagerController extends Controller
         }
     }
 
-    public function toggleStatus($id)
+    public function toggleStatus($nip)
     {
-        $user = User::with('dosen')->findOrFail($id);
-
-        if (!$user->dosen) {
-            return response()->json(['error' => 'Data dosen tidak ditemukan'], 404);
-        }
-
-        // Toggle status aktif
-        $user->dosen->aktif = !$user->dosen->aktif;
-        $user->dosen->save();
+        $dosen = \App\Models\Dosen::findOrFail($nip);
+        $dosen->aktif = $dosen->aktif ? 0 : 1;
+        $dosen->save();
 
         return response()->json([
             'success' => true,
-            'aktif' => $user->dosen->aktif,
+            'aktif' => $dosen->aktif,
         ]);
     }
 }
