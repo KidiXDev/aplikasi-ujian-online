@@ -177,7 +177,8 @@ class PenjadwalanController extends Controller
             'penjadwalan' => [
                 'id_penjadwalan' => $penjadwalan->id_penjadwalan,
                 'id_paket_ujian' => $penjadwalan->id_paket_ujian,
-                'tipe_ujian' => $penjadwalan->tipe_ujian,
+                // Kirim id numerik asli, bukan hasil accessor
+                'tipe_ujian' => $penjadwalan->getRawOriginal('tipe_ujian'),
                 'tanggal' => $penjadwalan->tanggal,
                 'waktu_mulai' => $penjadwalan->waktu_mulai,
                 'waktu_selesai' => $penjadwalan->waktu_selesai,
@@ -187,11 +188,11 @@ class PenjadwalanController extends Controller
                 'online_offline' => $penjadwalan->online_offline,
                 'status' => $penjadwalan->status,
                 'flag' => $penjadwalan->flag,
-                // Add event data with null safety
                 'event' => $penjadwalan->event ? [
                     'id_event' => $penjadwalan->event->id_event,
                     'nama_event' => $penjadwalan->event->nama_event,
                 ] : null,
+                // 'kategori_soal' dihapus sesuai permintaan
             ],
             'kategoriSoal' => $kategoriSoal,
             'events' => $events,
@@ -221,6 +222,23 @@ class PenjadwalanController extends Controller
 
             if (!$hasTemplate) {
                 return redirect()->back()->with('error', 'Event yang dipilih tidak memiliki template jadwal ujian.');
+            }
+
+            // Hitung jumlah peserta yang sudah terdaftar
+            $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+            $existingPesertaIds = [];
+            foreach ($jadwalUjians as $jadwalUjian) {
+                if ($jadwalUjian->kode_kelas) {
+                    $ids = explode(',', $jadwalUjian->kode_kelas);
+                    $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
+                }
+            }
+            $existingPesertaIds = array_unique($existingPesertaIds);
+            $jumlahTerdaftar = count($existingPesertaIds);
+
+            // Validasi: Tidak boleh mengurangi kuota di bawah jumlah peserta yang sudah terdaftar
+            if ($validated['kuota'] < $jumlahTerdaftar) {
+                return redirect()->back()->with('error', "Tidak dapat mengurangi kuota di bawah jumlah peserta yang sudah terdaftar ($jumlahTerdaftar). Silakan hapus peserta terlebih dahulu.");
             }
 
             // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
