@@ -19,8 +19,6 @@ import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 import { NavCollabsibleMain } from './nav-main';
 
-const prefix = '/dashboard';
-
 const footerItem: NavItem[] = [
     {
         title: 'Repository',
@@ -38,7 +36,7 @@ const items: MainNavItem[] = [
     {
         title: 'Dashboard',
         icon: Home,
-        href: prefix,
+        href: '/dashboard',
     },
     {
         title: 'Master Data',
@@ -46,37 +44,37 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'Peserta',
-                href: `${prefix}/master-data/peserta`,
+                href: `/master-data/peserta`,
                 icon: UserRound,
             },
             {
                 title: 'Dosen',
-                href: `${prefix}/master-data/dosen`,
+                href: `/master-data/dosen`,
                 icon: UsersRound,
             },
             {
                 title: 'Kategori Ujian',
-                href: `${prefix}/master-data/kategori-soal`,
+                href: `/master-data/kategori-soal`,
                 icon: Book,
             },
             {
                 title: 'Jenis Ujian',
-                href: `${prefix}/master-data/jenis-ujian`,
+                href: `/master-data/jenis-ujian`,
                 icon: Book,
             },
             {
                 title: 'Bank Soal',
-                href: `${prefix}/master-data/bank-soal`,
+                href: `/master-data/bank-soal`,
                 icon: Book,
             },
             {
                 title: 'Paket Soal',
-                href: `${prefix}/master-data/event`,
+                href: `/master-data/event`,
                 icon: Book,
             },
             // {
             //     title: 'Paket Soal',
-            //     href: `${prefix}/master-data/paket-soal`,
+            //     href: `/master-data/paket-soal`,
             //     icon: Book,
             // },
         ],
@@ -87,17 +85,17 @@ const items: MainNavItem[] = [
         subitem: [
             {
                 title: 'User',
-                href: `${prefix}/user-management/user`,
+                href: `/user-management/user`,
                 icon: UserRound,
             },
             {
                 title: 'Roles',
-                href: `${prefix}/user-management/roles`,
+                href: `/user-management/roles`,
                 icon: ShieldCheck,
             },
             {
                 title: 'Permissions',
-                href: `${prefix}/user-management/permissions`,
+                href: `/user-management/permissions`,
                 icon: ShieldAlert,
             },
         ],
@@ -105,17 +103,17 @@ const items: MainNavItem[] = [
     {
         title: 'Jadwal Ujian',
         icon: CalendarClock,
-        href: `${prefix}/penjadwalan`,
+        href: `/penjadwalan`,
     },
     {
         title: 'Monitoring',
         icon: Monitor,
-        href: `${prefix}/monitoring-ujian`,
+        href: `/monitoring-ujian`,
     },
     {
         title: 'Rekap Nilai',
         icon: GraduationCap,
-        href: `${prefix}/rekap-nilai`,
+        href: `/rekap-nilai`,
     },
 ];
 
