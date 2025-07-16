@@ -27,15 +27,14 @@ use App\Http\Controllers\PaketSoal\MakeEventController;
 use App\Http\Controllers\PaketSoal\AddSoalController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MonitoringUjianController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : Inertia::render('auth/login');
 })->name('home');
 
-// Dashboard prefix routes
-Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // yang perlu diinget, buat name yang punya nama lebih dari 1 kata, contohnya monitoring-ujian
     // itu harus diubah jadi pake titik, contoh monitoring.ujian
     // jadi nanti di route name-nya jadi monitoring.ujian
@@ -56,7 +55,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         return \App\Models\JadwalUjianSoal::where('id_ujian', $value)->firstOrFail();
     });
 
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
@@ -279,46 +278,6 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     });
 
     Route::get('/events/list', [MakeEventController::class, 'list']);
-});
-
-// Backward compatibility redirects for old routes
-Route::middleware(['auth', 'verified'])->group(function () {
-    // WARNING
-    // JANGAN BIKIN ROUTE BARU DI SINI
-    // Gunakan prefix 'dashboard' untuk semua route baru
-
-    // Redirect old monitoring-ujian routes
-    Route::get('/monitoring-ujian', fn() => redirect('/dashboard/monitoring-ujian'));
-    Route::get('/monitoring-ujian/{any}', fn($any) => redirect("/dashboard/monitoring-ujian/{$any}"))->where('any', '.*');
-
-    // Redirect old penjadwalan routes
-    Route::get('/penjadwalan', fn() => redirect('/dashboard/penjadwalan'));
-    Route::get('/penjadwalan/{any}', fn($any) => redirect("/dashboard/penjadwalan/{$any}"))->where('any', '.*');
-
-    // Redirect old rekap-nilai routes
-    Route::get('/rekap-nilai', fn() => redirect('/dashboard/rekap-nilai'));
-    Route::get('/rekap-nilai/{any}', fn($any) => redirect("/dashboard/rekap-nilai/{$any}"))->where('any', '.*');
-
-    // Redirect old master-data routes
-    Route::get('/master-data', fn() => redirect('/dashboard/master-data'));
-    Route::get('/master-data/{any}', fn($any) => redirect("/dashboard/master-data/{$any}"))->where('any', '.*');
-
-    // Redirect old user-management routes
-    Route::get('/user-management', fn() => redirect('/dashboard/user-management'));
-    Route::get('/user-management/{any}', fn($any) => redirect("/dashboard/user-management/{$any}"))->where('any', '.*');
-
-    // Redirect old token routes
-    Route::get('/token', fn() => redirect('/dashboard/token'));
-    Route::get('/token/{any}', fn($any) => redirect("/dashboard/token/{$any}"))->where('any', '.*');
-
-    // Redirect old paket-soal routes
-    Route::get('/paket-soal/{any}', fn($any) => redirect("/dashboard/paket-soal/{$any}"))->where('any', '.*');
-
-    // Redirect old bidangs route
-    Route::get('/bidangs', fn() => redirect('/dashboard/bidangs'));
-
-    // Redirect old events routes
-    Route::get('/events/{any}', fn($any) => redirect("/dashboard/events/{$any}"))->where('any', '.*');
 });
 
 require __DIR__ . '/settings.php';

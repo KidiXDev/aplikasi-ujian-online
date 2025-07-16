@@ -330,8 +330,11 @@ class PenjadwalanController extends Controller
             $pesertaIds = array_filter(array_map('trim', $pesertaIds));
         }
 
-        // Query peserta yang terdaftar dengan pagination dan search
+        // Query peserta yang terdaftar dengan pagination, search, filter, dan sort
         $search = $request->input('search');
+        $filter = $request->input('filter');
+        $sort = $request->input('sort', 'nama');
+        $direction = $request->input('direction', 'asc');
         $pages = $request->query('pages', 10);
         $query = Peserta::with('jurusanRef');
 
@@ -349,12 +352,34 @@ class PenjadwalanController extends Controller
             });
         }
 
-        $data = $query->orderBy('nama')
+        if ($filter !== null && $filter !== '') {
+            $query->where('filter', $filter);
+        }
+
+        // Sorting: hanya izinkan sort by 'nama', 'nis', atau 'filter'
+        $allowedSorts = ['nama', 'nis', 'filter'];
+        if (in_array($sort, $allowedSorts)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('nama');
+        }
+
+        $data = $query
             ->paginate((int)$pages)
             ->withQueryString();
 
         // Hitung jumlah peserta terdaftar
         $jumlahTerdaftar = !empty($pesertaIds) ? Peserta::whereIn('id', $pesertaIds)->count() : 0;
+
+        // Ambil semua nilai unik filter dari peserta yang terdaftar
+        $filterOptions = Peserta::query()
+            ->select('filter')
+            ->whereNotNull('filter')
+            ->whereIn('id', $pesertaIds)
+            ->distinct()
+            ->orderBy('filter')
+            ->pluck('filter')
+            ->toArray();
 
         return Inertia::render('penjadwalan/peserta-manager', [
             'penjadwalan' => [
@@ -374,7 +399,8 @@ class PenjadwalanController extends Controller
             'data' => $data, // Paginated data peserta terdaftar
             'jumlahTerdaftar' => $jumlahTerdaftar,
             'sisaKuota' => $penjadwalan->kuota - $jumlahTerdaftar,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'filter', 'sort', 'direction']),
+            'filterOptions' => $filterOptions,
         ]);
     }
 
@@ -400,10 +426,14 @@ class PenjadwalanController extends Controller
         }
 
         // Query peserta yang tersedia (belum terdaftar) dengan pagination dan search
+
         $search = $request->input('search');
+        $filter = $request->input('filter');
+        $sort = $request->input('sort', 'nama');
+        $direction = $request->input('direction', 'asc');
         $pages = $request->query('pages', 10);
         $query = Peserta::with('jurusanRef')
-            ->where('status', 1); // Hanya peserta aktif
+            ->where('status', 1);
 
         if (!empty($registeredPesertaIds)) {
             $query->whereNotIn('id', $registeredPesertaIds);
@@ -416,11 +446,32 @@ class PenjadwalanController extends Controller
             });
         }
 
-        $data = $query->orderBy('nama')
+        if ($filter !== null && $filter !== '') {
+            $query->where('filter', $filter);
+        }
+
+        // Sorting: hanya izinkan sort by 'nama', 'nis', atau 'filter'
+        $allowedSorts = ['nama', 'nis', 'filter'];
+        if (in_array($sort, $allowedSorts)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('nama');
+        }
+
+        $data = $query
             ->paginate((int)$pages)
             ->withQueryString();
 
         $jumlahTerdaftar = count($registeredPesertaIds);
+
+        // Ambil semua nilai unik filter dari peserta yang tersedia
+        $filterOptions = Peserta::query()
+            ->select('filter')
+            ->whereNotNull('filter')
+            ->distinct()
+            ->orderBy('filter')
+            ->pluck('filter')
+            ->toArray();
 
         return Inertia::render('penjadwalan/add-peserta', [
             'penjadwalan' => [
@@ -440,7 +491,8 @@ class PenjadwalanController extends Controller
             'data' => $data, // Paginated data peserta tersedia
             'jumlahTerdaftar' => $jumlahTerdaftar,
             'sisaKuota' => $penjadwalan->kuota - $jumlahTerdaftar,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'filter', 'sort', 'direction']),
+            'filterOptions' => $filterOptions,
         ]);
     }
 

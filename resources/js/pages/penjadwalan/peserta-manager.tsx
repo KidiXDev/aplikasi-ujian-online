@@ -1,5 +1,13 @@
 import AppLayout from '@/layouts/app-layout';
-import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
+import { PaginatedResponse, type BreadcrumbItem } from '@/types';
+
+interface PageFilter {
+    search?: string;
+    page?: number;
+    pages?: number;
+    filter?: string;
+    // Add more known filter fields here if needed
+}
 import { Head, router, usePage } from '@inertiajs/react';
 import { BookOpen, Calendar, Clock, Trash2, UserMinus, UserPlus, Users, UserX } from 'lucide-react'; // Hapus ArrowLeft
 import { useEffect, useState } from 'react';
@@ -71,7 +79,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function PesertaManager() {
-    const { penjadwalan, data: pesertaData, jumlahTerdaftar, sisaKuota, filters, flash } = usePage<PageProps>().props;
+    const { penjadwalan, data: pesertaData, jumlahTerdaftar, sisaKuota, filters, filterOptions = [], flash } = usePage<PageProps>().props;
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -130,18 +138,38 @@ export default function PesertaManager() {
                 {/* Table Controls */}
                 <div className="flex items-center justify-between">
                     <div></div>
-                    <div className="flex items-center gap-3">
-                        <SearchInputMenu
-                            defaultValue={filters.search}
-                            routeName="penjadwalan.peserta"
-                            routeParams={{ id: penjadwalan.id_penjadwalan }}
-                            placeholder="Cari peserta..."
-                        />
-                        <CButton type="primary" onClick={() => router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta/add`)}>
-                            <UserPlus className="h-4 w-4" />
-                            Tambah Peserta
-                        </CButton>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <select
+                        className="border rounded px-2 py-1 text-sm"
+                        value={filters.filter ?? ''}
+                        onChange={e => {
+                            router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta`, {
+                                data: {
+                                    ...filters,
+                                    filter: e.target.value || undefined,
+                                    page: 1,
+                                },
+                                preserveState: false,
+                                preserveScroll: false,
+                            });
+                        }}
+                    >
+                        <option value="">Semua Filter</option>
+                        {(filterOptions as (string | number)[]).map((opt: string | number) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                    </select>
+                    <SearchInputMenu
+                        defaultValue={filters.search}
+                        routeName="penjadwalan.peserta"
+                        routeParams={{ id: penjadwalan.id_penjadwalan }}
+                        placeholder="Cari peserta..."
+                    />
+                    <CButton type="primary" onClick={() => router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta/add`)}>
+                        <UserPlus className="h-4 w-4" />
+                        Tambah Peserta
+                    </CButton>
+                </div>
                 </div>
 
                 {/* Participants Table */}
@@ -269,6 +297,27 @@ function PesertaTable({
         }
     };
 
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [sortBy, setSortBy] = useState<string>('');
+
+    const handleSort = (column: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortBy === column) {
+            direction = sortDirection === 'asc' ? 'desc' : 'asc';
+        }
+        setSortBy(column);
+        setSortDirection(direction);
+        router.visit(`/penjadwalan/${penjadwalanId}/peserta`, {
+            data: {
+                ...filters,
+                sort: column,
+                direction,
+            },
+            preserveState: false,
+            preserveScroll: true,
+        });
+    };
+
     const columns = [
         {
             label: 'No',
@@ -278,10 +327,6 @@ function PesertaTable({
                 const rowNumber = (pesertaData.current_page - 1) * pesertaData.per_page + index + 1;
                 return <div className="text-center font-medium">{rowNumber}</div>;
             },
-        },
-        {
-            label: 'Id',
-            render: (peserta: Peserta) => <span className="font-medium">{peserta.id}</span>,
         },
         {
             label: 'NIS',
@@ -296,6 +341,16 @@ function PesertaTable({
             render: (peserta: Peserta) => (
                 <Badge variant={peserta.status === 1 ? 'default' : 'secondary'}>{peserta.status === 1 ? 'Aktif' : 'Tidak Aktif'}</Badge>
             ),
+        },
+        {
+            label: 'Filter',
+            // Klik header kolom Filter untuk sort
+            headerClassName: 'cursor-pointer select-none',
+            className: 'cursor-pointer select-none',
+            render: (peserta: Peserta & { filter?: string | number }) => (
+                <span className="font-medium">{peserta.filter ?? '-'}</span>
+            ),
+            onHeaderClick: () => handleSort('filter'),
         },
         {
             label: 'Pilih',
