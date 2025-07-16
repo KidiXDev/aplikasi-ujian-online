@@ -27,6 +27,8 @@ use App\Http\Controllers\PaketSoal\MakeEventController;
 use App\Http\Controllers\PaketSoal\AddSoalController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MonitoringUjianController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : Inertia::render('auth/login');
@@ -54,17 +56,15 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
         return \App\Models\JadwalUjianSoal::where('id_ujian', $value)->firstOrFail();
     });
 
-    Route::get('/', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
-        Route::get('/', [App\Http\Controllers\MonitoringUjianController::class, 'index'])->name('index');
-        Route::get('/{id}/preview', [App\Http\Controllers\MonitoringUjianController::class, 'preview'])->name('preview');
-        Route::get('/{id}', [App\Http\Controllers\MonitoringUjianController::class, 'show'])->name('detail');
-        Route::post('/{id}/reset-participant', [App\Http\Controllers\MonitoringUjianController::class, 'resetParticipant'])->name('reset');
-        Route::post('/{id}/delete-participant', [App\Http\Controllers\MonitoringUjianController::class, 'deleteParticipant'])->name('delete');
+        Route::get('/', [MonitoringUjianController::class, 'index'])->name('index');
+        Route::get('/{id}/preview', [MonitoringUjianController::class, 'preview'])->name('preview');
+        Route::get('/{id}', [MonitoringUjianController::class, 'show'])->name('detail');
+        Route::post('/{id}/reset-participant', [MonitoringUjianController::class, 'resetParticipant'])->name('reset');
+        Route::post('/{id}/delete-participant', [MonitoringUjianController::class, 'deleteParticipant'])->name('delete');
     });
 
     // Penjadwalan
