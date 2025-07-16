@@ -133,9 +133,9 @@ export default function CreatePaketSoal() {
                   <FormControl>
                     <select {...field} className="w-full rounded-md border border-gray-300 p-2">
                       <option value="">Pilih Bidang</option>
-                      {bidangs.map(bd => (
+                      {bidangs.map((bd, index) => (
                         <option key={bd.kode} value={bd.kode}>
-                          {bd.nama}
+                          {index + 1}. {bd.nama}
                         </option>
                       ))}
                     </select>

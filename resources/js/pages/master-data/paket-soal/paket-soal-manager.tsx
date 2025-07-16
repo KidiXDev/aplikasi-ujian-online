@@ -91,7 +91,7 @@ export default function PaketSoalManager() {
   };
 
   // Gabungkan data jadwalUjian dan jadwalUjianSoal berdasarkan id_ujian
-  const data = jadwalUjian.data.map((item) => {
+  const data = jadwalUjian.data.map((item, index) => {
     const soal = jadwalUjianSoal.find((s) => s.id_ujian === item.id_ujian);
     return {
       id: item.id_ujian,
@@ -99,6 +99,7 @@ export default function PaketSoalManager() {
       event: item.event?.nama_event ?? item.id_event,
       // bidang: item.bidang?.nama ?? item.kode_part,
       jumlah: soal ? soal.total_soal : 0,
+      nomor: ((jadwalUjian.current_page - 1) * jadwalUjian.per_page) + index + 1,
     };
   });
 
@@ -188,6 +189,13 @@ export default function PaketSoalManager() {
   ];
 
   const columns = [
+    { 
+      label: 'No', 
+      className: 'text-center w-[60px]', 
+      render: (d: typeof data[0]) => (
+        <div className="text-center">{d.nomor}</div>
+      )
+    },
     { label: 'ID', className: 'text-center w-[80px]', render: (d: typeof data[0]) => <div className="text-center">{d.id}</div> },
     { label: 'Nama Paket Soal', className: 'w-[300px]', render: (d: typeof data[0]) => d.nama },
     { label: 'Event', className: 'w-[200px]', render: (d: typeof data[0]) => d.event },

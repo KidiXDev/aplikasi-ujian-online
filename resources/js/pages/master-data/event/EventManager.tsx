@@ -143,6 +143,12 @@ function EventTable({
         setTableData(data);
     }, [data]);
 
+    // Tambahkan nomor urut pada data
+    const dataWithNumbers = tableData.map((event, index) => ({
+        ...event,
+        nomor: ((events.current_page - 1) * events.per_page) + index + 1,
+    }));
+
     const handleToggleStatus = (id: number) => {
         setTargetId(id);
         setActionType('toggle');
@@ -206,6 +212,13 @@ function EventTable({
     };
 
     const columns = [
+        {
+            label: 'No',
+            className: 'text-center w-[60px]',
+            render: (event: typeof dataWithNumbers[0]) => (
+                <div className="text-center font-medium">{event.nomor}</div>
+            ),
+        },
         {
             label: 'ID',
             className: 'text-center w-[100px]',
@@ -311,7 +324,7 @@ function EventTable({
 
     return (
         <>
-            <CustomTable columns={columns} data={tableData} />
+            <CustomTable columns={columns} data={dataWithNumbers} />
             <PaginationWrapper
                 currentPage={events.current_page}
                 lastPage={events.last_page}
