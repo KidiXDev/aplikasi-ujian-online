@@ -1,5 +1,26 @@
 // Penjadwalan Form Page (migrated from exam-schedule/form.exam-manager.tsx)
 import { CButton } from '@/components/ui/c-button';
+// Type guard for penjadwalan with event
+function hasEvent(obj: unknown): obj is { event: { nama_event: string } } {
+    return (
+        typeof obj === 'object' &&
+        obj !== null &&
+        'event' in obj &&
+        typeof (obj as { event?: unknown }).event === 'object' &&
+        (obj as { event?: unknown }).event !== null &&
+        'nama_event' in (obj as { event: { nama_event?: unknown } }).event
+    );
+}
+function hasKategoriSoal(obj: unknown): obj is { kategori_soal: { kategori: string } } {
+    return (
+        typeof obj === 'object' &&
+        obj !== null &&
+        'kategori_soal' in obj &&
+        typeof (obj as { kategori_soal?: unknown }).kategori_soal === 'object' &&
+        (obj as { kategori_soal?: unknown }).kategori_soal !== null &&
+        'kategori' in (obj as { kategori_soal: { kategori?: unknown } }).kategori_soal
+    );
+}
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -150,9 +171,9 @@ export default function PenjadwalanForm() {
                                     const found = events.find(e => e.id_event === field.value);
                                     if (found) {
                                         namaEvent = found.nama_event;
-                                    } else if (penjadwalan && (penjadwalan as any).event) {
+                                    } else if (hasEvent(penjadwalan)) {
                                         // Fallback ke relasi event jika ada
-                                        namaEvent = (penjadwalan as any).event.nama_event || '';
+                                        namaEvent = penjadwalan.event.nama_event || '';
                                     }
                                 }
                                 return (
@@ -199,9 +220,9 @@ export default function PenjadwalanForm() {
                                     const found = kategoriSoal.find(k => k.id === field.value);
                                     if (found) {
                                         namaKategori = found.kategori;
-                                    } else if (penjadwalan && (penjadwalan as any).kategori_soal) {
+                                    } else if (hasKategoriSoal(penjadwalan)) {
                                         // Fallback ke relasi kategori_soal jika ada
-                                        namaKategori = (penjadwalan as any).kategori_soal.kategori || '';
+                                        namaKategori = penjadwalan.kategori_soal.kategori || '';
                                     }
                                 }
                                 return (
