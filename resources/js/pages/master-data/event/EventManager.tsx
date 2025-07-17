@@ -148,7 +148,7 @@ function StatusFilter({
             >
                 <option value="">Semua Status</option>
                 <option value="1">Aktif</option>
-                <option value="0">Tidak Aktif</option>
+                <option value="0">Non Aktif</option>
             </select>
         </div>
     );
