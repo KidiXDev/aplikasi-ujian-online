@@ -11,7 +11,7 @@ import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { Listbox } from '@headlessui/react';
 import { ChevronDown, Search } from 'lucide-react';
-import { useState, useEffect, JSX } from 'react';
+import { useState, useEffect, JSX, useMemo } from 'react';
 
 interface BreadcrumbItem {
     title: string;
@@ -76,7 +76,7 @@ export default function Banksoal() {
         total: 0,
     };
 
-    const filters = props.filters || { search: '' };
+    const filters = useMemo(() => props.filters || { search: '' }, [props.filters]);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     
     // Store all data locally for client-side filtering
