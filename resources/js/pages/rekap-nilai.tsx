@@ -58,6 +58,10 @@ interface AverageScores {
 }
 
 const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
+  // Breadcrumbs mirip monitoring
+  const breadcrumbs = [
+    { title: 'Rekap Nilai', href: '/rekap-nilai' },
+  ];
   const [data, setData] = useState<Ujian[]>(initialData.data);  const [currentPage, setCurrentPage] = useState<number>(initialData.current_page);
   const [entriesPerPage, setEntriesPerPage] = useState<number>(initialData.per_page);
   const [searchTerm] = useState<string>(filters.search);
@@ -158,15 +162,30 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   }, [selectedUjian?.id, studentSearchTerm, studentEntriesPerPage, studentCurrentPage]);
 
   // Filter data based on search term
-  const filteredData = data.filter(item => {
+  let filteredData = data.filter(item => {
     if (!searchTerm) return true;
-    
     return (
       safeIncludes(item.tipe, searchTerm) ||
       safeIncludes(item.paket, searchTerm) ||
       (item.tanggal || '').includes(searchTerm) ||
       safeIncludes(item.status, searchTerm)
     );
+  });
+
+  // Sort by tanggal descending (newest first), fallback to id descending
+  filteredData = filteredData.slice().sort((a, b) => {
+    if (a.tanggal && b.tanggal) {
+      // Format: dd/mm/yyyy, convert to yyyy-mm-dd for comparison
+      const parseDate = (str: string) => {
+        const [d, m, y] = str.split('/').map(Number);
+        return new Date(y, m - 1, d).getTime();
+      };
+      return parseDate(b.tanggal) - parseDate(a.tanggal);
+    }
+    if (a.id && b.id) {
+      return b.id - a.id;
+    }
+    return 0;
   });
 
   // Pagination logic for main data
@@ -197,7 +216,10 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
 
   // Action handlers
   const handleActionClick = (ujian: Ujian) => {
-    setSelectedUjian(ujian);
+    // Navigate to preview page
+    if (ujian.id) {
+      window.location.href = `/rekap-nilai/${ujian.id}/preview`;
+    }
   };
 
   const handleBackToList = () => {
@@ -251,9 +273,9 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
   };
 
   return (
-    <AppLayout>
+    <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Rekap Nilai" />
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div>
         {selectedUjian ? (
           // Detail View (Student Results)
           <div>
@@ -512,17 +534,23 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                 <EntriesSelector 
                   currentValue={entriesPerPage} 
                   options={[10, 25, 50]} 
-                  routeName="rekap-nilai" 
+                  routeName="rekap.nilai" 
                 />
                 <SearchInputMenu 
                   defaultValue={searchTerm} 
-                  routeName="rekap-nilai"
+                  routeName="rekap.nilai"
                 />
               </div>
 
               <div className="flex flex-col gap-4">
                 <CustomTable
-                  columns={[
+                  columns={[ 
+                    {
+  label: 'No',
+  className: 'w-[60px]',
+  render: (item: Ujian) => currentEntries.indexOf(item) + 1,
+},
+
                     {
                       label: 'Tipe Ujian',
                       className: 'w-[150px]',
@@ -569,7 +597,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                       ),
                     },
                     {
-                      label: 'Action',
+                      label: 'Preview',
                       className: 'w-[80px] text-center',
                       render: (item: Ujian) => (
                         <Button
