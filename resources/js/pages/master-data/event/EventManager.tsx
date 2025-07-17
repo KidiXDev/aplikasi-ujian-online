@@ -321,7 +321,7 @@ function EventTable({
                         }`}
                         onClick={() => handleToggleStatus(event.id_event)}
                     >
-                        {event.status === 1 ? 'Aktif' : 'Nonaktif'}
+                        {event.status === 1 ? 'Aktif' : 'Non Aktif'}
                     </button>
                 </div>
             ),

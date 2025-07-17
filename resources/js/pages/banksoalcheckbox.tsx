@@ -215,29 +215,29 @@ export default function BankSoalCheckbox() {
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">Nama Part</label>
-                <p className="text-base font-semibold text-yellow-900">{paketSoal.nama_ujian}</p>
+                <p className="text-base font-semibold ">{paketSoal.nama_ujian}</p>
               </div>
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">Nama Paket</label>
-                <p className="text-base font-semibold text-indigo-500">
+                <p className="text-base font-semibold ">
                   {paketSoal.nama_event}
                 </p>
               </div>
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">Soal Terpilih</label>
-                <p className="text-base font-semibold text-green-800">
+                <p className="text-base font-semibold ">
                   {selectedSoalIds.length} / {totalAvailableSoal} soal
                 </p>
               </div>
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">Total Soal Tersedia</label>
-                <p className="text-base font-semibold text-blue-800 ">
+                <p className="text-base font-semibold ">
                   {totalAvailableSoal} soal
                 </p>
               </div>
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-gray-600">Dapat Ditambahkan</label>
-                <p className="text-base font-semibold text-purple-600 ">
+                <p className="text-base font-semibold ">
                   {totalAvailableSoal - selectedSoalIds.length} soal
                 </p>
               </div>
