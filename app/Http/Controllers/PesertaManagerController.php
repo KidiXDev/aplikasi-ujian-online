@@ -12,43 +12,61 @@ class PesertaManagerController extends Controller
 
     public function index(Request $request)
     {
-        $search = $request->query('search');
-        $pages = $request->query('pages', 10);
-
-        // Ambil parameter sorting dari query string, default: sort by 'nama' ascending
-        $sort = $request->query('sort', 'id');
-        $direction = 'asc';
-
-        $pesertaQuery = Peserta::with('jurusanRef');
-
-        if ($search) {
-            $pesertaQuery->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%$search%")
-                    ->orWhere('nis', 'like', "%$search%")
-                    ->orWhere('username', 'like', "%$search%");
+        $query = Peserta::with('kategoriRef');
+        
+        // Filter berdasarkan search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nis', 'like', "%{$search}%")
+                  ->orWhere('nama', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
             });
         }
-
-        // Validasi kolom yang boleh di-sort untuk keamanan
-        $allowedSorts = ['id', 'nama', 'nis', 'username'];
-        if (in_array($sort, $allowedSorts)) {
-            $pesertaQuery->orderBy($sort, $direction);
-        } else {
-            $pesertaQuery->orderBy('id', 'asc');
+        
+        // Filter berdasarkan filter value
+        if ($request->filled('filter')) {
+            $query->where('filter', $request->filter);
         }
-
-        return Inertia::render(
-            'master-data/peserta-manager',
-            [
-                'data' => $pesertaQuery->paginate((int)$pages)->withQueryString(),
-                'filters' => [
-                    'search' => $search,
-                    'pages' => $pages,
-                    'sort' => $sort,
-                    // 'direction' tidak perlu karena selalu ASC
-                ],
-            ]
-        );
+        
+        // Sorting - handle format dari frontend
+        $sortParam = $request->get('sort', 'newest');
+        
+        switch ($sortParam) {
+            case 'newest':
+                $query->orderBy('id', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('id', 'asc');
+                break;
+            case 'nama_asc':
+                $query->orderBy('nama', 'asc');
+                break;
+            case 'nama_desc':
+                $query->orderBy('nama', 'desc');
+                break;
+            case 'nis_asc':
+                $query->orderBy('nis', 'asc');
+                break;
+            case 'nis_desc':
+                $query->orderBy('nis', 'desc');
+                break;
+            default:
+                $query->orderBy('id', 'desc');
+                break;
+        }
+        
+        // Pagination
+        $perPage = $request->get('pages', 10);
+        $data = $query->paginate($perPage);
+        
+        return Inertia::render('master-data/peserta-manager', [
+            'data' => $data,
+            'filters' => array_merge($request->only(['search', 'pages', 'filter', 'sort']), [
+                'sort' => $sortParam // Pastikan sort value selalu ada
+            ]),
+            'filterOptions' => Peserta::distinct()->pluck('filter')->filter()->sort()->values(),
+        ]);
     }
 
     public function delete(Request $request, Peserta $peserta)
@@ -76,7 +94,7 @@ class PesertaManagerController extends Controller
             'username' => 'required|string|max:255',
             'status' => 'integer',
             'jurusan' => 'required|integer',
-            'nis' => 'required|string|max:255',
+            'nis' => 'required|string|min:5|max:15',
             'nama' => 'required|string|max:255',
         ]);
 
