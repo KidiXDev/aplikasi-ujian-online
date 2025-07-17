@@ -128,6 +128,7 @@ class BankSoalControllerCheckbox extends Controller
                 'id_ujian' => $paket_soal->id_ujian,
                 'nama_ujian' => $jadwalUjian->nama_ujian,
                 'kode_part' => $jadwalUjian->kode_part,
+                'id_event' => $jadwalUjian->id_event,
             ],
             'matchedSoalIds' => $ujianSoalIds,
             'totalAvailableSoal' => $totalAvailableSoal,
@@ -315,7 +316,7 @@ class BankSoalControllerCheckbox extends Controller
         $id_event = $jadwalUjian->id_event;
                 
         // Redirect ke halaman paket soal berdasarkan event       
-        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $id_event]);
+        return redirect()->route('master-data.part.show-by-event', ['id_event' => $id_event]);
     }    
 }    
 

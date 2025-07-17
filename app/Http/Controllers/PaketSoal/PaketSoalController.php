@@ -189,7 +189,7 @@ class PaketSoalController extends Controller
         ];
 
         // Tampilkan halaman detail paket soal
-        return Inertia::render('master-data/paket-soal/PaketSoalDetail', [
+        return Inertia::render('master-data/part/PaketSoalDetail', [
             'paketSoal' => $detail,
         ]);
     }
