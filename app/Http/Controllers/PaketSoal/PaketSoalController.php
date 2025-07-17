@@ -16,20 +16,35 @@ class PaketSoalController extends Controller
     public function destroy($id)
     {
         try {
+            // Handle if $id is an array or object, extract the id_ujian
+            if (is_array($id)) {
+                $ujianId = $id['id_ujian'] ?? $id;
+            } elseif (is_object($id)) {
+                $ujianId = $id->id_ujian ?? $id;
+            } elseif (is_string($id) && (str_starts_with($id, '{') || str_starts_with($id, '['))) {
+                // Handle JSON string
+                $decoded = json_decode($id, true);
+                $ujianId = $decoded['id_ujian'] ?? $id;
+            } else {
+                $ujianId = $id;
+            }
+
+            Log::info('Attempting to delete PaketSoal:', ['original_id' => $id, 'extracted_id' => $ujianId]);
+
             // Hapus data terkait di tabel jadwal_ujian_soal
-            JadwalUjianSoal::where('id_ujian', $id)->delete();
+            JadwalUjianSoal::where('id_ujian', $ujianId)->delete();
 
             // Hapus data di tabel jadwal_ujian
-            JadwalUjian::destroy($id);
+            JadwalUjian::where('id_ujian', $ujianId)->delete();
 
-            Log::info('Paket soal deleted successfully:', ['id' => $id]);
-            return redirect()->back();
+            Log::info('Paket soal deleted successfully:', ['id' => $ujianId]);
+            return redirect()->back()->with('success', 'Paket soal berhasil dihapus');
         } catch (\Exception $e) {
-            Log::error('Error deleting PaketSoal:', ['error' => $e->getMessage()]);
+            Log::error('Error deleting PaketSoal:', ['error' => $e->getMessage(), 'id' => $id]);
             return redirect()->back()->with('error', 'Gagal menghapus paket soal');
         }
     }
-    
+
     // Method untuk menampilkan paket soal berdasarkan event
     public function index(Request $request, $id_event)
     {
@@ -54,9 +69,9 @@ class PaketSoalController extends Controller
             $jadwalUjian = $jadwalUjianQuery->get();
             // Create a mock pagination object for "All" option
             $jadwalUjian = new \Illuminate\Pagination\LengthAwarePaginator(
-                $jadwalUjian, 
-                $jadwalUjian->count(), 
-                $jadwalUjian->count(), 
+                $jadwalUjian,
+                $jadwalUjian->count(),
+                $jadwalUjian->count(),
                 1,
                 ['path' => $request->url(), 'pageName' => 'page']
             );
@@ -105,9 +120,9 @@ class PaketSoalController extends Controller
             $jadwalUjian = $jadwalUjianQuery->get();
             // Create a mock pagination object for "All" option
             $jadwalUjian = new \Illuminate\Pagination\LengthAwarePaginator(
-                $jadwalUjian, 
-                $jadwalUjian->count(), 
-                $jadwalUjian->count(), 
+                $jadwalUjian,
+                $jadwalUjian->count(),
+                $jadwalUjian->count(),
                 1,
                 ['path' => $request->url(), 'pageName' => 'page']
             );
