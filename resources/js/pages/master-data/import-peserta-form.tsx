@@ -44,7 +44,26 @@ export default function ImportPeserta() {
                 router.visit(route('master-data.peserta.manager', { page: lastPage }), { replace: true });
                 localStorage.removeItem('peserta_last_page');
             },
-            onError: () => toast.error('Import gagal, periksa format file.'),
+            onError: (errors) => {
+                console.log('Errors received:', errors); // Debug log
+                // Handle specific error messages with shorter text
+                if (errors.error) {
+                    // Simplify error message
+                    let errorMsg = errors.error;
+                    if (errorMsg.includes('Format file tidak sesuai') || errorMsg.includes('tidak ditemukan')) {
+                        errorMsg = 'Format Excel tidak sesuai';
+                    } else if (errorMsg.includes('kosong')) {
+                        errorMsg = 'File Excel kosong';
+                    } else if (errorMsg.includes('gagal')) {
+                        errorMsg = 'Import gagal';
+                    }
+                    toast.error(errorMsg);
+                } else if (errors.file) {
+                    toast.error('File tidak valid');
+                } else {
+                    toast.error('Import gagal');
+                }
+            },
         });
     };
 
@@ -94,6 +113,7 @@ export default function ImportPeserta() {
                         </CButton>
                     </div>
                 </form>
+            
             </div>
         </AppLayout>
     );
