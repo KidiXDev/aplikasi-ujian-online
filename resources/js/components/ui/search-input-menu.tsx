@@ -16,7 +16,7 @@ export function SearchInputMenu({
     defaultValue = "",
     placeholder = "Search...",
     routeName,
-    routeParams = {},
+    // routeParams = {},
     paramName = "search",
     width = "w-[300px]"
 }: SearchInputMenuProps) {

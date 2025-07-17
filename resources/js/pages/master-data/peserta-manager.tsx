@@ -14,7 +14,6 @@ import { EntriesSelector } from '@/components/ui/entries-selector';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
-import { Select } from '@/components/ui/select';
 import { SortDropdown } from '@/components/ui/sort-dropdown';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -122,21 +121,17 @@ export default function UserManager() {
                     </div>
                 </div>
 
-                <UserTable data={userData} pageFilters={filters} />
+                <UserTable data={userData} />
             </div>
         </AppLayout>
     );
 }
 
-function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedResponse<Peserta>; pageFilters: PesertaPageFilter }) {
+function UserTable({ data: userData }: { data: PaginatedResponse<Peserta> }) {
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
     const [toggleOpen, setToggleOpen] = useState(false);
     const [targetPeserta, setTargetPeserta] = useState<Peserta | null>(null);
-    
-    // Tambahkan state untuk highlight
-    const flash = (usePage().props as any).flash ?? {};
-    const highlightId = flash.highlight_id as number | undefined;
 
     const AVAILABLE_COLORS = ['bg-blue-500', 'bg-yellow-500', 'bg-purple-600', 'bg-indigo-500', 'bg-orange-500'];
     const kategoriColorCache = new Map<string, string>();
@@ -236,10 +231,8 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
                 const perPage = userData.per_page;
                 const index = userData.data.findIndex((item) => item.id === peserta.id);
                 const nomor = (currentPage - 1) * perPage + index + 1;
-                // Tambahkan highlight untuk baris yang baru diedit
-                const isHighlighted = highlightId === peserta.id;
                 return (
-                    <div className={`text-center font-medium ${isHighlighted ? 'bg-yellow-100' : ''}`}>
+                    <div className="text-center font-medium">
                         {nomor}
                     </div>
                 );
@@ -249,9 +242,8 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             label: 'NIS',
             className: 'w-[300px] text-center',
             render: (peserta: Peserta) => {
-                const isHighlighted = highlightId === peserta.id;
                 return (
-                    <div className={`text-center ${isHighlighted ? 'bg-yellow-100' : ''}`}>
+                    <div className="text-center">
                         {peserta.nis}
                     </div>
                 );
@@ -261,9 +253,8 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             label: 'Nama',
             className: 'w-[400px] text-center',
             render: (peserta: Peserta) => {
-                const isHighlighted = highlightId === peserta.id;
                 return (
-                    <div className={`${isHighlighted ? 'bg-yellow-100' : ''}`}>
+                    <div>
                         {peserta.nama}
                     </div>
                 );
@@ -275,10 +266,9 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             render: (peserta: Peserta) => {
                 const kategori = peserta.kategori_ref?.kategori || '-';
                 const color = getKategoriColor(kategori);
-                const isHighlighted = highlightId === peserta.id;
 
                 return (
-                    <div className={`flex justify-center ${isHighlighted ? 'bg-yellow-100' : ''}`}>
+                    <div className="flex justify-center">
                         <span className={`${color} rounded p-2 text-white shadow`}>{kategori}</span>
                     </div>
                 );
@@ -288,9 +278,8 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             label: 'Status',
             className: 'w-[150px] text-center',
             render: (peserta: Peserta) => {
-                const isHighlighted = highlightId === peserta.id;
                 return (
-                    <div className={`flex items-center justify-center ${isHighlighted ? 'bg-yellow-100' : ''}`}>
+                    <div className="flex items-center justify-center">
                         <button
                             className={`w-[100px] rounded p-2 text-white shadow transition ${
                                 peserta.status ? 'bg-green-600 hover:bg-green-700' : 'bg-button-danger hover:bg-red-700'
@@ -307,9 +296,8 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             label: 'Action',
             className: 'w-[150px] text-center',
             render: (peserta: Peserta) => {
-                const isHighlighted = highlightId === peserta.id;
                 return (
-                    <div className={`flex justify-center gap-2 ${isHighlighted ? 'bg-yellow-100' : ''}`}>
+                    <div className="flex justify-center gap-2">
                         <CButtonIcon icon={Pencil} onClick={() => router.visit(route('master-data.peserta.edit', peserta.id))} />
                         <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(peserta.id)} />
                     </div>
