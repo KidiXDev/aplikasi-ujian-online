@@ -11,4 +11,9 @@ class DashboardController extends Controller
     {
         return Inertia::render('dashboard');
     }
+
+    public function faq()
+    {
+        return Inertia::render('faq/faq-page');
+    }
 }

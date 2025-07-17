@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard/faq', [DashboardController::class, 'faq'])->name('dashboard.faq');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
