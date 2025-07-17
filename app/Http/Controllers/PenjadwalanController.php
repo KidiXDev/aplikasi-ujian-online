@@ -223,68 +223,32 @@ class PenjadwalanController extends Controller
             'jenis_ujian' => 'required|integer',
         ]);
 
-        return DB::transaction(function () use ($validated, $penjadwalan) {
-            // Validasi bahwa Event yang dipilih memiliki template JadwalUjian
-            $hasTemplate = JadwalUjian::where('kode_kelas', null)
-                ->whereNull('id_penjadwalan')
-                ->where('id_event', $validated['id_paket_ujian'])
-                ->exists();
-
-            if (!$hasTemplate) {
-                return redirect()->back()->with('error', 'Event yang dipilih tidak memiliki template jadwal ujian.');
+        // Hitung jumlah peserta yang sudah terdaftar
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+        $existingPesertaIds = [];
+        foreach ($jadwalUjians as $jadwalUjian) {
+            if ($jadwalUjian->kode_kelas) {
+                $ids = explode(',', $jadwalUjian->kode_kelas);
+                $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
             }
+        }
+        $existingPesertaIds = array_unique($existingPesertaIds);
+        $jumlahTerdaftar = count($existingPesertaIds);
 
-            // Hitung jumlah peserta yang sudah terdaftar
-            $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
-            $existingPesertaIds = [];
-            foreach ($jadwalUjians as $jadwalUjian) {
-                if ($jadwalUjian->kode_kelas) {
-                    $ids = explode(',', $jadwalUjian->kode_kelas);
-                    $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
-                }
-            }
-            $existingPesertaIds = array_unique($existingPesertaIds);
-            $jumlahTerdaftar = count($existingPesertaIds);
+        // Validasi: Tidak boleh mengurangi kuota di bawah jumlah peserta yang sudah terdaftar
+        if ($validated['kuota'] < $jumlahTerdaftar) {
+            return redirect()->back()->with('error', 'Kuota tidak boleh kurang dari jumlah peserta terdaftar.');
+        }
 
-            // Validasi: Tidak boleh mengurangi kuota di bawah jumlah peserta yang sudah terdaftar
-            if ($validated['kuota'] < $jumlahTerdaftar) {
-                return redirect()->back()->with('error', 'Kuota tidak boleh kurang dari jumlah peserta terdaftar.');
-            }
+        // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
+        if ($penjadwalan->tipe_ujian != $validated['tipe_ujian'] || $penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
+            $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
+        }
 
-            // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
-            if ($penjadwalan->tipe_ujian != $validated['tipe_ujian'] || $penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
-                $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
-            }
+        $penjadwalan->update($validated);
 
-            // Jika id_paket_ujian berubah, perlu regenerasi JadwalUjian dan JadwalUjianSoal
-            if ($penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
-                // Hapus JadwalUjian dan JadwalUjianSoal yang lama
-                $oldJadwalUjian = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
-                foreach ($oldJadwalUjian as $jadwal) {
-                    JadwalUjianSoal::where('id_ujian', $jadwal->id_ujian)->delete();
-                }
-                JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->delete();
-
-                // Update penjadwalan terlebih dahulu
-                $penjadwalan->update($validated);
-
-                // Regenerasi JadwalUjian dan JadwalUjianSoal dengan paket ujian baru
-                $this->createJadwalUjian($penjadwalan);
-            } else {
-                // Jika id_paket_ujian tidak berubah, hanya update penjadwalan
-                $penjadwalan->update($validated);
-            }
-
-            // Ambil data kategori dan event untuk success message dengan null safety
-            $kategoriSoal = KategoriSoal::find($validated['tipe_ujian']);
-            $event = Event::find($validated['id_paket_ujian']);
-
-            $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Ujian';
-            $namaEvent = $event ? $event->nama_event : 'Event';
-
-            return redirect()->route('penjadwalan.index')
-                ->with('success', 'Jadwal ujian berhasil diperbarui.');
-        });
+        return redirect()->route('penjadwalan.index')
+            ->with('success', 'Jadwal ujian berhasil diperbarui.');
     }
 
     public function destroy($id)
