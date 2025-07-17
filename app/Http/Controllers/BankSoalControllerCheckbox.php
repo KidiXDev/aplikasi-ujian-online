@@ -315,7 +315,7 @@ class BankSoalControllerCheckbox extends Controller
         $id_event = $jadwalUjian->id_event;
                 
         // Redirect ke halaman paket soal berdasarkan event       
-        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $id_event]);
+        return redirect()->route('master-data.part.show-by-event', ['id_event' => $id_event]);
     }    
 }    
 

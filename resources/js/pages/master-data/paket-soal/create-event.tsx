@@ -63,12 +63,12 @@ export default function FormEvent() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (isEdit && event?.id_event) {
-            router.put(route('master-data.event.update', event.id_event), values, {
+            router.put(route('master-data.paket.update', event.id_event), values, {
                 preserveScroll: true,
                 onError: handleErrors,
             });
         } else {
-            router.post(route('master-data.event.store'), values, {
+            router.post(route('master-data.paket.store'), values, {
                 preserveScroll: true,
                 onError: handleErrors,
             });
@@ -93,7 +93,7 @@ export default function FormEvent() {
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Tambah'} Paket Soal</h1>
                     <CButton
                         type="primary"
-                        onClick={() => router.visit(route('master-data.event.getEvent'))}
+                        onClick={() => router.visit(route('master-data.paket.getEvent'))}
                     >
                         Kembali
                     </CButton>

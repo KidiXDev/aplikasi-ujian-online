@@ -61,8 +61,8 @@ export default function CreatePaketSoal() {
   });
 
   const breadcrumbs = [
-    { title: 'Event', href: '/master-data/event' },
-    { title: 'Paket Soal', href: '/master-data/paket-soal' },
+    { title: 'Paket Soal', href: '/master-data/paket' },
+    { title: 'Part', href: '/master-data/part' },
     { title: edit ? 'Edit' : 'Create', href: '#' },
   ];
 
@@ -73,14 +73,14 @@ export default function CreatePaketSoal() {
     };
 
     if (edit && paket) {
-      router.put(`/master-data/paket-soal/${paket.id_ujian}`, payload, {
+      router.put(`/master-data/part/${paket.id_ujian}`, payload, {
         onSuccess: () => toast.success('Paket soal berhasil diupdate!'),
         onError: () => toast.error('Gagal update paket soal.'),
       });
     } else {
       // Jika ada selectedEventId, gunakan route store_id
       if (selectedEventId) {
-        router.post(`/master-data/paket-soal/${selectedEventId}`, payload, {
+        router.post(`/master-data/part/${selectedEventId}`, payload, {
           onSuccess: () => {
             toast.success('Paket soal berhasil disimpan!');
             form.reset();
@@ -90,7 +90,7 @@ export default function CreatePaketSoal() {
         });
       } else {
         // Jika tidak ada selectedEventId, gunakan route store biasa
-        router.post('/master-data/paket-soal', payload, {
+        router.post('/master-data/part', payload, {
           onSuccess: () => {
             toast.success('Paket soal berhasil disimpan!');
             form.reset();
@@ -105,10 +105,10 @@ export default function CreatePaketSoal() {
   const handleBack = () => {
     if (selectedEventId) {
       // Jika ada selectedEventId, kembali ke paket soal berdasarkan event
-      router.visit(route('master-data.paket-soal.show-by-event', selectedEventId));
+      router.visit(route('master-data.part.show-by-event', selectedEventId));
     } else {
       // Jika tidak ada selectedEventId, kembali ke index paket soal
-      router.visit(route('master-data.paket-soal.index'));
+      router.visit(route('master-data.part.index'));
     }
   };
 

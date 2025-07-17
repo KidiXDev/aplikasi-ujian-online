@@ -51,10 +51,10 @@ class MakeEventController extends Controller
             ]);
 
             // Redirect ke halaman event manager dengan pesan sukses
-            return redirect()->route('master-data.event.getEvent')
+            return redirect()->route('master-data.paket.getEvent')
                 ->with('success', 'Event berhasil dibuat');
         } catch (\Exception $e) {
-            return redirect()->route('master-data.event.getEvent')
+            return redirect()->route('master-data.paket.getEvent')
                 ->with('error', 'Gagal membuat event: ' . $e->getMessage());
         }
     }
@@ -98,7 +98,7 @@ class MakeEventController extends Controller
     //         'status' => 1
     //     ]);
 
-    //     return redirect()->route('master-data.event.getEvent');
+    //     return redirect()->route('master-data.paket.getEvent');
     // }
 
     public function update($id, Request $request)
@@ -107,10 +107,10 @@ class MakeEventController extends Controller
             $event = Event::findOrFail($id);
             $event->update($request->all());
 
-            return redirect()->route('master-data.event.getEvent')
+            return redirect()->route('master-data.paket.getEvent')
                 ->with('success', 'Event berhasil diupdate');
         } catch (\Exception $e) {
-            return redirect()->route('master-data.event.getEvent')
+            return redirect()->route('master-data.paket.getEvent')
                 ->with('error', 'Gagal mengupdate event: ' . $e->getMessage());
         }
     }
@@ -132,10 +132,10 @@ class MakeEventController extends Controller
             // Ambil parameter dari request untuk mempertahankan filter
             $params = $request->only(['pages', 'search', 'status', 'page']);
             
-            return redirect()->route('master-data.event.getEvent', $params)
+            return redirect()->route('master-data.paket.getEvent', $params)
                 ->with('success', 'Event berhasil dihapus');
         } catch (\Exception $e) {
-            return redirect()->route('master-data.event.getEvent')
+            return redirect()->route('master-data.paket.getEvent')
                 ->with('error', 'Gagal menghapus event: ' . $e->getMessage());
         }
     }
@@ -154,10 +154,10 @@ class MakeEventController extends Controller
             // Ambil parameter dari request untuk mempertahankan filter
             $params = $request->only(['pages', 'search', 'status', 'page']);
             
-            return redirect()->route('master-data.event.getEvent', $params)
+            return redirect()->route('master-data.paket.getEvent', $params)
                 ->with('success', "Status event berhasil {$statusText}");            
         } catch (\Exception $e) {
-            return redirect()->route('master-data.event.getEvent')
+            return redirect()->route('master-data.paket.getEvent')
                 ->with('error', 'Gagal mengubah status event: ' . $e->getMessage());
         }
     }

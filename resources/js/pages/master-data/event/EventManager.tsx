@@ -34,7 +34,7 @@ interface EventsPageProps {
     [key: string]: unknown;
 }
 
-const breadcrumbs = [{ title: 'Event', href: '/master-data/event' }];
+const breadcrumbs = [{ title: 'Paket Soal', href: '/master-data/paket' }];
 
 export default function EventManager() {
     const { props, url } = usePage<EventsPageProps>();
@@ -44,12 +44,12 @@ export default function EventManager() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Data Event" />
+            <Head title="Data Paket Soal" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <ContentTitle
                     title="Paket Soal"
                     showButton
-                    onButtonClick={() => router.visit(route('master-data.event.create'))}
+                    onButtonClick={() => router.visit(route('master-data.paket.create'))}
                 />
                 
                 <div className="mt-4 flex items-center justify-between gap-4">
@@ -57,7 +57,7 @@ export default function EventManager() {
                         <EntriesSelector
                             currentValue={events.per_page}
                             options={[10, 25, 50, 100]}
-                            routeName="master-data.event.getEvent"
+                            routeName="master-data.paket.getEvent"
                             paramName="pages"
                             routeParams={{
                                 search: params.get('search') || '',
@@ -87,7 +87,7 @@ export default function EventManager() {
                     
                     <SearchInputMenu
                         defaultValue={params.get('search') || ''}
-                        routeName="master-data.event.getEvent"
+                        routeName="master-data.paket.getEvent"
                         paramName="search"
                         routeParams={{
                             pages: params.get('pages') || events.per_page.toString(),
@@ -112,7 +112,7 @@ function StatusFilter({
     routeParams: { [key: string]: string };
 }) {
     const handleStatusChange = (status: string) => {
-        router.visit(route('master-data.event.getEvent'), {
+        router.visit(route('master-data.paket.getEvent'), {
             data: {
                 ...routeParams,
                 status: status,
@@ -147,7 +147,7 @@ function SortFilter({
     routeParams: { [key: string]: string };
 }) {
     const handleSortChange = (sort: string) => {
-        router.visit(route('master-data.event.getEvent'), {
+        router.visit(route('master-data.paket.getEvent'), {
             data: {
                 ...routeParams,
                 sort: sort,
@@ -228,26 +228,26 @@ function EventTable({
         };
         
         if (actionType === 'delete') {
-            router.delete(route('master-data.event.destroy', targetId), {
+            router.delete(route('master-data.paket.destroy', targetId), {
                 data: currentParams,
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Event berhasil dihapus');
+                    toast.success('Paket soal berhasil dihapus');
                     // Remove from local state
                     setTableData(prev => prev.filter(ev => ev.id_event !== targetId));
                 },
                 onError: () => {
-                    toast.error('Gagal menghapus event');
+                    toast.error('Gagal menghapus paket soal');
                 },
             });
         } else {
             // Toggle status
-            router.put(route('master-data.event.updateStatus', targetId), currentParams, {
+            router.put(route('master-data.paket.updateStatus', targetId), currentParams, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Status event berhasil diubah');
+                    toast.success('Status paket soal berhasil diubah');
                     // Update local state
                     setTableData(prev =>
                         prev.map(ev => {
@@ -258,13 +258,13 @@ function EventTable({
                         })
                     );
                     // Refresh halaman dengan parameter yang sama untuk mempertahankan filter
-                    router.visit(route('master-data.event.getEvent'), {
+                    router.visit(route('master-data.paket.getEvent'), {
                         data: currentParams,
                         preserveScroll: true
                     });
                 },
                 onError: () => {
-                    toast.error('Gagal mengubah status event');
+                    toast.error('Gagal mengubah status paket soal');
                 },
             });
         }
@@ -369,12 +369,12 @@ function EventTable({
                     <CButtonIcon
                         icon={List}
                         className="bg-yellow-500"
-                        onClick={() => router.visit(`/master-data/paket-soal/${event.id_event}`)}
+                        onClick={() => router.visit(`/master-data/part/${event.id_event}`)}
                     />
                     <CButtonIcon
                         icon={Pencil}
                         onClick={() =>
-                            router.visit(route('master-data.event.edit', event.id_event))
+                            router.visit(route('master-data.paket.edit', event.id_event))
                         }
                     />
                 </div>
@@ -414,7 +414,7 @@ function EventTable({
                 total={events.total}
                 onNavigate={(page) => {
                     router.visit(
-                        route('master-data.event.getEvent', {
+                        route('master-data.paket.getEvent', {
                             pages: queryParams.get('pages') || events.per_page.toString(),
                             search: queryParams.get('search') || '',
                             status: queryParams.get('status') || '',
