@@ -1,5 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
-import { PageFilter, PaginatedResponse, type BreadcrumbItem } from '@/types';
+import { PaginatedResponse, type BreadcrumbItem } from '@/types';
+
+interface PageFilter {
+    search?: string;
+    per_page?: number;
+    page?: number;
+    filter?: string; // Add this line to fix the error
+}
 import { Head, router, usePage } from '@inertiajs/react';
 import { BookOpen, Calendar, Clock, UserPlus, Users } from 'lucide-react'; // Hapus ArrowLeft
 import { useEffect, useState } from 'react';
@@ -22,6 +29,7 @@ interface Peserta {
     username: string;
     status: number;
     jurusan: number;
+    filter?: string | number;
     jurusan_ref?: {
         id_jurusan: number;
         nama_jurusan: string;
@@ -57,11 +65,12 @@ interface PageProps {
     jumlahTerdaftar: number;
     sisaKuota: number;
     filters: PageFilter;
+    filterOptions: (string | number)[];
     flash?: {
         success?: string;
         error?: string;
     };
-    [key: string]: unknown; // Add index signature for compatibility with Inertia PageProps
+    [key: string]: unknown;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -71,7 +80,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AddPeserta() {
-    const { penjadwalan, data: pesertaData, jumlahTerdaftar, sisaKuota, filters, flash } = usePage<PageProps>().props;
+    const { penjadwalan, data: pesertaData, jumlahTerdaftar, sisaKuota, filters, filterOptions = [], flash } = usePage<PageProps>().props;
 
     const [selectedPeserta, setSelectedPeserta] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -199,6 +208,27 @@ export default function AddPeserta() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        {/* Dropdown filter */}
+                        <select
+                            className="border rounded px-2 py-1 text-sm"
+                            value={filters.filter ?? ''}
+                            onChange={e => {
+                                router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta/add`, {
+                                    data: {
+                                        ...filters,
+                                        filter: e.target.value || undefined,
+                                        page: 1,
+                                    },
+                                    preserveState: false,
+                                    preserveScroll: false,
+                                });
+                            }}
+                        >
+                            <option value="">Semua Filter</option>
+                            {(filterOptions as (string | number)[]).map((opt: string | number) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
                         <SearchInputMenu
                             defaultValue={filters.search}
                             routeName="penjadwalan.peserta.add"
@@ -269,10 +299,6 @@ function AddPesertaTable({
             ),
         },
         {
-            label: 'Id',
-            render: (peserta: Peserta) => <span className="font-medium">{peserta.id}</span>,
-        },
-        {
             label: 'NIS',
             render: (peserta: Peserta) => <span className="font-medium">{peserta.nis}</span>,
         },
@@ -283,8 +309,14 @@ function AddPesertaTable({
         {
             label: 'Status',
             render: (peserta: Peserta) => (
-                <Badge variant={peserta.status === 1 ? 'default' : 'secondary'}>{peserta.status === 1 ? 'Aktif' : 'Tidak Aktif'}</Badge>
+                <Badge variant={peserta.status === 1 ? 'default' : 'secondary'}>
+                    {peserta.status === 1 ? 'Aktif' : 'Tidak Aktif'}
+                </Badge>
             ),
+        },
+        {
+            label: 'Filter',
+            render: (peserta: Peserta) => peserta.filter ?? '-',
         },
     ];
 

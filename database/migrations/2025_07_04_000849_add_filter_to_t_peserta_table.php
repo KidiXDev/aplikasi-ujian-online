@@ -17,7 +17,9 @@ return new class extends Migration
         }
 
         Schema::connection('data_db')->table('t_peserta', function (Blueprint $table) {
-            $table->integer('filter')->default(0)->after('nama');
+            if (!Schema::connection('data_db')->hasColumn('t_peserta', 'filter')) {
+                $table->integer('filter')->default(0)->after('nama');
+            }
         });
     }
 
@@ -32,7 +34,9 @@ return new class extends Migration
         }
 
         Schema::connection('data_db')->table('t_peserta', function (Blueprint $table) {
-            $table->dropColumn('filter');
+            if (Schema::connection('data_db')->hasColumn('t_peserta', 'filter')) {
+                $table->dropColumn('filter');
+            }
         });
     }
 };

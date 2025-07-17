@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Matakuliah;
 use App\Http\Controllers\{
@@ -43,6 +44,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
+        Route::get('/', [MonitoringUjianController::class, 'index'])->name('index');
+        Route::get('/{id}/preview', [MonitoringUjianController::class, 'preview'])->name('preview');
+        Route::get('/{id}', [MonitoringUjianController::class, 'show'])->name('detail');
+        Route::post('/{id}/reset-participant', [MonitoringUjianController::class, 'resetParticipant'])->name('reset');
+        Route::post('/{id}/delete-participant', [MonitoringUjianController::class, 'deleteParticipant'])->name('delete');
         Route::get('/', [MonitoringUjianController::class, 'index'])->name('index');
         Route::get('/{id}/preview', [MonitoringUjianController::class, 'preview'])->name('preview');
         Route::get('/{id}', [MonitoringUjianController::class, 'show'])->name('detail');

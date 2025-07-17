@@ -15,7 +15,10 @@ const formSchema = z.object({
 });
 
 export default function FormJenisUjian() {
-    const { user } = usePage<{ user: { kode?: string; nama?: string; type?: string } | null }>().props;
+    const { user, kategoriOptions } = usePage<{ 
+        user: { kode?: string; nama?: string; type?: string } | null;
+        kategoriOptions: string[]; // Tambahkan type untuk kategoriOptions
+    }>().props;
 
     const isEdit = !!user;
 
@@ -86,9 +89,12 @@ export default function FormJenisUjian() {
                                     <FormControl>
                                         <select {...field} className="w-full rounded-md border border-gray-300 p-2">
                                             <option value="">Pilih Kategori</option>
-                                            <option value="TOEFL">TOEFL</option>
-                                            <option value="TOEIC">TOEIC</option>
-                                            <option value="TEPPS">TEPPS</option>
+                                            {/* Render options dari database */}
+                                            {kategoriOptions && kategoriOptions.map((kategori, index) => (
+                                                <option key={index} value={kategori}>
+                                                    {kategori}
+                                                </option>
+                                            ))}
                                         </select>
                                     </FormControl>
                                     <FormMessage />
@@ -102,7 +108,7 @@ export default function FormJenisUjian() {
                                 <FormItem>
                                     <FormLabel>Nama</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Contoh: Ujian Akhir Semester" {...field} />
+                                        <Input placeholder="Contoh: Listening Part 1" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
