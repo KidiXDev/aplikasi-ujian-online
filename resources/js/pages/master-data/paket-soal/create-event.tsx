@@ -65,13 +65,11 @@ export default function FormEvent() {
         if (isEdit && event?.id_event) {
             router.put(route('master-data.event.update', event.id_event), values, {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Event berhasil diubah!'),
                 onError: handleErrors,
             });
         } else {
             router.post(route('master-data.event.store'), values, {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Event berhasil ditambahkan!'),
                 onError: handleErrors,
             });
         }
@@ -89,10 +87,10 @@ export default function FormEvent() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isEdit ? 'Edit Event' : 'Create Event'} />
+            <Head title={isEdit ? 'Edit Paket Soal' : 'Buat Paket Soal'} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} Event</h1>
+                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Buat'} Paket Soal</h1>
                     <CButton
                         type="primary"
                         onClick={() => router.visit(route('master-data.event.getEvent'))}
@@ -107,7 +105,7 @@ export default function FormEvent() {
                             name="nama_event"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Nama Event</FormLabel>
+                                    <FormLabel>Nama Paket</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Contoh: Tryout Nasional" {...field} />
                                     </FormControl>
@@ -146,7 +144,7 @@ export default function FormEvent() {
                             name="event_mulai"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Mulai Event (opsional)</FormLabel>
+                                    <FormLabel>Mulai Paket Soal (opsional)</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="date"
@@ -163,7 +161,7 @@ export default function FormEvent() {
                             name="event_akhir"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Akhir Event (opsional)</FormLabel>
+                                    <FormLabel>Akhir Paket Soal (opsional)</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="date"

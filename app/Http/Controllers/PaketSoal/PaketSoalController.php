@@ -23,7 +23,7 @@ class PaketSoalController extends Controller
             JadwalUjian::destroy($id);
 
             Log::info('Paket soal deleted successfully:', ['id' => $id]);
-            return redirect()->back()->with('success', 'Paket soal berhasil dihapus');
+            return redirect()->back();
         } catch (\Exception $e) {
             Log::error('Error deleting PaketSoal:', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Gagal menghapus paket soal');
@@ -33,25 +33,39 @@ class PaketSoalController extends Controller
     // Method untuk menampilkan paket soal berdasarkan event
     public function index(Request $request, $id_event)
     {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
+        $pages = $request->input('pages', 10);
+        $search = $request->input('search', null);
 
         // Ambil data event
         $event = Event::findOrFail($id_event);
 
         // Query jadwal ujian berdasarkan event
-        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
+        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part', 'id_penjadwalan')
             ->with(['event:id_event,nama_event', 'bidang:kode,nama'])
-            ->where('id_event', $id_event);
+            ->where('id_event', $id_event)
+            ->where('id_penjadwalan', null);
 
         if ($search) {
             $jadwalUjianQuery->where('nama_ujian', 'like', '%' . $search . '%');
         }
 
-        $jadwalUjian = $jadwalUjianQuery->paginate($pages);
-
-        // Preserve query parameters untuk pagination
-        $jadwalUjian->appends($request->query());
+        // Handle pagination with different page sizes
+        if ($pages === 'all') {
+            $jadwalUjian = $jadwalUjianQuery->get();
+            // Create a mock pagination object for "All" option
+            $jadwalUjian = new \Illuminate\Pagination\LengthAwarePaginator(
+                $jadwalUjian, 
+                $jadwalUjian->count(), 
+                $jadwalUjian->count(), 
+                1,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+            $jadwalUjian->appends($request->query());
+        } else {
+            // Ensure per page is a valid number
+            $pages = in_array($pages, [10, 20, 25, 50, 100]) ? (int)$pages : 10;
+            $jadwalUjian = $jadwalUjianQuery->paginate($pages)->withQueryString();
+        }
 
         // Ambil data total soal
         $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')
@@ -62,14 +76,17 @@ class PaketSoalController extends Controller
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
             'event' => $event, // Kirim data event ke frontend
+            'filters' => [
+                'search' => $request->input('search', ''),
+            ]
         ]);
     }
 
     // Method untuk menampilkan semua paket soal
     public function indexAll(Request $request)
     {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
+        $pages = $request->input('pages', 10);
+        $search = $request->input('search', null);
 
         $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
             ->with(['event:id_event,nama_event', 'bidang:kode,nama']);
@@ -83,10 +100,23 @@ class PaketSoalController extends Controller
             });
         }
 
-        $jadwalUjian = $jadwalUjianQuery->paginate($pages);
-
-        // Preserve query parameters untuk pagination
-        $jadwalUjian->appends($request->query());
+        // Handle pagination with different page sizes
+        if ($pages === 'all') {
+            $jadwalUjian = $jadwalUjianQuery->get();
+            // Create a mock pagination object for "All" option
+            $jadwalUjian = new \Illuminate\Pagination\LengthAwarePaginator(
+                $jadwalUjian, 
+                $jadwalUjian->count(), 
+                $jadwalUjian->count(), 
+                1,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+            $jadwalUjian->appends($request->query());
+        } else {
+            // Ensure per page is a valid number
+            $pages = in_array($pages, [10, 20, 25, 50, 100]) ? (int)$pages : 10;
+            $jadwalUjian = $jadwalUjianQuery->paginate($pages)->withQueryString();
+        }
 
         $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
 
@@ -94,6 +124,9 @@ class PaketSoalController extends Controller
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
             // Tidak ada event untuk index all
+            'filters' => [
+                'search' => $request->input('search', ''),
+            ]
         ]);
     }
 
@@ -105,29 +138,27 @@ class PaketSoalController extends Controller
         return response()->json($paketSoal);
     }
 
-    public function create()
+    public function create($id_event)
     {
-        // Ambil data yang diperlukan untuk membuat paket soal, misalnya daftar event dan bidang
-        $events = Event::select('id_event', 'nama_event')->get();
-        $bidangs = Bidang::select('id_bidang', 'nama_bidang')->get();
+        $JadwalUjian = JadwalUjian::where('id_event', $id_event)->first();
+        $kode_part = $JadwalUjian->kode_part;
 
-        // Tampilkan halaman untuk membuat paket soal
+        //Ambil bidang yang id nya beda dengan $kode_part
+        $bidangs = Bidang::select('id_bidang', 'nama_bidang')
+            ->where('kode', '!=', $kode_part)
+            ->get();
+
         return Inertia::render('master-data/paket-soal/create-paket-soal', [
-            'events' => $events,
             'bidangs' => $bidangs,
         ]);
     }
 
     public function edit($id)
     {
-        // Ambil data paket soal yang akan diedit
         $paketSoal = JadwalUjian::findOrFail($id);
-
-        // Ambil data yang diperlukan untuk mengisi form edit, misalnya daftar event dan bidang
         $events = Event::select('id_event', 'nama_event')->get();
         $bidangs = Bidang::select('id_bidang', 'nama_bidang')->get();
 
-        // Tampilkan halaman untuk mengedit paket soal
         return Inertia::render('master-data/paket-soal/create-paket-soal', [
             'paketSoal' => $paketSoal,
             'events' => $events,
