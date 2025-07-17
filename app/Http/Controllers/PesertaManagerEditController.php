@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Peserta;
 use App\Models\Jurusan;
+use App\Models\KategoriSoal;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ class PesertaManagerEditController extends Controller
     {
         $peserta = Peserta::findOrFail($id);
         $allRoles = Role::all();
-        $jurusanList = Jurusan::all(['id_jurusan', 'nama_jurusan']);
+        $kategoriList = KategoriSoal::all(['id', 'kategori']);
 
         return Inertia::render('master-data/form.peserta-manager', [
             'peserta' => [
@@ -25,9 +26,10 @@ class PesertaManagerEditController extends Controller
                 'nama' => $peserta->nama,
                 'status' => $peserta->status,
                 'jurusan' => $peserta->jurusan,
+                'filter' => $peserta->filter,
             ],
             'allRoles' => $allRoles,
-            'jurusanList' => $jurusanList,
+            'kategoriList' => $kategoriList,
         ]);
     }
 
@@ -37,7 +39,8 @@ class PesertaManagerEditController extends Controller
             'username' => 'required|string|max:255',
             'status'   => 'required|integer',
             'jurusan'  => 'required|integer',
-            'nis'      => 'required|string|max:255',
+            'filter'   => 'required|string|max:2',
+            'nis'      => 'required|string|max:15',
             'nama'     => 'required|string|max:255',
             'password' => 'nullable|string|min:8',
         ]);
@@ -50,6 +53,7 @@ class PesertaManagerEditController extends Controller
                 'username' => $data['username'],
                 'status'   => $data['status'],
                 'jurusan'  => $data['jurusan'],
+                'filter'   => $data['filter'],
                 'nis'      => $data['nis'],
                 'nama'     => $data['nama'],
             ];
@@ -91,20 +95,19 @@ class PesertaManagerEditController extends Controller
                 ]);
         });
 
-        $page = $request->input('page', 1);
-        return redirect()->route('master-data.peserta.manager', ['page' => $page])
+        return redirect()->route('master-data.peserta.manager')
             ->with('success', 'Peserta berhasil diedit');
     }
 
     public function create()
     {
         $allRoles = Role::all();
-        $jurusanList = Jurusan::all(['id_jurusan', 'nama_jurusan']);
+        $kategoriList = KategoriSoal::all(['id', 'kategori']);
 
         return Inertia::render('master-data/form.peserta-manager', [
             'peserta' => null,
             'allRoles' => $allRoles,
-            'jurusanList' => $jurusanList,
+            'kategoriList' => $kategoriList,
         ]);
     }
 
@@ -113,9 +116,11 @@ class PesertaManagerEditController extends Controller
         $data = $request->validate([
             'username' => 'required|string|max:255',
             'password' => 'required|string|min:8',
-            'nis'      => 'required|string|max:255',
+            'nis'      => 'required|string|max:15',
             'nama'     => 'required|string|max:255',
             'status'   => 'nullable|integer|in:0,1',
+            'jurusan'  => 'required|integer',
+            'filter'   => 'required|string|max:2',
         ]);
 
         DB::transaction(function () use ($data) {
@@ -126,7 +131,8 @@ class PesertaManagerEditController extends Controller
                 'password' => bcrypt($data['password']),
                 'nis'      => $data['nis'],
                 'nama'     => $data['nama'],
-                'jurusan'  => 1,
+                'jurusan'  => $data['jurusan'],
+                'filter'   => $data['filter'],
                 'status'   => $data['status'] ?? 1,
                 'aktif'    => 1,
             ]);
@@ -157,11 +163,7 @@ class PesertaManagerEditController extends Controller
             );
         });
 
-        $perPage = 10;
-        $total = Peserta::count();
-        $lastPage = ceil($total / $perPage);
-
-        return redirect()->route('master-data.peserta.manager', ['page' => $lastPage])
+        return redirect()->route('master-data.peserta.manager')
             ->with('success', 'Peserta berhasil ditambahkan');
     }
 }

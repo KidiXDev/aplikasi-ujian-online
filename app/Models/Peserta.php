@@ -22,6 +22,7 @@ class Peserta extends Model
         'password',
         'status', // yang dipake itu status ya bukan aktif
         'jurusan',
+        'kategori', // tambahkan ini
         'nis',
         'nama',
         'filter', // tambahkan ini
@@ -32,12 +33,23 @@ class Peserta extends Model
         'id' => 'integer',
         'status' => 'integer',
         'jurusan' => 'integer',
-        'filter' => 'integer', // tambahkan ini
+        'kategori' => 'integer', // tambahkan ini
+        'filter' => 'string', // tambahkan ini
     ];
+
+    // public function jurusanRef()
+    // {
+    //     return $this->belongsTo(Jurusan::class, 'jurusan', 'id_jurusan');
+    // }
 
     public function jurusanRef()
     {
         return $this->belongsTo(Jurusan::class, 'jurusan', 'id_jurusan');
+    }
+
+    public function kategoriRef()
+    {
+        return $this->belongsTo(KategoriSoal::class, 'jurusan', 'id');
     }
 
     public function pengerjaan()

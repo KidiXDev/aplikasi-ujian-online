@@ -21,7 +21,8 @@ const formSchema = z.object({
         .refine((val) => !val || val.length <= 20, { message: 'Password max 20 characters.' }),
     status: z.number().min(0, { message: 'Status is required.' }),
     jurusan: z.number().min(0, { message: 'Jurusan is required.' }),
-    nis: z.string().min(5, { message: 'NIS must be at least 5 characters.' }).max(20, { message: 'NIS max 20 characters.' }),
+    filter: z.string().min(0, { message: 'Filter is required.' }).max(2, { message: 'Filter max 2 characters.' }),
+    nis: z.string().min(5, { message: 'NIS must be at least 5 characters.' }).max(15, { message: 'NIS max 20 characters.' }),
     nama: z.string().min(2, { message: 'Nama must be at least 2 characters.' }).max(20, { message: 'Nama max 20 characters.' }),
 });
 
@@ -33,8 +34,12 @@ export default function PesertaForm() {
         nama: string;
         status: number;
         jurusan: number;
+        filter: string;
     };
-    const { peserta, jurusanList } = usePage<{ peserta: PesertaType; jurusanList: { id_jurusan: number; nama_jurusan: string }[] }>().props;
+    const { peserta, kategoriList } = usePage<{
+        peserta: PesertaType;
+        kategoriList: { id: number; kategori: string }[];
+    }>().props;
     const isEdit = !!peserta;
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -48,7 +53,7 @@ export default function PesertaForm() {
         },
     ];
 
-    const defaultJurusan = isEdit ? (peserta?.jurusan ?? 0) : (jurusanList?.[0]?.id_jurusan ?? 0);
+    const defaultKategori = isEdit ? (peserta?.jurusan ?? 0) : (kategoriList?.[0]?.id ?? 0);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -56,26 +61,22 @@ export default function PesertaForm() {
             username: peserta?.username ?? '',
             password: isEdit ? '' : 'password123',
             status: peserta?.status ?? 1,
-            jurusan: defaultJurusan,
+            jurusan: defaultKategori,
+            filter: peserta?.filter ?? '',
             nis: peserta?.nis ?? '',
             nama: peserta?.nama ?? '',
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // console.log('Submitting values:', values); // Log data yang dikirim
         if (isEdit) {
-            const params = new URLSearchParams(window.location.search);
-            const page = params.get('page') || 1;
-
             router.put(
                 route('master-data.peserta.update', peserta.id),
-                { ...values, page },
+                values,
                 {
                     preserveScroll: true,
-                    // onSuccess tidak perlu router.visit lagi jika backend sudah redirect ke page yang benar
                     onSuccess: () => {
-                        // console.log('Peserta berhasil diubah!')
+                        // Backend akan handle redirect dan highlight
                     },
                     onError: () => {
                         toast.error('Failed to update peserta.');
@@ -86,10 +87,9 @@ export default function PesertaForm() {
             router.post(route('master-data.peserta.store'), values, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    // console.log('Peserta berhasil ditambahkan!'); // Log jika berhasil
+                    // console.log('Peserta berhasil ditambahkan!');
                 },
                 onError: () => {
-                    // Log error jika gagal
                     toast.error('Failed to create peserta.');
                 },
             });
@@ -172,16 +172,30 @@ export default function PesertaForm() {
                                     <FormControl>
                                         <Select value={field.value?.toString() ?? ''} onValueChange={(val) => field.onChange(parseInt(val))}>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Pilih jurusan" />
+                                                <SelectValue placeholder="Pilih kategori" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {jurusanList?.map((j) => (
-                                                    <SelectItem key={j.id_jurusan} value={j.id_jurusan.toString()}>
-                                                        {j.nama_jurusan}
+                                                {kategoriList?.map((k) => (
+                                                    <SelectItem key={k.id} value={k.id.toString()}>
+                                                        {k.kategori}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="filter"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Filter</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Masukkan filter" maxLength={2} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
