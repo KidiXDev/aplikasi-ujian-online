@@ -120,7 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('create', [DosenManagerEditController::class, 'create'])->name('create');
             Route::post('/', [DosenManagerEditController::class, 'store'])->name('store');
             Route::post('import', [DosenImportController::class, 'import'])->name('import');
-            Route::put('{dosen}/toggle-status', [DosenManagerController::class, 'toggleStatus'])->name('toggle-status');
+            Route::put('{nip}/toggle-status', [DosenManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
         Route::get('import-dosen', [DosenImportController::class, 'importViewDosen'])->name('import-dosen.view');

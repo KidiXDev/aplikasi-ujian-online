@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { BreadcrumbItem } from '@/types';
 
 export default function ImportDosen() {
     const [file, setFile] = useState<File | null>(null);
@@ -23,16 +24,19 @@ export default function ImportDosen() {
             forceFormData: true,
             onSuccess: () => {
                 toast.success('Import berhasil');
-                const lastPage = localStorage.getItem('dosen_last_page') || 1;
-                router.visit(route('master-data.dosen.manager', { page: lastPage }), { replace: true });
-                localStorage.removeItem('dosen_last_page');
+
             },
             onError: () => toast.error('Import gagal, periksa format file.'),
         });
     };
 
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dosen Manager', href: route('master-data.dosen.manager') },
+        { title: 'Import', href: '/import' },
+    ];
+
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Import Data Dosen" />
 
             <div className="space-y-4 p-6">

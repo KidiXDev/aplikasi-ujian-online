@@ -1,139 +1,95 @@
 import { PasswordInput } from '@/components/c-password-input';
-import {
-    MultiSelector,
-    MultiSelectorContent,
-    MultiSelectorInput,
-    MultiSelectorItem,
-    MultiSelectorList,
-    MultiSelectorTrigger,
-} from '@/components/multi-select';
 import { CButton } from '@/components/ui/c-button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, Role } from '@/types';
+import { type BreadcrumbItem } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    roles: string[];
-    dosen?: {
-        nip: string;
-        aktif: boolean;
-    };
-}
-
-interface UserWithPassword extends User {
-    password: string;
+interface Dosen {
+    nip: string;
+    nama: string;
+    aktif: boolean;
 }
 
 const formSchema = z.object({
-    username: z.string().min(2, {
-        message: 'Username must be at least 2 characters.',
-    }),
-    email: z.string().email('Invalid email address.'),
-    password: z
-        .string()
-        .optional()
-        .refine((val) => !val || val.length >= 8, { message: 'Password must be at least 8 characters.' }),
-    roles: z.array(z.string()).nonempty('Please select at least one item'),
-    nip: z.string().min(2, {
-        message: 'NIP must be at least 2 characters.',
-    }),
+    nip: z.string().min(2, { message: 'NIP minimal 2 karakter.' }),
+    nama: z.string().min(2, { message: 'Nama minimal 2 karakter.' }),
+    password: z.string().optional().refine((val) => !val || val.length >= 8, { message: 'Password minimal 8 karakter.' }),
     aktif: z.boolean(),
 });
 
-export default function Dashboard() {
-    const { user, allRoles } = usePage<{ user: UserWithPassword; allRoles: Role[] }>().props;
-    const isEdit = !!user;
+export default function FormDosenManager() {
+    const { dosen } = usePage<{ dosen: Dosen | null }>().props;
+    const isEdit = !!dosen;
 
     const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Dosen Manager',
-            href: '/user-management/dosen',
-        },
-        {
-            title: isEdit ? 'Edit' : 'Create',
-            href: isEdit ? '/edit' : '/create',
-        },
+        { title: 'Dosen Manager', href: route('master-data.dosen.manager') }, // gunakan route name ke daftar dosen
+        { title: isEdit ? 'Edit' : 'Create', href: isEdit ? '/edit' : '/create' },
     ];
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            username: user?.name ?? '',
-            email: user?.email ?? '',
+            nip: dosen?.nip ?? '',
+            nama: dosen?.nama ?? '',
             password: '',
-            roles: user?.roles?.length ? user.roles : [],
-            nip: user?.dosen?.nip ?? '',
-            aktif: !!user?.dosen?.aktif,
+            aktif: !!dosen?.aktif,
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (isEdit) {
             router.put(
-                route('master-data.dosen.update', user.id),
+                route('master-data.dosen.update', dosen?.nip),
                 {
-                    name: values.username,
-                    email: values.email,
-                    roles: values.roles,
                     nip: values.nip,
+                    nama: values.nama,
+                    password: values.password,
                     aktif: values.aktif,
                 },
                 {
                     preserveScroll: true,
-                    onSuccess: () => {
-                        // Success handler
-                    },
+                    onSuccess: () => toast.success('Dosen berhasil diedit'),
                     onError: (errors) => {
-                        if (errors.email) {
-                            toast.error(errors.email);
-                        }
+                        if (errors.nip) toast.error(errors.nip);
+                        if (errors.nama) toast.error(errors.nama);
+                        if (errors.password) toast.error(errors.password);
                     },
-                },
+                }
             );
         } else {
             router.post(
                 route('master-data.dosen.store'),
                 {
-                    name: values.username,
-                    email: values.email,
-                    password: values.password,
-                    roles: values.roles,
                     nip: values.nip,
+                    nama: values.nama,
+                    password: values.password,
                     aktif: values.aktif,
                 },
                 {
                     preserveScroll: true,
-                    onSuccess: () => {
-                        // Success handler
-                    },
+                    onSuccess: () => toast.success('Dosen berhasil ditambahkan'),
                     onError: (errors) => {
-                        if (errors.email) {
-                            toast.error(errors.email);
-                        }
-                        if (errors.password) {
-                            toast.error(errors.password);
-                        }
+                        if (errors.nip) toast.error(errors.nip);
+                        if (errors.nama) toast.error(errors.nama);
+                        if (errors.password) toast.error(errors.password);
                     },
-                },
+                }
             );
         }
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title={isEdit ? 'Edit Dosen' : 'Tambah Dosen'} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="space-between flex items-center justify-between">
+                <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Tambah'} Data Dosen</h1>
                     <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('master-data.dosen.manager'))}>
                         Kembali
@@ -143,12 +99,12 @@ export default function Dashboard() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <FormField
                             control={form.control}
-                            name="username"
+                            name="nip"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Username</FormLabel>
+                                    <FormLabel>NIP</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter your username" {...field} />
+                                        <Input placeholder="Masukkan NIP" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -156,12 +112,12 @@ export default function Dashboard() {
                         />
                         <FormField
                             control={form.control}
-                            name="email"
+                            name="nama"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Email</FormLabel>
+                                    <FormLabel>Nama</FormLabel>
                                     <FormControl>
-                                        <Input type="email" placeholder="Enter your email" {...field} />
+                                        <Input placeholder="Masukkan Nama" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -182,45 +138,6 @@ export default function Dashboard() {
                                 )}
                             />
                         )}
-                        <FormField
-                            control={form.control}
-                            name="roles"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Roles</FormLabel>
-                                    <FormControl>
-                                        <MultiSelector values={field.value} onValuesChange={field.onChange} loop className="max-w-xs">
-                                            <MultiSelectorTrigger>
-                                                <MultiSelectorInput placeholder="Select roles" />
-                                            </MultiSelectorTrigger>
-                                            <MultiSelectorContent>
-                                                <MultiSelectorList>
-                                                    {allRoles.map((role) => (
-                                                        <MultiSelectorItem key={role.id} value={role.name}>
-                                                            {role.name}
-                                                        </MultiSelectorItem>
-                                                    ))}
-                                                </MultiSelectorList>
-                                            </MultiSelectorContent>
-                                        </MultiSelector>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="nip"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>NIP</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Enter your NIP" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
                         <FormField
                             control={form.control}
                             name="aktif"
@@ -245,7 +162,7 @@ export default function Dashboard() {
                                 </FormItem>
                             )}
                         />
-                         <CButton type="submit" className="bg-green-600 hover:bg-green-700 md:w-24">
+                        <CButton type="submit" className="bg-green-600 hover:bg-green-700 md:w-24">
                             Save
                         </CButton>
                     </form>
