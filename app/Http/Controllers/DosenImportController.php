@@ -30,7 +30,8 @@ class DosenImportController extends Controller
             Excel::import(new DosenImport, $request->file('file'));
 
             Log::debug('Import process completed successfully');  // Debugging setelah import selesai
-            return redirect()->back()->with('success', 'Import data dosen berhasil.');
+            return redirect()->route('master-data.dosen.manager')
+                ->with('success', 'Import data dosen berhasil.');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             // Log error jika ada masalah dalam validasi Excel
             Log::error('Excel validation error: ', ['error' => $e->getMessage()]);

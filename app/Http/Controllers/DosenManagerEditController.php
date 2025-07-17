@@ -10,114 +10,79 @@ use Spatie\Permission\Models\Role;
 
 class DosenManagerEditController extends Controller
 {
-    public function edit($id)
+    public function edit($nip)
     {
-        $user = User::with(['roles', 'dosen'])->findOrFail($id);
+        $dosen = Dosen::findOrFail($nip);
 
         return Inertia::render('dosen-management/form.dosen-manager', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'roles' => $user->roles->pluck('name'),
-                'dosen' => [
-                    'nip' => $user->dosen->nip ?? '',
-                    'aktif' => $user->dosen->aktif ?? false,
+            'dosen' => [
+                'nip' => $dosen->nip,
+                'nama' => $dosen->nama,
+                'aktif' => $dosen->aktif,
             ],
-        ],  'allRoles' => Role::all(),
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $nip)
     {
-        $user = User::findOrFail($id);
-
-        // Validasi input, kecuali password karena opsional update password
         $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'roles' => 'nullable|array',
-            'roles.*' => 'string|exists:roles,name',
-            'nip' => 'required|string|unique:data_db.t_guru,nip,' . $user->nip . ',nip',
+            'nama' => 'required|string',
+            'password' => 'nullable|string|min:8',
             'aktif' => 'required|boolean',
-            'password' => 'nullable|string|min:8', // password opsional
         ]);
 
-        // Update data user
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'nip' => $data['nip'],
-        ]);
+        $dosen = Dosen::findOrFail($nip);
 
-        // Update atau buat data dosen
-        $dosen = Dosen::find($user->nip);
-
-        $dosenData = [
-            'nip' => $data['nip'],
+        $updateData = [
+            'nama' => $data['nama'],
             'aktif' => $data['aktif'],
-            'nama' => $data['name'],
         ];
 
-        // Jika ada password baru, hash dan set ke data dosen
         if (!empty($data['password'])) {
-            $dosenData['password'] = bcrypt($data['password']);
+            $updateData['password'] = bcrypt($data['password']);
         }
 
-        if ($dosen) {
-            $dosen->update($dosenData);
-        } else {
-            Dosen::create($dosenData);
-        }
-
-        // Sinkronisasi roles jika ada
-        if (isset($data['roles'])) {
-            $user->syncRoles($data['roles']);
-        }
+        $dosen->update($updateData);
 
         return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil diedit');
     }
 
     public function create()
     {
-        $allRoles = Role::all();
-
         return Inertia::render('dosen-management/form.dosen-manager', [
-            'user' => null,
-            'allRoles' => $allRoles,
+            'dosen' => null,
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'roles' => 'nullable|array',
-            'roles.*' => 'string|exists:roles,name',
             'nip' => 'required|string|unique:data_db.t_guru,nip',
+            'nama' => 'required|string',
+            'password' => 'required|string|min:8',
             'aktif' => 'required|boolean',
-        ]);
-
-        $user = User::create([
-            'nip' => $data['nip'],
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => bcrypt($data['password']),
         ]);
 
         Dosen::create([
             'nip' => $data['nip'],
-            'aktif' => $data['aktif'],
+            'nama' => $data['nama'],
             'password' => bcrypt($data['password']),
-            'nama' => $data['name'],
+            'aktif' => $data['aktif'],
         ]);
 
-        if (isset($data['roles'])) {
-            $user->syncRoles($data['roles']);
-        }
-
         return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil ditambahkan');
+    }
+
+    // Toggle status aktif
+    public function toggleStatus($nip)
+    {
+        $dosen = Dosen::findOrFail($nip);
+        $dosen->aktif = !$dosen->aktif;
+        $dosen->save();
+
+        return response()->json([
+            'success' => true,
+            'aktif' => $dosen->aktif,
+        ]);
     }
 }

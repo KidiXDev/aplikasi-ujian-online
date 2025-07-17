@@ -98,6 +98,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('{id}/edit', [DosenManagerEditController::class, 'edit'])->name('edit');
             Route::put('{id}', [DosenManagerEditController::class, 'update'])->name('update');
             Route::delete('{user}', [DosenManagerController::class, 'delete'])->name('destroy');
+            Route::get('create', [DosenManagerEditController::class, 'create'])->name('create');
+            Route::post('/', [DosenManagerEditController::class, 'store'])->name('store');
+            Route::post('import', [DosenImportController::class, 'import'])->name('import');
+            Route::put('{nip}/toggle-status', [DosenManagerController::class, 'toggleStatus'])->name('toggle-status');
             Route::put('{dosen}/toggle-status', [DosenManagerController::class, 'toggleStatus'])->name('toggle-status');
         });
 
