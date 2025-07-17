@@ -151,9 +151,9 @@ function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: Pagi
             className: 'w-[100px] text-center',
             render: (exam: JadwalUjian) => (
                 <div className="flex justify-center gap-2">
-                    <CButtonIcon icon={Users} onClick={() => router.visit(route('penjadwalan.peserta', exam.id_penjadwalan))} />
-                    <CButtonIcon icon={Pencil} onClick={() => router.visit(route('penjadwalan.edit', exam.id_penjadwalan))} />
-                    <CButtonIcon icon={Trash2} type="danger" onClick={() => handleDelete(exam.id_penjadwalan)} />
+                    <CButtonIcon icon={Users} className='bg-yellow-500' onClick={() => router.visit(route('penjadwalan.peserta', exam.id_penjadwalan))} />
+                    <CButtonIcon icon={Pencil} className='bg-blue-500' onClick={() => router.visit(route('penjadwalan.edit', exam.id_penjadwalan))} />
+                    <CButtonIcon icon={Trash2} type="danger" className='bg-red-500' onClick={() => handleDelete(exam.id_penjadwalan)} />
                 </div>
             ),
         },
