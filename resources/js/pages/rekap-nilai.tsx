@@ -225,7 +225,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
-            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Soal</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Benar</th>
             <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Soal Salah</th>
@@ -319,7 +319,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Total Student</p>
+                    <p className="text-sm text-gray-600 font-medium">Total Peserta</p>
                     <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
                   </div>
                 </div>
@@ -331,7 +331,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Absent</p>
+                    <p className="text-sm text-gray-600 font-medium">Absen</p>
                     <p className="text-2xl font-bold text-gray-900">{absentStudents}</p>
                   </div>
                 </div>
@@ -343,7 +343,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 font-medium">Finished</p>
+                    <p className="text-sm text-gray-600 font-medium">Selesai</p>
                     <p className="text-2xl font-bold text-gray-900">{finishedStudents}</p>
                   </div>
                 </div>
@@ -412,7 +412,7 @@ const RekapNilai: React.FC<Props> = ({ initialData, filters }) => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   </svg>
-                  Export to Excel
+                  Export ke Excel
                 </a>
               </div>
 
