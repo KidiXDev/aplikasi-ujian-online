@@ -452,7 +452,7 @@ export default function PaketSoalManager() {
           <div className="flex items-center gap-4">
             <EntriesSelector
               currentValue={jadwalUjian.per_page}
-              options={[10, 20, 25, 50, 100]}
+              options={[10, 25, 50, 100]}
               routeName={event ? "master-data.paket-soal.show-by-event" : "master-data.paket-soal.index"}
               paramName="pages"
               routeParams={event ? { 
