@@ -218,7 +218,10 @@ export default function KategoriUjianManager() {
                 {/* Judul + tombol tambah */}
                 <div className="flex items-center justify-between">
                     <ContentTitle title="Kategori Ujian" showButton={false} />
-                    <Button onClick={handleAdd} className="flex items-center gap-2">
+                    <Button 
+                        onClick={handleAdd} 
+                        className="flex items-center gap-2 bg-button-primary hover:bg-[#475873] text-white"
+                    >
                         <Plus className="h-4 w-4" />
                         Tambah Kategori Ujian
                     </Button>
