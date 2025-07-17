@@ -148,10 +148,17 @@ function UserTable({ data: userData, pageFilters: filters }: { data: PaginatedRe
             router.delete(route('master-data.dosen.destroy', targetId), {
                 preserveState: true,
                 preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Data dosen berhasil dihapus.');
+                },
+                onError: () => {
+                    toast.error('Gagal menghapus data dosen.');
+                },
             });
         }
         setOpen(false);
     };
+
 
 
     // Toggle Status

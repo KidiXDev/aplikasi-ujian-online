@@ -38,7 +38,7 @@ class DosenManagerController extends Controller
         $dosen = \App\Models\Dosen::findOrFail($nip); // nip sebagai primary key
         $dosen->delete();
 
-        return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil dihapus');
+        return redirect()->back()->with('success', 'Dosen berhasil dihapus');
     }
 
     public function update(Request $request, User $user)

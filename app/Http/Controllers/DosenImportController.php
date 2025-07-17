@@ -29,13 +29,8 @@ class DosenImportController extends Controller
             Log::debug('Starting import process');  // Debugging sebelum memulai proses import
             Excel::import(new DosenImport, $request->file('file'));
 
-            // Hitung total dosen dan halaman terakhir
-            $total = \App\Models\Dosen::count();
-            $perPage = 10; // samakan dengan paginate di controller index
-            $lastPage = ceil($total / $perPage);
-
             Log::debug('Import process completed successfully');  // Debugging setelah import selesai
-            return redirect()->route('master-data.dosen.manager', ['page' => $lastPage])
+            return redirect()->route('master-data.dosen.manager')
                 ->with('success', 'Import data dosen berhasil.');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             // Log error jika ada masalah dalam validasi Excel
