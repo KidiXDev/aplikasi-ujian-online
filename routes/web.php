@@ -88,7 +88,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('rekap-nilai', [App\Http\Controllers\RekapNilaiController::class, 'index'])->name('rekap.nilai');
     Route::get('rekap-nilai/{id}', [App\Http\Controllers\RekapNilaiController::class, 'show'])->name('rekap.nilai.detail');
     Route::get('rekap-nilai/{id}/export', [App\Http\Controllers\RekapNilaiController::class, 'export'])->name('rekap.nilai.export');
-
+    Route::get('/rekap-nilai/{id}/preview', [App\Http\Controllers\RekapNilaiController::class, 'preview'])->name('rekap-nilai.preview');
     // MASTER DATA
     Route::prefix('master-data')->name('master-data.')->group(function () {
         Route::get('/', fn() => redirect()->route('dashboard'))->name('index');
