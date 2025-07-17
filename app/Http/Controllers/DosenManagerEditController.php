@@ -29,7 +29,7 @@ class DosenManagerEditController extends Controller
             'nip' => 'required|string|unique:data_db.t_guru,nip,' . $nip . ',nip',
             'nama' => 'required|string',
             'password' => 'nullable|string|min:8',
-            'aktif' => 'required|boolean',
+            'aktif' => 'nullable|boolean',
         ]);
 
         $dosen = Dosen::findOrFail($nip);
@@ -54,6 +54,10 @@ class DosenManagerEditController extends Controller
                 'aktif' => $data['aktif'],
                 'password' => $passwordFinal,
             ];
+            if (array_key_exists('aktif', $data)) {
+                $updateData['aktif'] = $data['aktif'];
+            }
+
 
             $dosen->update($updateData);
         }

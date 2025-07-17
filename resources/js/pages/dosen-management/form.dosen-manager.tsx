@@ -39,7 +39,7 @@ export default function FormDosenManager() {
             nip: dosen?.nip ?? '',
             nama: dosen?.nama ?? '',
             password: dosen ? '' : 'Password123',
-            aktif: dosen?.aktif ?? true,
+            aktif: !!dosen?.aktif,
         },
     });
 
