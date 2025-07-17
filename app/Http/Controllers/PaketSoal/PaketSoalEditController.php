@@ -161,15 +161,27 @@ class PaketSoalEditController extends Controller
 
     
 
-    public function list_event_to_copy_part($id_event_tujuan){
+    public function list_event_to_copy_part(Request $request, $id_event_tujuan){
         try {
-            // Ambil event kecuali event tujuan dan hanya yang aktif
-            $eventList = Event::where('id_event', '!=', $id_event_tujuan)
-                ->where('status', 1)
-                ->select('id_event', 'nama_event')
-                ->get();
+            $search = $request->get('search', '');
             
-            Log::info('Event list for copy:', ['count' => $eventList->count(), 'data' => $eventList->toArray()]);
+            // Ambil event kecuali event tujuan dan hanya yang aktif
+            $query = Event::where('id_event', '!=', $id_event_tujuan)
+                ->where('status', 1)
+                ->select('id_event', 'nama_event');
+            
+            // Jika ada parameter search, filter berdasarkan nama event
+            if (!empty($search)) {
+                $query->where('nama_event', 'LIKE', '%' . $search . '%');
+            }
+            
+            $eventList = $query->orderBy('nama_event', 'asc')->get();
+            
+            Log::info('Event list for copy:', [
+                'search' => $search,
+                'count' => $eventList->count(), 
+                'data' => $eventList->toArray()
+            ]);
             
             return response()->json($eventList);
         } catch (\Exception $e) {

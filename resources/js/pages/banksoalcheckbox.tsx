@@ -55,6 +55,8 @@ interface PageProps {
     error?: string;
   };
   matchedSoalIds?: number[];
+  totalAvailableSoal?: number;
+  availableForAdd?: number;
   paketSoal?: {
     id_ujian: number;
     nama_ujian: string;
@@ -80,10 +82,13 @@ export default function BankSoalCheckbox() {
   const dataSoal = props.dataSoal;
   const filters = props.filters || { search: '', order: 'asc' };
   const paketSoal = props.paketSoal;
+  const totalAvailableSoal = props.totalAvailableSoal || 0;
 
   const [selectedSoalIds, setSelectedSoalIds] = useState<number[]>(
     props.matchedSoalIds || []
   );
+  const [randomCount, setRandomCount] = useState<number>(10);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   /** Notifications --------------------------------------------------------*/
   useEffect(() => {
@@ -100,6 +105,87 @@ export default function BankSoalCheckbox() {
       // Fallback ke history back
       window.history.back();
     }
+  };
+
+  /** Handle select all ---------------------------------------------------*/
+  const handleSelectAll = () => {
+    if (!paketSoal?.id_ujian || isProcessing) return;
+
+    setIsProcessing(true);
+    router.post(
+      route('master-data.bank-soal-checkbox.select-all', paketSoal.id_ujian),
+      {},
+      {
+        preserveState: false, // Changed to false to reload page data
+        preserveScroll: true,
+        onFinish: () => setIsProcessing(false),
+      }
+    );
+  };
+
+  /** Handle select random ------------------------------------------------*/
+  const handleSelectRandom = () => {
+    if (!paketSoal?.id_ujian || isProcessing) return;
+
+    if (randomCount < 1 || randomCount > totalAvailableSoal) {
+      toast.error(`Jumlah soal harus antara 1 dan ${totalAvailableSoal}`);
+      return;
+    }
+
+    setIsProcessing(true);
+    router.post(
+      route('master-data.bank-soal-checkbox.select-random', paketSoal.id_ujian),
+      { random_count: randomCount },
+      {
+        preserveState: false, // Changed to false to reload page data
+        preserveScroll: true,
+        onFinish: () => setIsProcessing(false),
+      }
+    );
+  };
+
+  /** Handle add random ---------------------------------------------------*/
+  const handleAddRandom = () => {
+    if (!paketSoal?.id_ujian || isProcessing) return;
+
+    const availableForAdd = totalAvailableSoal - selectedSoalIds.length;
+    
+    if (randomCount < 1 || randomCount > availableForAdd) {
+      toast.error(`Jumlah soal harus antara 1 dan ${availableForAdd} (soal yang tersedia untuk ditambahkan)`);
+      return;
+    }
+
+    setIsProcessing(true);
+    router.post(
+      route('master-data.bank-soal-checkbox.add-random', paketSoal.id_ujian),
+      { random_count: randomCount },
+      {
+        preserveState: false, // Changed to false to reload page data
+        preserveScroll: true,
+        onFinish: () => setIsProcessing(false),
+      }
+    );
+  };
+
+  /** Handle clear all ----------------------------------------------------*/
+  const handleClearAll = () => {
+    if (!paketSoal?.id_ujian || isProcessing) return;
+
+    if (selectedSoalIds.length === 0) {
+      toast.error('Tidak ada soal yang dipilih');
+      return;
+    }
+
+    setIsProcessing(true);
+    router.post(
+      route('master-data.bank-soal-checkbox.clear-all', paketSoal.id_ujian),
+      {},
+      {
+        preserveState: false, // Changed to false to reload page data
+        preserveScroll: true,
+        onFinish: () => setIsProcessing(false),
+      }
+    );
   };
 
   /** Render ---------------------------------------------------------------*/
@@ -123,8 +209,8 @@ export default function BankSoalCheckbox() {
 
         {/* Info Paket Soal dan Filter */}
         {paketSoal && (
-          <div className="mb-4 rounded border bg-blue-50 p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mb-4 rounded border bg-gray-50 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nama Paket</label>
                 <p className="mt-1 text-base font-semibold">{paketSoal.nama_ujian}</p>
@@ -136,9 +222,103 @@ export default function BankSoalCheckbox() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Soal Terpilih</label>
                 <p className="mt-1 text-base font-semibold text-green-600">
-                  {selectedSoalIds.length} soal
+                  {selectedSoalIds.length} / {totalAvailableSoal} soal
                 </p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Total Soal Tersedia</label>
+                <p className="mt-1 text-base font-semibold text-blue-600">
+                  {totalAvailableSoal} soal
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Dapat Ditambahkan</label>
+                <p className="mt-1 text-base font-semibold text-purple-600">
+                  {totalAvailableSoal - selectedSoalIds.length} soal
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Selection Controls */}
+        {paketSoal && (
+          <div className="mb-4 rounded border bg-gray-50 p-4">
+            <h3 className="mb-3 text-lg font-semibold text-gray-800">Pilihan Cepat</h3>
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Select All Button */}
+              <button
+                onClick={handleSelectAll}
+                disabled={isProcessing}
+                className="flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {isProcessing ? 'Memproses...' : 'Pilih Semua'}
+              </button>
+
+              {/* Random Selection */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Random:</label>
+                <input
+                  type="number"
+                  value={randomCount}
+                  onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max={totalAvailableSoal}
+                  className="w-20 rounded border border-gray-300 px-2 py-1 text-sm"
+                />
+                <span className="text-sm text-gray-500">dari {totalAvailableSoal}</span>
+                <button
+                  onClick={handleSelectRandom}
+                  disabled={isProcessing}
+                  className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {isProcessing ? 'Memproses...' : 'Pilih Random'}
+                </button>
+              </div>
+
+              {/* Add Random Section */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Tambah Random:</label>
+                <input
+                  type="number"
+                  value={randomCount}
+                  onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max={totalAvailableSoal - selectedSoalIds.length}
+                  className="w-20 rounded border border-gray-300 px-2 py-1 text-sm"
+                />
+                <span className="text-sm text-gray-500">dari {totalAvailableSoal - selectedSoalIds.length}</span>
+                
+                {/* Add Random Button */}
+                <button
+                  onClick={handleAddRandom}
+                  disabled={isProcessing || (totalAvailableSoal - selectedSoalIds.length) <= 0}
+                  className="flex items-center gap-2 rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  {isProcessing ? 'Memproses...' : 'Tambah Random'}
+                </button>
+              </div>
+
+              {/* Clear All Button */}
+              <button
+                onClick={handleClearAll}
+                disabled={isProcessing || selectedSoalIds.length === 0}
+                className="flex items-center gap-2 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {isProcessing ? 'Memproses...' : 'Hapus Semua'}
+              </button>
             </div>
           </div>
         )}
@@ -151,12 +331,23 @@ export default function BankSoalCheckbox() {
               options={[10, 15, 25, 50]}
               routeName="master-data.bank-soal-checkbox.edit"
               paramName="pages"
+              routeParams={paketSoal ? {
+                paket_soal: paketSoal.id_ujian,
+                search: filters?.search || '',
+                order: filters?.order || 'asc',
+              } : {}}
             />
             <OrderFilter defaultValue={filters?.order ?? 'asc'} />
           </div>
           <SearchInputMenu
-            defaultValue={filters?.search}
+            defaultValue={filters?.search || ''}
             routeName="master-data.bank-soal-checkbox.edit"
+            paramName="search"
+            routeParams={paketSoal ? {
+              paket_soal: paketSoal.id_ujian,
+              pages: dataSoal.per_page.toString(),
+              order: filters?.order || 'asc',
+            } : {}}
           />
         </div>
 
@@ -213,20 +404,23 @@ function renderContentWithBase64(content: string | null) {
 function OrderFilter({ defaultValue }: { defaultValue: string }) {
   const props = usePage<PageProps>().props as unknown as PageProps;
   const filters = props.filters || {};
+  const paketSoal = props.paketSoal;
   const perPage = props.dataSoal?.per_page || 10;
   const [order, setOrder] = useState(defaultValue);
 
   const handleChange = (selected: string) => {
     setOrder(selected);
-    router.visit(route('master-data.bank-soal-checkbox.update'), {
-      data: {
-        order: selected,
-        search: filters.search || '',
-        pages: perPage,
-      },
-      preserveState: true,
-      preserveScroll: true,
-    });
+    if (paketSoal) {
+      router.visit(route('master-data.bank-soal-checkbox.edit', paketSoal.id_ujian), {
+        data: {
+          order: selected,
+          search: filters.search || '',
+          pages: perPage,
+        },
+        preserveState: true,
+        preserveScroll: true,
+      });
+    }
   };
 
   const options = [
@@ -292,14 +486,19 @@ function BankSoalTable({
     setSelectedSoalIds(newIds);
 
     // Update ke backend jika ada paket yang dipilih
-    if (paketSoal && newIds.length > 0) {
+    if (paketSoal) {
       router.put(
         route('master-data.bank-soal-checkbox.update', paketSoal.id_ujian),
         { soal_id: newIds },
         {
+          preserveState: true,
           preserveScroll: true,
-          onSuccess: () => toast.success('Soal berhasil diperbarui'),
-          onError: () => toast.error('Gagal menyimpan soal'),
+          onSuccess: () => {
+            toast.success('Soal berhasil diperbarui');
+          },
+          onError: () => {
+            toast.error('Gagal menyimpan soal');
+          },
         }
       );
     }
@@ -309,7 +508,14 @@ function BankSoalTable({
     {
       label: 'No',
       className: 'w-[60px] text-center',
-      render: (item: Soal) => <div className="text-center">{item.ids}</div>,
+      render: (item: Soal) => {
+        const index = data.data.indexOf(item);
+        return (
+          <div className="text-center">
+            {((data.current_page - 1) * data.per_page) + index + 1}
+          </div>
+        );
+      },
     },
     {
       label: 'Soal',
@@ -371,7 +577,7 @@ function BankSoalTable({
       router.visit(route('master-data.bank-soal-checkbox.edit', paketSoal.id_ujian), {
         data: {
           page,
-          search: pageFilters?.search,
+          search: pageFilters?.search || '',
           pages: data.per_page,
           order: pageFilters?.order || 'asc',
         },

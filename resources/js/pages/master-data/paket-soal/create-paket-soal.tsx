@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 import {
   Form,
@@ -22,6 +23,8 @@ const formSchema = z.object({
 });
 
 export default function CreatePaketSoal() {
+  const [searchBidang, setSearchBidang] = useState('');
+  
   const { 
     bidangs = [], 
     edit = false, 
@@ -40,6 +43,14 @@ export default function CreatePaketSoal() {
     selectedEventId?: number;
     selectedEvent?: { id_event: number; nama_event: string };
   };
+
+  // Filter bidang berdasarkan pencarian
+  const filteredBidangs = useMemo(() => {
+    if (!searchBidang) return bidangs;
+    return bidangs.filter(bidang => 
+      bidang.nama.toLowerCase().includes(searchBidang.toLowerCase())
+    );
+  }, [bidangs, searchBidang]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -73,6 +84,7 @@ export default function CreatePaketSoal() {
           onSuccess: () => {
             toast.success('Paket soal berhasil disimpan!');
             form.reset();
+            setSearchBidang(''); // Reset search bidang
           },
           onError: () => toast.error('Gagal menyimpan paket soal.'),
         });
@@ -82,6 +94,7 @@ export default function CreatePaketSoal() {
           onSuccess: () => {
             toast.success('Paket soal berhasil disimpan!');
             form.reset();
+            setSearchBidang(''); // Reset search bidang
           },
           onError: () => toast.error('Gagal menyimpan paket soal.'),
         });
@@ -101,61 +114,110 @@ export default function CreatePaketSoal() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={edit ? "Edit Part" : "Buat Part"} />
-      <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+      <Head title={edit ? "Edit Paket Soal" : "Buat Part"} />
+      <div className="flex h-full flex-1 flex-col gap-6 p-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{edit ? "Edit Part" : "Buat Part"}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {edit ? "Edit Paket Soal" : "Buat Part dari Paket Soal"} {selectedEvent?.nama_event}
+          </h1>
           <CButton type="primary" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Kembali
           </CButton>
         </div>
 
-        {/* Info Event yang dipilih */}
-        {selectedEventId && selectedEvent && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-semibold text-blue-800 mb-2">Event Dipilih:</h3>
-            <p className="text-blue-700">
-              <strong>{selectedEvent.nama_event}</strong>
-            </p>
-          </div>
-        )}
-
+        {/* Form */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-xl">
-            {/* Bidang */}
-            <FormField
-              control={form.control}
-              name="bidang"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Part</FormLabel>
-                  <FormControl>
-                    <select {...field} className="w-full rounded-md border border-gray-300 p-2">
-                      <option value="">Pilih Bidang</option>
-                      {bidangs.map((bd, index) => (
-                        <option key={bd.kode} value={bd.kode}>
-                          {index + 1}. {bd.nama}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Search Bidang */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cari Bidang
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchBidang}
+                    onChange={(e) => setSearchBidang(e.target.value)}
+                    placeholder="Ketik nama bidang untuk mencari..."
+                    className="w-full border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                    autoFocus
+                  />
+                  {searchBidang && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchBidang('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                
+                {/* Search Results Info */}
+                {searchBidang && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    Ditemukan <span className="font-medium text-blue-600">{filteredBidangs.length}</span> dari {bidangs.length} bidang
+                  </div>
+                )}
+              </div>
 
-            <div className="flex gap-3">
-              <CButton type="button" onClick={handleBack}>
-                Batal
-              </CButton>
-              <CButton type="submit">
-                {edit ? "Update" : "Simpan"}
-              </CButton>
-            </div>
-          </form>
-        </Form>
-      </div>
-    </AppLayout>
-  );
-}
+              {/* Bidang Selection */}
+              <FormField
+                control={form.control}
+                name="bidang"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">
+                      Pilih Paket Soal
+                    </FormLabel>
+                    <FormControl>
+                      <select 
+                        {...field} 
+                        className="w-full border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                        size={Math.min(filteredBidangs.length + 1, 12)}
+                        style={{ height: 'auto' }}
+                      >
+                        <option value="" disabled className="text-gray-500">
+                          {filteredBidangs.length === 0 ? 'Tidak ada bidang tersedia' : 'Pilih Bidang'}
+                        </option>
+                        {filteredBidangs.map((bd, index) => (
+                          <option key={bd.kode} value={bd.kode} className="py-1">
+                            {index + 1}. {bd.nama}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                    
+                    {/* Info jika tidak ada hasil pencarian */}
+                    {searchBidang && filteredBidangs.length === 0 && (
+                      <div className="mt-2 text-sm text-amber-600">
+                        Tidak ada bidang yang cocok dengan pencarian "<strong>{searchBidang}</strong>"
+                      </div>
+                    )}
+                    
+                    {/* Helper text */}
+                    <div className="mt-2 text-sm text-gray-500">
+                      Gunakan kolom pencarian di atas untuk mempermudah mencari bidang
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <CButton 
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                >
+                  {edit ? "Update" : "Simpan"}
+                </CButton>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </AppLayout>
+    );
+  }

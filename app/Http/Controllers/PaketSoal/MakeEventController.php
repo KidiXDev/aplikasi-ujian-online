@@ -4,7 +4,9 @@ namespace App\Http\Controllers\PaketSoal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\JadwalUjian;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class MakeEventController extends Controller
@@ -172,8 +174,49 @@ public function getEvent(Request $request)
             $events->where('status', $request->status);
         }
 
-        $data = $events->paginate($request->pages ?? 10)->withQueryString();
+        // Add sorting by ID
+        $sort = $request->input('sort', 'asc');
+        if ($sort === 'asc') {
+            $events->orderBy('id_event', 'asc');
+        } else {
+            $events->orderBy('id_event', 'desc');
+        }
 
+        // Handle pagination with different page sizes
+        $perPage = $request->input('pages', 10);
+        
+        // Validate and set per page value
+        if ($perPage === 'all') {
+            $data = $events->get();
+            // Create a mock pagination object for "All" option
+            $data = new \Illuminate\Pagination\LengthAwarePaginator(
+                $data, 
+                $data->count(), 
+                $data->count(), 
+                1,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+            $data->appends($request->query());
+        } else {
+            // Ensure per page is a valid number
+            $perPage = in_array($perPage, [10, 25, 50, 100]) ? (int)$perPage : 10;
+            $data = $events->paginate($perPage)->withQueryString();
+        }
+
+        // Hitung jumlah part untuk setiap event
+        $eventIds = $data->pluck('id_event');
+        $jumlahPartPerEvent = JadwalUjian::whereIn('id_event', $eventIds)
+            ->where('id_penjadwalan', null) // Hanya hitung paket soal, bukan jadwal ujian
+            ->select('id_event', DB::raw('count(*) as jumlah_part'))
+            ->groupBy('id_event')
+            ->pluck('jumlah_part', 'id_event');
+
+        // Tambahkan jumlah part ke setiap event
+        $data->getCollection()->transform(function ($event) use ($jumlahPartPerEvent) {
+            $event->jumlah_part = $jumlahPartPerEvent->get($event->id_event, 0);
+            return $event;
+        });
+        
         return Inertia::render('master-data/event/EventManager', [
             'events' => $data
         ]);

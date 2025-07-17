@@ -173,6 +173,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/kategori-soal-dropdown', [\App\Http\Controllers\KategoriUjianController::class, 'getKategoriList'])->name('kategori-soal.dropdown');
         Route::get('/bank-soal-checkbox/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('bank-soal-checkbox.edit');
         Route::put('/bank-soal-checkbox/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('bank-soal-checkbox.update');
+        Route::post('/bank-soal-checkbox/{paket_soal}/select-all', [BankSoalControllerCheckbox::class, 'selectAll'])->name('bank-soal-checkbox.select-all');
+        Route::post('/bank-soal-checkbox/{paket_soal}/select-random', [BankSoalControllerCheckbox::class, 'selectRandom'])->name('bank-soal-checkbox.select-random');
+        Route::post('/bank-soal-checkbox/{paket_soal}/add-random', [BankSoalControllerCheckbox::class, 'addRandom'])->name('bank-soal-checkbox.add-random');
+        Route::post('/bank-soal-checkbox/{paket_soal}/clear-all', [BankSoalControllerCheckbox::class, 'clearAll'])->name('bank-soal-checkbox.clear-all');
         Route::get('/bank-soal-checkbox/{paket_soal_id}/back', [BankSoalControllerCheckbox::class, 'back'])->name('bank-soal-checkbox.back');
     });
 

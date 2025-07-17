@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { List, Pencil} from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ interface EventType {
     status: number;
     mulai_event?: string;
     akhir_event?: string;
+    jumlah_part?: number;
 }
 
 interface EventsData {
@@ -55,12 +56,13 @@ export default function EventManager() {
                     <div className="flex items-center gap-4">
                         <EntriesSelector
                             currentValue={events.per_page}
-                            options={[10, 25, 50]}
+                            options={[10, 25, 50, 100]}
                             routeName="master-data.event.getEvent"
                             paramName="pages"
                             routeParams={{
                                 search: params.get('search') || '',
                                 status: params.get('status') || '',
+                                sort: params.get('sort') || 'asc',
                             }}
                         />
                         
@@ -69,6 +71,16 @@ export default function EventManager() {
                             routeParams={{
                                 search: params.get('search') || '',
                                 pages: params.get('pages') || events.per_page.toString(),
+                                sort: params.get('sort') || 'asc',
+                            }}
+                        />
+                        
+                        <SortFilter 
+                            currentValue={params.get('sort') || 'asc'}
+                            routeParams={{
+                                search: params.get('search') || '',
+                                pages: params.get('pages') || events.per_page.toString(),
+                                status: params.get('status') || '',
                             }}
                         />
                     </div>
@@ -80,6 +92,7 @@ export default function EventManager() {
                         routeParams={{
                             pages: params.get('pages') || events.per_page.toString(),
                             status: params.get('status') || '',
+                            sort: params.get('sort') || 'asc',
                         }}
                     />
                 </div>
@@ -125,6 +138,40 @@ function StatusFilter({
     );
 }
 
+// Sort Filter Component
+function SortFilter({ 
+    currentValue, 
+    routeParams 
+}: { 
+    currentValue: string;
+    routeParams: { [key: string]: string };
+}) {
+    const handleSortChange = (sort: string) => {
+        router.visit(route('master-data.event.getEvent'), {
+            data: {
+                ...routeParams,
+                sort: sort,
+            },
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Urutkan ID:</label>
+            <select
+                value={currentValue}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+                <option value="asc">Terkecil ke Terbesar</option>
+                <option value="desc">Terbesar ke Terkecil</option>
+            </select>
+        </div>
+    );
+}
+
 function EventTable({
     data,
     events,
@@ -143,8 +190,21 @@ function EventTable({
         setTableData(data);
     }, [data]);
 
-    // Tambahkan nomor urut pada data
-    const dataWithNumbers = tableData.map((event, index) => ({
+    // Sort data based on query parameter
+    const sortOrder = queryParams.get('sort') || 'asc';
+    const sortedData = useMemo(() => {
+        const sorted = [...tableData];
+        return sorted.sort((a, b) => {
+            if (sortOrder === 'asc') {
+                return a.id_event - b.id_event; // Terkecil ke terbesar
+            } else {
+                return b.id_event - a.id_event; // Terbesar ke terkecil
+            }
+        });
+    }, [tableData, sortOrder]);
+
+    // Tambahkan nomor urut pada data yang sudah diurutkan
+    const dataWithNumbers = sortedData.map((event, index) => ({
         ...event,
         nomor: ((events.current_page - 1) * events.per_page) + index + 1,
     }));
@@ -163,6 +223,7 @@ function EventTable({
             pages: queryParams.get('pages') || events.per_page.toString(),
             search: queryParams.get('search') || '',
             status: queryParams.get('status') || '',
+            sort: queryParams.get('sort') || 'asc',
             page: queryParams.get('page') || '1'
         };
         
@@ -227,37 +288,58 @@ function EventTable({
             ),
         },
         {
-            label: 'Nama Event',
-            className: 'text-left w-[400px]',
+            label: 'Nama Paket Soal',
+            className: 'text-left w-[350px]',
             render: (event: EventType) => <div>{event.nama_event}</div>,
         },
         {
             label: 'Status',
-            className: 'text-center w-[200px]',
+            className: 'text-center w-[120px]',
             render: (event: EventType) => (
                 <div className="flex justify-center">
                     <button
-                        className={`px-3 py-1 rounded text-white font-semibold text-sm min-w-[100px] text-center transition-colors duration-200 ${
+                        className={`px-2 py-1 rounded text-white font-semibold text-xs min-w-[80px] text-center transition-colors duration-200 ${
                             event.status === 1 
                                 ? 'bg-green-600 hover:bg-green-700' 
                                 : 'bg-red-600 hover:bg-red-700'
                         }`}
                         onClick={() => handleToggleStatus(event.id_event)}
                     >
-                        {event.status === 1 ? 'Aktif' : 'Tidak Aktif'}
+                        {event.status === 1 ? 'Aktif' : 'Nonaktif'}
                     </button>
                 </div>
             ),
         },
         {
-            label: 'Mulai Event',
-            className: 'text-center w-[200px]',
+            label: 'Jumlah Part',
+            className: 'text-center w-[120px]',
+            render: (event: EventType) => {
+                const jumlahPart = event.jumlah_part || 0;
+                return (
+                    <div className="text-center">
+                        <span 
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-help ${
+                                jumlahPart > 0 
+                                    ? 'bg-blue-100 text-blue-800' 
+                                    : 'bg-gray-100 text-gray-600'
+                            }`}
+                            title={`Event ini memiliki ${jumlahPart} part/paket soal`}
+                        >
+                            {jumlahPart} Part
+                        </span>
+                    </div>
+                );
+            },
+        },
+        {
+            label: 'Mulai Paket Soal',
+            className: 'text-center w-[150px]',
             render: (event: EventType) => (
                 <div className="text-center">
                     {event.mulai_event
                         ? new Date(event.mulai_event).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
+                              day: '2-digit',
+                              month: '2-digit',
                               year: 'numeric',
                           })
                         : '-'}
@@ -265,14 +347,14 @@ function EventTable({
             ),
         },
         {
-            label: 'Akhir Event',
-            className: 'text-center w-[200px]',
+            label: 'Akhir Paket Soal',
+            className: 'text-center w-[150px]',
             render: (event: EventType) => (
                 <div className="text-center">
                     {event.akhir_event
                         ? new Date(event.akhir_event).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
+                              day: '2-digit',
+                              month: '2-digit',
                               year: 'numeric',
                           })
                         : '-'}
@@ -281,9 +363,9 @@ function EventTable({
         },
         {
             label: 'Action',
-            className: 'text-center w-[180px]',
+            className: 'text-center w-[120px]',
             render: (event: EventType) => (
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center gap-1">
                     <CButtonIcon
                         icon={List}
                         className="bg-yellow-500"
@@ -333,9 +415,10 @@ function EventTable({
                 onNavigate={(page) => {
                     router.visit(
                         route('master-data.event.getEvent', {
-                            pages: queryParams.get('pages') || events.per_page,
+                            pages: queryParams.get('pages') || events.per_page.toString(),
                             search: queryParams.get('search') || '',
                             status: queryParams.get('status') || '',
+                            sort: queryParams.get('sort') || 'asc',
                             page,
                         }),
                         { preserveScroll: true }

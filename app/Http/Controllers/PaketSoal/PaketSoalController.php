@@ -33,8 +33,8 @@ class PaketSoalController extends Controller
     // Method untuk menampilkan paket soal berdasarkan event
     public function index(Request $request, $id_event)
     {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
+        $pages = $request->input('pages', 10);
+        $search = $request->input('search', null);
 
         // Ambil data event
         $event = Event::findOrFail($id_event);
@@ -49,10 +49,23 @@ class PaketSoalController extends Controller
             $jadwalUjianQuery->where('nama_ujian', 'like', '%' . $search . '%');
         }
 
-        $jadwalUjian = $jadwalUjianQuery->paginate($pages);
-
-        // Preserve query parameters untuk pagination
-        $jadwalUjian->appends($request->query());
+        // Handle pagination with different page sizes
+        if ($pages === 'all') {
+            $jadwalUjian = $jadwalUjianQuery->get();
+            // Create a mock pagination object for "All" option
+            $jadwalUjian = new \Illuminate\Pagination\LengthAwarePaginator(
+                $jadwalUjian, 
+                $jadwalUjian->count(), 
+                $jadwalUjian->count(), 
+                1,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+            $jadwalUjian->appends($request->query());
+        } else {
+            // Ensure per page is a valid number
+            $pages = in_array($pages, [10, 20, 25, 50, 100]) ? (int)$pages : 10;
+            $jadwalUjian = $jadwalUjianQuery->paginate($pages)->withQueryString();
+        }
 
         // Ambil data total soal
         $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')
@@ -69,10 +82,11 @@ class PaketSoalController extends Controller
     // Method untuk menampilkan semua paket soal
     public function indexAll(Request $request)
     {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
+        $pages = $request->input('pages', 10);
+        $search = $request->input('search', null);
 
-        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part');
+        $jadwalUjianQuery = JadwalUjian::select('id_ujian', 'nama_ujian', 'id_event', 'kode_part')
+            ->with(['event:id_event,nama_event', 'bidang:kode,nama']);
 
         if ($search) {
             $jadwalUjianQuery->where(function ($query) use ($search) {
@@ -83,10 +97,23 @@ class PaketSoalController extends Controller
             });
         }
 
-        $jadwalUjian = $jadwalUjianQuery->paginate($pages);
-
-        // Preserve query parameters untuk pagination
-        $jadwalUjian->appends($request->query());
+        // Handle pagination with different page sizes
+        if ($pages === 'all') {
+            $jadwalUjian = $jadwalUjianQuery->get();
+            // Create a mock pagination object for "All" option
+            $jadwalUjian = new \Illuminate\Pagination\LengthAwarePaginator(
+                $jadwalUjian, 
+                $jadwalUjian->count(), 
+                $jadwalUjian->count(), 
+                1,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+            $jadwalUjian->appends($request->query());
+        } else {
+            // Ensure per page is a valid number
+            $pages = in_array($pages, [10, 20, 25, 50, 100]) ? (int)$pages : 10;
+            $jadwalUjian = $jadwalUjianQuery->paginate($pages)->withQueryString();
+        }
 
         $jadwalUjianSoal = JadwalUjianSoal::select('id_ujian', 'total_soal')->get();
 
