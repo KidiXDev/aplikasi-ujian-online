@@ -219,6 +219,23 @@ class PenjadwalanController extends Controller
                 return redirect()->back()->with('error', 'Event yang dipilih tidak memiliki template jadwal ujian.');
             }
 
+            // Hitung jumlah peserta yang sudah terdaftar
+            $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+            $existingPesertaIds = [];
+            foreach ($jadwalUjians as $jadwalUjian) {
+                if ($jadwalUjian->kode_kelas) {
+                    $ids = explode(',', $jadwalUjian->kode_kelas);
+                    $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
+                }
+            }
+            $existingPesertaIds = array_unique($existingPesertaIds);
+            $jumlahTerdaftar = count($existingPesertaIds);
+
+            // Validasi: Tidak boleh mengurangi kuota di bawah jumlah peserta yang sudah terdaftar
+            if ($validated['kuota'] < $jumlahTerdaftar) {
+                return redirect()->back()->with('error', 'Kuota tidak boleh kurang dari jumlah peserta terdaftar.');
+            }
+
             // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
             if ($penjadwalan->tipe_ujian != $validated['tipe_ujian'] || $penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
                 $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
@@ -529,10 +546,9 @@ class PenjadwalanController extends Controller
         $kategoriSoal = KategoriSoal::find($penjadwalan->tipe_ujian);
         $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori';
 
-        // Tetap di halaman add-peserta setelah submit
-        return redirect()->back()->with(
+        return redirect()->route('penjadwalan.peserta', $id)->with(
             'success',
-            "Berhasil menambahkan {$pesertaBaru} peserta ke semua jadwal ujian {$kategoriNama}."
+            'Peserta berhasil ditambahkan.'
         );
     }
 
