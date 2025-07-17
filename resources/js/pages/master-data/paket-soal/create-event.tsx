@@ -66,11 +66,17 @@ export default function FormEvent() {
             router.put(route('master-data.paket.update', event.id_event), values, {
                 preserveScroll: true,
                 onError: handleErrors,
+                // onSuccess: () => {
+                //     toast.success('Paket berhasil diperbarui');
+                // }
             });
         } else {
             router.post(route('master-data.paket.store'), values, {
                 preserveScroll: true,
                 onError: handleErrors,
+                // onSuccess: () => {
+                //     toast.success('Paket berhasil dibuat');
+                // }
             });
         }
     }
@@ -94,6 +100,7 @@ export default function FormEvent() {
                     <CButton
                         type="primary"
                         onClick={() => router.visit(route('master-data.paket.getEvent'))}
+                        className="px-8 py-3 "
                     >
                         Kembali
                     </CButton>
@@ -174,7 +181,9 @@ export default function FormEvent() {
                             )}
                         />
 
-                        <CButton type="submit">{isEdit ? 'Simpan' : 'Save'}</CButton>
+                        <CButton type="submit" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 ">
+                            {isEdit ? 'Simpan' : 'Simpan'}
+                        </CButton>
                     </form>
                 </Form>
             </div>

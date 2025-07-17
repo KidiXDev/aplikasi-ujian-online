@@ -31,6 +31,10 @@ interface EventsData {
 
 interface EventsPageProps {
     events: EventsData;
+    flash?: {
+        success?: string;
+        error?: string;
+    };
     [key: string]: unknown;
 }
 
@@ -41,6 +45,16 @@ export default function EventManager() {
     const events = props.events;
     const data = events.data;
     const params = new URLSearchParams(url.split('?')[1] || '');
+
+    // Handle flash messages
+    useEffect(() => {
+        if (props.flash?.success) {
+            toast.success(props.flash.success);
+        }
+        if (props.flash?.error) {
+            toast.error(props.flash.error);
+        }
+    }, [props.flash]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -65,7 +79,9 @@ export default function EventManager() {
                                 sort: params.get('sort') || 'asc',
                             }}
                         />
-                        
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
                         <StatusFilter 
                             currentValue={params.get('status') || ''}
                             routeParams={{
@@ -83,18 +99,18 @@ export default function EventManager() {
                                 status: params.get('status') || '',
                             }}
                         />
+                        
+                        <SearchInputMenu
+                            defaultValue={params.get('search') || ''}
+                            routeName="master-data.paket.getEvent"
+                            paramName="search"
+                            routeParams={{
+                                pages: params.get('pages') || events.per_page.toString(),
+                                status: params.get('status') || '',
+                                sort: params.get('sort') || 'asc',
+                            }}
+                        />
                     </div>
-                    
-                    <SearchInputMenu
-                        defaultValue={params.get('search') || ''}
-                        routeName="master-data.paket.getEvent"
-                        paramName="search"
-                        routeParams={{
-                            pages: params.get('pages') || events.per_page.toString(),
-                            status: params.get('status') || '',
-                            sort: params.get('sort') || 'asc',
-                        }}
-                    />
                 </div>
 
                 <EventTable data={data} events={events} queryParams={params} />
@@ -123,7 +139,7 @@ function StatusFilter({
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-gray-700">Status:</label>
             <select
                 value={currentValue}
@@ -158,15 +174,15 @@ function SortFilter({
     };
 
     return (
-        <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Urutkan ID:</label>
+        <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">Urutkan:</label>
             <select
                 value={currentValue}
                 onChange={(e) => handleSortChange(e.target.value)}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-                <option value="asc">Terkecil ke Terbesar</option>
-                <option value="desc">Terbesar ke Terkecil</option>
+                <option value="asc">Terlama</option>
+                <option value="desc">Terbaru</option>
             </select>
         </div>
     );
@@ -289,16 +305,16 @@ function EventTable({
         },
         {
             label: 'Nama Paket Soal',
-            className: 'text-left w-[350px]',
+            className: 'text-center w-[350px]',
             render: (event: EventType) => <div>{event.nama_event}</div>,
         },
         {
             label: 'Status',
-            className: 'text-center w-[120px]',
+            className: 'text-center w-[150px]',
             render: (event: EventType) => (
                 <div className="flex justify-center">
                     <button
-                        className={`px-2 py-1 rounded text-white font-semibold text-xs min-w-[80px] text-center transition-colors duration-200 ${
+                        className={`px-4 py-2.5 rounded text-white font-semibold text-xs w-[110px] text-center transition-colors duration-200 ${
                             event.status === 1 
                                 ? 'bg-green-600 hover:bg-green-700' 
                                 : 'bg-red-600 hover:bg-red-700'
