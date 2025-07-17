@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\PaketSoal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bidang;
-use Illuminate\Http\Request;
 use App\Models\Event;
-use Inertia\Inertia;
 use App\Models\JadwalUjian;
-use App\Models\JadwalUjianSoal;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class MakeEventController extends Controller
 {
+    // public function create()
+    // {
+    //     return Inertia::render('master-data/event/CreateEvent');
+    // }
+
     public function index()
     {
         $event = Event::get();
@@ -34,20 +38,25 @@ class MakeEventController extends Controller
             'event_akhir' => 'nullable|date',
         ]);
 
-        // Gunakan nilai dari request atau default
-        $event_mulai = $request->input('event_mulai') ?? now();
-        $event_akhir = $request->input('event_akhir') ?? now()->addYears(5);
+        try {
+            // Gunakan nilai dari request atau default
+            $event_mulai = $request->input('event_mulai') ?? now();
+            $event_akhir = $request->input('event_akhir') ?? now()->addYears(5);
 
-        $event = Event::create([
-            'nama_event' => $request->input('nama_event'),
-            'status' => $request->input('status', 1),
-            'mulai_event' => $event_mulai,
-            'akhir_event' => $event_akhir,
-        ]);
+            $event = Event::create([
+                'nama_event' => $request->input('nama_event'),
+                'status' => $request->input('status', 1),
+                'mulai_event' => $event_mulai,
+                'akhir_event' => $event_akhir,
+            ]);
 
-        // Redirect ke halaman event manager dengan pesan sukses
-        return redirect()->route('master-data.event.getEvent')
-            ->with('success', 'Event berhasil dibuat!');
+            // Redirect ke halaman event manager dengan pesan sukses
+            return redirect()->route('master-data.paket.getEvent')
+                ->with('success', 'Event berhasil dibuat');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.paket.getEvent')
+                ->with('error', 'Gagal membuat event: ' . $e->getMessage());
+        }
     }
 
     public function show($id)
@@ -71,94 +80,150 @@ class MakeEventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        // Konversi status ke string agar sesuai dengan form FE
         $eventData = [
             'id_event' => $event->id_event,
             'nama_event' => $event->nama_event,
             'status' => $event->status ? 'aktif' : 'tidak-aktif',
-            'event_mulai' => $event->mulai_event ? $event->mulai_event->format('Y-m-d H:i:s') : null,
-            'event_akhir' => $event->akhir_event ? $event->akhir_event->format('Y-m-d H:i:s') : null,
+            'event_mulai' => $event->mulai_event ? $event->mulai_event->format('Y-m-d') : null,
+            'event_akhir' => $event->akhir_event ? $event->akhir_event->format('Y-m-d') : null,
         ];
 
-        return Inertia::render('master-data/paket-soal/create-event', [
-            'event' => $eventData,
-        ]);
+        return Inertia::render('master-data/paket-soal/create-event', ['event' => $eventData]);
     }
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'nama_event' => 'required|string|max:255',
-            'status' => 'required|boolean',
-            'event_mulai' => 'nullable|date',
-            'event_akhir' => 'nullable|date',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     Event::create([
+    //         'nama_event' => $request->nama_event,
+    //         'status' => 1
+    //     ]);
 
-        $event = Event::findOrFail($id);
-        $event->nama_event = $request->input('nama_event');
-        $event->status = $request->input('status');
-        
-        if ($request->has('event_mulai')) {
-            $event->mulai_event = $request->input('event_mulai');
-        }
-        if ($request->has('event_akhir')) {
-            $event->akhir_event = $request->input('event_akhir');
-        }
-        
-        $event->save();
+    //     return redirect()->route('master-data.paket.getEvent');
+    // }
 
-        return redirect()->route('master-data.event.getEvent')->with('success', 'Event berhasil diupdate!');
-    }
-
-    public function destroy($id)
+    public function update($id, Request $request)
     {
         try {
-            // Cari event berdasarkan ID
+            $event = Event::findOrFail($id);
+            $event->update($request->all());
+
+            return redirect()->route('master-data.paket.getEvent')
+                ->with('success', 'Event berhasil diupdate');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.paket.getEvent')
+                ->with('error', 'Gagal mengupdate event: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleStatus($id, Request $request)
+    {
+        $event = Event::findOrFail($id);
+        $event->status = $request->status;
+        $event->save();
+
+        return redirect()->back();
+    }
+
+    public function destroy($id, Request $request)
+    {
+        try {
+            Event::findOrFail($id)->delete();
+            
+            // Ambil parameter dari request untuk mempertahankan filter
+            $params = $request->only(['pages', 'search', 'status', 'page']);
+            
+            return redirect()->route('master-data.paket.getEvent', $params)
+                ->with('success', 'Event berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->route('master-data.paket.getEvent')
+                ->with('error', 'Gagal menghapus event: ' . $e->getMessage());
+        }
+    }
+
+    public function change_status($id, Request $request)
+    {
+        try {
             $event = Event::findOrFail($id);
             
-            // Nonaktifkan event dengan mengubah status menjadi 0
-            $event->status = 0;
+            // Toggle status
+            $event->status = $event->status === 1 ? 0 : 1;
             $event->save();
+            
+            $statusText = $event->status === 1 ? 'diaktifkan' : 'dinonaktifkan';
 
-            // Nonaktifkan semua jadwal ujian yang terkait dengan event ini
-            $jadwalUjians = JadwalUjian::where('id_event', $id)->get();
-            foreach ($jadwalUjians as $jadwalUjian) {
-                // Bisa tambahkan field status pada jadwal ujian jika diperlukan
-                // $jadwalUjian->status = 0;
-                // $jadwalUjian->save();
-            }
-
-            return redirect()->route('master-data.event.getEvent')
-                ->with('success', 'Event berhasil dinonaktifkan');
+            // Ambil parameter dari request untuk mempertahankan filter
+            $params = $request->only(['pages', 'search', 'status', 'page']);
+            
+            return redirect()->route('master-data.paket.getEvent', $params)
+                ->with('success', "Status event berhasil {$statusText}");            
         } catch (\Exception $e) {
-            return redirect()->route('master-data.event.getEvent')
-                ->with('error', 'Gagal menonaktifkan event: ' . $e->getMessage());
+            return redirect()->route('master-data.paket.getEvent')
+                ->with('error', 'Gagal mengubah status event: ' . $e->getMessage());
         }
     }
 
-    public function list()
+public function getEvent(Request $request)
     {
-        // Ambil semua event, bisa tambahkan where jika ingin filter tertentu
-        $events = Event::select('id_event', 'nama_event')->get();
-        return response()->json($events);
-    }
+        $events = Event::query();
 
-    public function getEvent(Request $request)
-    {
-        $pages = $request->query('pages', 10);
-        $search = $request->query('search', null);
-
-        $eventQuery = Event::select('id_event', 'nama_event', 'status', 'mulai_event', 'akhir_event')
-            ->orderBy('id_event', 'desc');
-
-        if ($search) {
-            $eventQuery->where('nama_event', 'like', '%' . $search . '%');
+        if ($request->search) {
+            $events->where('nama_event', 'like', '%' . $request->search . '%');
         }
 
-        $events = $eventQuery->paginate($pages);
+        if (!is_null($request->status) && $request->status !== '') {
+            $events->where('status', $request->status);
+        }
 
+        // Add sorting by ID
+        $sort = $request->input('sort', 'asc');
+        if ($sort === 'asc') {
+            $events->orderBy('id_event', 'asc');
+        } else {
+            $events->orderBy('id_event', 'desc');
+        }
+
+        // Handle pagination with different page sizes
+        $perPage = $request->input('pages', 10);
+        
+        // Validate and set per page value
+        if ($perPage === 'all') {
+            $data = $events->get();
+            // Create a mock pagination object for "All" option
+            $data = new \Illuminate\Pagination\LengthAwarePaginator(
+                $data, 
+                $data->count(), 
+                $data->count(), 
+                1,
+                ['path' => $request->url(), 'pageName' => 'page']
+            );
+            $data->appends($request->query());
+        } else {
+            // Ensure per page is a valid number
+            $perPage = in_array($perPage, [10, 25, 50, 100]) ? (int)$perPage : 10;
+            $data = $events->paginate($perPage)->withQueryString();
+        }
+
+        // Hitung jumlah part untuk setiap event
+        $eventIds = $data->pluck('id_event');
+        $jumlahPartPerEvent = JadwalUjian::whereIn('id_event', $eventIds)
+            ->where('id_penjadwalan', null) // Hanya hitung paket soal, bukan jadwal ujian
+            ->select('id_event', DB::raw('count(*) as jumlah_part'))
+            ->groupBy('id_event')
+            ->pluck('jumlah_part', 'id_event');
+
+        // Tambahkan jumlah part ke setiap event
+        $data->getCollection()->transform(function ($event) use ($jumlahPartPerEvent) {
+            $event->jumlah_part = $jumlahPartPerEvent->get($event->id_event, 0);
+            return $event;
+        });
+        
         return Inertia::render('master-data/event/EventManager', [
-            'events' => $events,
+            'events' => $data,
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $request->input('status', ''),
+                'sort' => $request->input('sort', 'asc'),
+            ]
         ]);
     }
 }

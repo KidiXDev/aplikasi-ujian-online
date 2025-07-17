@@ -114,13 +114,13 @@ export default function Dashboard() {
         };
 
         if (isEdit) {
-            router.put(route('master-data.paket-soal.update', paket.id), payload, {
+            router.put(route('master-data.part.update', paket.id), payload, {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Paket ujian berhasil diperbarui!'),
                 onError: (errors) => console.error('Error:', errors),
             });
         } else {
-            router.post(route('master-data.paket-soal.store_data'), payload, {
+            router.post(route('master-data.part.store_data'), payload, {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Paket ujian berhasil ditambahkan!'),
                 onError: (errors) => console.error('Error:', errors),
@@ -146,7 +146,7 @@ export default function Dashboard() {
         if (isEdit) {
             router.visit(route('master-data.bank-soal-checkbox.edit', paket.id));
         } else {
-            router.post(route('master-data.paket-soal.store_data'), payload, {
+            router.post(route('master-data.part.store_data'), payload, {
                 preserveScroll: true,
                 onSuccess: (page) => {
                     const paketId = (page as { props: { paket?: { id: number } } }).props?.paket?.id;
@@ -171,7 +171,7 @@ export default function Dashboard() {
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Create'} Paket Ujian</h1>
-                    <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('master-data.paket-soal.manager'))}>
+                    <CButton type="primary" className="md:w-24" onClick={() => router.visit(route('master-data.part.manager'))}>
                         Back
                     </CButton>
                 </div>

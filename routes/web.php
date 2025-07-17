@@ -39,13 +39,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // itu harus diubah jadi pake titik, contoh monitoring.ujian
     // jadi nanti di route name-nya jadi monitoring.ujian
 
-    Route::get('/paket-soal/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('paket-soal.add-soal');
+    Route::get('/part/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('part.add-soal');
 
-    Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
+    Route::get('/part/list', [PaketSoalController::class, 'list']);
 
     Route::get('/bidangs', [BidangController::class, 'index']); // dropdown bidang
 
-    Route::post('/paket-soal', [PaketSoalEditController::class, 'store'])->name('paket-soal.store');
+    Route::post('/part', [PaketSoalEditController::class, 'store'])->name('part.store');
 
     // Custom binding
     Route::bind('matakuliah', fn($value) => Matakuliah::where('id_mk', $value)->firstOrFail());
@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard/faq', [DashboardController::class, 'faq'])->name('dashboard.faq');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
@@ -88,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('rekap-nilai', [App\Http\Controllers\RekapNilaiController::class, 'index'])->name('rekap.nilai');
     Route::get('rekap-nilai/{id}', [App\Http\Controllers\RekapNilaiController::class, 'show'])->name('rekap.nilai.detail');
     Route::get('rekap-nilai/{id}/export', [App\Http\Controllers\RekapNilaiController::class, 'export'])->name('rekap.nilai.export');
-
+    Route::get('/rekap-nilai/{id}/preview', [App\Http\Controllers\RekapNilaiController::class, 'preview'])->name('rekap-nilai.preview');
     // MASTER DATA
     Route::prefix('master-data')->name('master-data.')->group(function () {
         Route::get('/', fn() => redirect()->route('dashboard'))->name('index');
@@ -179,15 +180,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{matakuliah}', [MatkulController::class, 'destroy'])->name('destroy');
         });
 
-        Route::prefix('event')->name('event.')->group(function () {
+        // Event
+        Route::prefix('paket')->name('paket.')->group(function () {
+            Route::get('/', [MakeEventController::class, 'getEvent'])->name('getEvent');
+            Route::get('/list', [MakeEventController::class, 'index'])->name('list');
             Route::get('/create', [MakeEventController::class, 'create'])->name('create');
             Route::post('/store', [MakeEventController::class, 'store'])->name('store');
-            Route::get('/list', [MakeEventController::class, 'index'])->name('list');
+            Route::get('/{id}', [MakeEventController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [MakeEventController::class, 'edit'])->name('edit');
             Route::put('/{id}', [MakeEventController::class, 'update'])->name('update');
-            Route::get('/', [MakeEventController::class, 'getEvent'])->name('getEvent');
-            Route::get('/{id}', [MakeEventController::class, 'show'])->name('show');
             Route::delete('/{id}', [MakeEventController::class, 'destroy'])->name('destroy');
+            // Tambah route toggle status event
+            Route::put('/{id}/toggle-status', [MakeEventController::class, 'toggleStatus'])->name('toggleStatus');
+            Route::put('/{id}/status', [MakeEventController::class, 'change_status'])->name('updateStatus');
         });
 
         Route::prefix('jenis-ujian')->name('jenis-ujian.')->group(function () {
@@ -199,26 +204,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/', [JenisUjianEditController::class, 'store'])->name('store');
         });
 
-        // Route untuk paket soal
-        Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
-            // Route index untuk menampilkan semua paket soal
+        // Paket Soal
+        Route::prefix('part')->name('part.')->group(function () {
             Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
-
-            // Route untuk menampilkan paket soal berdasarkan event
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
-
-            // Route untuk create dengan id_event otomatis
             Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');
-
-            // Route untuk create biasa
-            Route::get('/create-event', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
-
-            // Route untuk store
+            Route::get('/create-event/{id_event}', fn() => Inertia::render('master-data/paket-soal/create-event'))->name('create-event');
             Route::post('/', [PaketSoalEditController::class, 'store'])->name('store');
             Route::post('/store', [PaketSoalEditController::class, 'store_data'])->name('store_data');
+            Route::post('/copy-part', [PaketSoalEditController::class, 'copyPart'])->name('copy_part');
+            Route::get('/list-event-to-copy/{id_event_tujuan}', [PaketSoalEditController::class, 'list_event_to_copy_part'])->name('list-event-to-copy');
             Route::post('/{event_id}', [PaketSoalEditController::class, 'store_id'])->name('store_id');
-
-            // Route untuk edit, update, destroy, show
             Route::get('/{paket_soal}/edit', [PaketSoalEditController::class, 'edit'])->name('edit');
             Route::put('/{paket_soal}', [PaketSoalEditController::class, 'update'])->name('update');
             Route::delete('/{paket_soal}', [PaketSoalController::class, 'destroy'])->name('destroy');
@@ -237,9 +233,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/kategori-soal-dropdown', [KategoriUjianController::class, 'getKategoriList'])
             ->name('kategori-soal.dropdown');
 
-        Route::get('/bank-soal-checkbox/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('bank-soal-checkbox.edit');
-        Route::put('/bank-soal-checkbox/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('bank-soal-checkbox.update');
-        Route::get('/bank-soal-checkbox/{paket_soal_id}/back', [BankSoalControllerCheckbox::class, 'back'])->name('bank-soal-checkbox.back');
+        // Bank Soal Checkbox Management
+        Route::prefix('bank-soal-checkbox')->name('bank-soal-checkbox.')->group(function () {
+            Route::get('/{paket_soal}/edit', [BankSoalControllerCheckbox::class, 'edit'])->name('edit');
+            Route::put('/{paket_soal}', [BankSoalControllerCheckbox::class, 'update'])->name('update');
+            Route::post('/{paket_soal}/select-all', [BankSoalControllerCheckbox::class, 'selectAll'])->name('select-all');
+            Route::post('/{paket_soal}/select-random', [BankSoalControllerCheckbox::class, 'selectRandom'])->name('select-random');
+            Route::post('/{paket_soal}/add-random', [BankSoalControllerCheckbox::class, 'addRandom'])->name('add-random');
+            Route::post('/{paket_soal}/clear-all', [BankSoalControllerCheckbox::class, 'clearAll'])->name('clear-all');
+            Route::get('/{paket_soal_id}/back', [BankSoalControllerCheckbox::class, 'back'])->name('back');
+        });
     });
 
     // User Management routes

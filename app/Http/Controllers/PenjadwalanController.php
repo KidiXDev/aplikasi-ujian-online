@@ -149,12 +149,8 @@ class PenjadwalanController extends Controller
             $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori Ujian';
             $namaEvent = $event ? $event->nama_event : 'Event';
 
-            // Enhanced success message with duplication stats
-            $successMessage = "Jadwal ujian {$kategoriNama} - {$namaEvent} dengan kode {$kodeJadwal} berhasil ditambahkan. " .
-                "({$stats['jadwal_ujian_count']} jadwal ujian, {$stats['jadwal_ujian_soal_count']} soal diduplikasi)";
-
             return redirect()->route('penjadwalan.index')
-                ->with('success', $successMessage);
+                ->with('success', 'Jadwal ujian berhasil ditambahkan.');
         });
     }
 
@@ -255,7 +251,7 @@ class PenjadwalanController extends Controller
             $namaEvent = $event ? $event->nama_event : 'Event';
 
             return redirect()->route('penjadwalan.index')
-                ->with('success', "Jadwal ujian {$kategoriNama} - {$namaEvent} berhasil diperbarui.");
+                ->with('success', 'Jadwal ujian berhasil diperbarui.');
         });
     }
 
@@ -283,7 +279,7 @@ class PenjadwalanController extends Controller
             $penjadwalan->delete();
 
             return redirect()->back()
-                ->with('success', "Penjadwalan {$namaEvent} dan semua data terkait berhasil dihapus.");
+                ->with('success', 'Jadwal ujian berhasil dihapus.');
         });
     }
 
@@ -515,8 +511,7 @@ class PenjadwalanController extends Controller
         if (($jumlahTerdaftar + $pesertaBaru) > $penjadwalan->kuota) {
             return redirect()->back()->with(
                 'error',
-                "Tidak dapat menambahkan peserta. Kuota tersisa: " .
-                    ($penjadwalan->kuota - $jumlahTerdaftar) . " peserta."
+                'Kuota tidak mencukupi.'
             );
         }
 
@@ -581,7 +576,7 @@ class PenjadwalanController extends Controller
 
         return redirect()->back()->with(
             'success',
-            "Peserta {$namaPeserta} berhasil dihapus dari jadwal ujian."
+            'Peserta berhasil dihapus.'
         );
     }
 
@@ -602,7 +597,7 @@ class PenjadwalanController extends Controller
 
         return redirect()->back()->with(
             'success',
-            'Semua peserta berhasil dihapus dari jadwal ujian.'
+            'Semua peserta berhasil dihapus.'
         );
     }
 
@@ -644,7 +639,7 @@ class PenjadwalanController extends Controller
 
         return redirect()->back()->with(
             'success',
-            "{$jumlahDihapus} peserta berhasil dihapus dari jadwal ujian."
+            'Peserta berhasil dihapus.'
         );
     }
 
@@ -653,26 +648,27 @@ class PenjadwalanController extends Controller
      */
     private function generateKodeJadwal($idEvent, $idKategori)
     {
-        // Ambil event dan kategori
-        $event = Event::find($idEvent);
+        // Ambil kategori soal (tipe ujian)
         $kategori = KategoriSoal::find($idKategori);
 
-        if (!$event || !$kategori) {
+        if (!$kategori) {
             return 'UJI0001';
         }
 
-        // Ambil 3 huruf pertama dari kombinasi event dan kategori
-        $eventCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $event->nama_event), 0, 2));
-        $kategoriCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $kategori->kategori), 0, 1));
+        // Ambil 3 huruf konsonan dari tipe ujian, hilangkan non-huruf dan vokal
+        $cleanKategori = strtoupper(preg_replace('/[^A-Za-z]/', '', $kategori->kategori));
+        $konsonan = preg_replace('/[AEIOU]/i', '', $cleanKategori);
 
-        // Kombinasi 3 huruf
-        $prefix = $eventCode . $kategoriCode;
-
-        // Jika kurang dari 3 huruf, tambahkan 'X'
-        $prefix = str_pad($prefix, 3, 'X');
-
-        // Jika lebih dari 3 huruf, potong menjadi 3
-        $prefix = substr($prefix, 0, 3);
+        // Ambil 3 huruf konsonan: pertama, kedua, dan terakhir (atau tambahkan 'X' jika kurang)
+        if (strlen($konsonan) >= 3) {
+            $prefix = $konsonan[0] . $konsonan[1] . $konsonan[strlen($konsonan) - 1];
+        } elseif (strlen($konsonan) == 2) {
+            $prefix = $konsonan[0] . $konsonan[1] . 'X';
+        } elseif (strlen($konsonan) == 1) {
+            $prefix = $konsonan[0] . 'XX';
+        } else {
+            $prefix = 'UJI';
+        }
 
         // Cari nomor urut terakhir untuk prefix ini
         $lastKode = Penjadwalan::where('kode_jadwal', 'LIKE', $prefix . '%')
@@ -680,17 +676,14 @@ class PenjadwalanController extends Controller
             ->first();
 
         if ($lastKode) {
-            // Ambil 4 digit terakhir dan tambah 1
             $lastNumber = (int) substr($lastKode->kode_jadwal, -4);
             $nextNumber = $lastNumber + 1;
         } else {
             $nextNumber = 1;
         }
 
-        // Format 4 digit dengan leading zero
         $number = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-        // Gabungkan prefix + number (format: ABC0001)
         return $prefix . $number;
     }
 

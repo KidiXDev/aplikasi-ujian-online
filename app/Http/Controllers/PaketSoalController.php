@@ -9,7 +9,6 @@ use App\Models\Bidang;
 use App\Models\PaketSoal;
 use Illuminate\Support\Facades\Log;
 
-
 class PaketSoalController extends Controller
 {
     public function index(Request $request)
@@ -17,7 +16,7 @@ class PaketSoalController extends Controller
         $pages = $request->query('pages', 10);
         $search = $request->query('search', null);
 
-        $usersQuery = PaketSoal::withCount('match_soal'); 
+        $usersQuery = PaketSoal::withCount('match_soal');
 
         if ($search) {
             $usersQuery->where('nama_paket', 'like', '%' . $search . '%');
@@ -35,23 +34,28 @@ class PaketSoalController extends Controller
         );
     }
 
-    public function destroy(PaketSoal $paketSoal)
+    /**
+     * DELETE paket soal (via API / AJAX / Inertia)
+     */
+    public function delete($id)
     {
         try {
-            Log::info('Delete route called with ID:', ['id' => $paketSoal->id]);
+            Log::info('Delete route called with ID:', ['id' => $id]);
 
-            // Hapus data terkait di tabel match_soals
-            \App\Models\MatchSoal::where('paket_id', $paketSoal->id)->delete();
+            $paket_soal = PaketSoal::findOrFail($id);
 
-            // Hapus data di tabel paket_soals
-            $paketSoal->delete();
+            // Hapus relasi match soal dulu
+            MatchSoal::where('paket_id', $paket_soal->id)->delete();
 
-            Log::info('PaketSoal deleted successfully:', ['id' => $paketSoal->id]);
+            // Hapus paket soal-nya
+            $paket_soal->delete();
 
-            return redirect()->back()->with('success', 'Paket deleted successfully');
+            Log::info('PaketSoal deleted successfully:', ['id' => $id]);
+
+            return response()->json(['message' => 'Paket soal berhasil dihapus.']);
         } catch (\Exception $e) {
             Log::error('Error deleting PaketSoal:', ['error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Failed to delete Paket');
+            return response()->json(['error' => 'Gagal menghapus paket soal.'], 500);
         }
     }
 
@@ -59,6 +63,6 @@ class PaketSoalController extends Controller
     {
         $paket_soal->update($request->all());
 
-        return redirect()->back()->with('success', 'User updated successfully');
+        return redirect()->back()->with('success', 'Paket soal berhasil diperbarui');
     }
 }
