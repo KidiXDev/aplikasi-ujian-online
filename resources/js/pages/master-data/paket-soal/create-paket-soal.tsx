@@ -119,7 +119,7 @@ export default function CreatePaketSoal() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">
-            {edit ? "Edit Paket Soal" : "Buat Part dari Paket Soal"} {selectedEvent?.nama_event}
+            {edit ? "Edit Paket Soal" : "Tambah Part dari Paket Soal"} {selectedEvent?.nama_event}
           </h1>
           <CButton type="primary" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />

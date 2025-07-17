@@ -87,7 +87,7 @@ export default function FormEvent() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isEdit ? 'Edit Paket Soal' : 'Buat Paket Soal'} />
+            <Head title={isEdit ? 'Edit Paket Soal' : 'Tambah Paket Soal'} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Buat'} Paket Soal</h1>
