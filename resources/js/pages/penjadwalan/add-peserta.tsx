@@ -274,8 +274,8 @@ function AddPesertaTable({
     const navigateToPage = (page: number) => {
         router.visit(`/penjadwalan/${penjadwalanId}/peserta/add`, {
             data: {
+                ...filters, // Kirim semua filter, search, sort, direction
                 page: page,
-                search: filters.search,
                 per_page: pesertaData.per_page,
             },
             preserveState: true,
