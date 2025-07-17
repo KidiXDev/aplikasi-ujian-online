@@ -114,7 +114,7 @@ export default function CreatePaketSoal() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={edit ? "Edit Paket Soal" : "Buat Part"} />
+      <Head title={edit ? "Edit Paket Soal" : "Tambah Part"} />
       <div className="flex h-full flex-1 flex-col gap-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
