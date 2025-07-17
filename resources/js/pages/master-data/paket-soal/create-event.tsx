@@ -37,7 +37,7 @@ export default function FormEvent() {
     const isEdit = !!event;
 
     const breadcrumbs = [
-        { title: 'Event', href: '/master-data/event' },
+        { title: 'Paket Soal', href: '/master-data/paket' },
         { title: isEdit ? 'Edit' : 'Create', href: '#' },
     ];
 

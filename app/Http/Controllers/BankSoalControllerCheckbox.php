@@ -128,6 +128,7 @@ class BankSoalControllerCheckbox extends Controller
                 'id_ujian' => $paket_soal->id_ujian,
                 'nama_ujian' => $jadwalUjian->nama_ujian,
                 'kode_part' => $jadwalUjian->kode_part,
+                'id_event' => $jadwalUjian->id_event,
             ],
             'matchedSoalIds' => $ujianSoalIds,
             'totalAvailableSoal' => $totalAvailableSoal,

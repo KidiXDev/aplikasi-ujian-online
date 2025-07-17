@@ -62,7 +62,7 @@ export default function CreatePaketSoal() {
 
   const breadcrumbs = [
     { title: 'Paket Soal', href: '/master-data/paket' },
-    { title: 'Part', href: '/master-data/part' },
+    { title: 'Part', href: `/master-data/part/${selectedEventId}` },
     { title: edit ? 'Edit' : 'Create', href: '#' },
   ];
 
