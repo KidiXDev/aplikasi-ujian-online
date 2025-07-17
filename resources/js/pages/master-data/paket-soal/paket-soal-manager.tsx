@@ -77,7 +77,7 @@ export default function PaketSoalManager() {
     
     setLoadingEventList(true);
     try {
-      const url = `/master-data/paket-soal/list-event-to-copy/${event.id_event}${search ? `?search=${encodeURIComponent(search)}` : ''}`;
+      const url = `/master-data/part/list-event-to-copy/${event.id_event}${search ? `?search=${encodeURIComponent(search)}` : ''}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch event list');
@@ -165,14 +165,14 @@ export default function PaketSoalManager() {
 
   const confirmDelete = () => {
     if (!targetId) return;
-    router.delete(route('master-data.paket-soal.destroy', targetId), {
+    router.delete(route('master-data.part.destroy', targetId), {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
         toast.success('Paket soal berhasil dihapus');
         // Refresh halaman dengan parameter yang sama
         if (event?.id_event) {
-          router.visit(route('master-data.paket-soal.show-by-event', event.id_event), {
+          router.visit(route('master-data.part.show-by-event', event.id_event), {
             data: currentParams,
             preserveScroll: true
           });
@@ -197,9 +197,9 @@ export default function PaketSoalManager() {
     };
 
     console.log('Sending copy part request:', payload);
-    console.log('Route:', route('master-data.paket-soal.copy_part'));
+    console.log('Route:', route('master-data.part.copy_part'));
 
-    router.post(route('master-data.paket-soal.copy_part'), payload, {
+    router.post(route('master-data.part.copy_part'), payload, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: (response) => {
@@ -211,7 +211,7 @@ export default function PaketSoalManager() {
         setSearchEventCopy('');
         // Refresh halaman dengan parameter yang sama
         if (event?.id_event) {
-          router.visit(route('master-data.paket-soal.show-by-event', event.id_event), {
+          router.visit(route('master-data.part.show-by-event', event.id_event), {
             data: currentParams,
             preserveScroll: true
           });
@@ -225,12 +225,12 @@ export default function PaketSoalManager() {
   };
 
   const handleBack = () => {
-    router.visit(route('master-data.event.getEvent'));
+    router.visit(route('master-data.paket.getEvent'));
   };
 
   const breadcrumbs = [
-    { title: 'Event', href: '/master-data/event' },
-    { title: 'Paket Soal', href: '#' }
+    { title: 'Paket soal', href: '/master-data/paket' },
+    { title: 'Part', href: '#' }
   ];
 
   const columns = [
@@ -435,9 +435,9 @@ export default function PaketSoalManager() {
             <CButton
               onClick={() => {
                 if (event?.id_event) {
-                  router.visit(`/master-data/paket-soal/create/${event.id_event}`);
+                  router.visit(`/master-data/part/create/${event.id_event}`);
                 } else {
-                  router.visit(`/master-data/paket-soal/create-event/${event?.id_event}`);
+                  router.visit(`/master-data/part/create-event/${event?.id_event}`);
                 }
               }}
               className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
@@ -453,7 +453,7 @@ export default function PaketSoalManager() {
             <EntriesSelector
               currentValue={jadwalUjian.per_page}
               options={[10, 25, 50, 100]}
-              routeName={event ? "master-data.paket-soal.show-by-event" : "master-data.paket-soal.index"}
+              routeName={event ? "master-data.part.show-by-event" : "master-data.part.index"}
               paramName="pages"
               routeParams={event ? { 
                 id_event: event.id_event,
@@ -479,7 +479,7 @@ export default function PaketSoalManager() {
           
           <SearchInputMenu
             defaultValue={currentParams.search}
-            routeName={event ? "master-data.paket-soal.show-by-event" : "master-data.paket-soal.index"}
+            routeName={event ? "master-data.part.show-by-event" : "master-data.part.index"}
             paramName="search"
             routeParams={event ? { 
               id_event: event.id_event,
@@ -499,7 +499,7 @@ export default function PaketSoalManager() {
           total={jadwalUjian.total}
           onNavigate={(page) => {
             if (event && event.id_event) {
-              router.visit(route('master-data.paket-soal.show-by-event', event.id_event), {
+              router.visit(route('master-data.part.show-by-event', event.id_event), {
                 data: {
                   pages: currentParams.pages,
                   search: currentParams.search,
@@ -508,7 +508,7 @@ export default function PaketSoalManager() {
                 preserveScroll: true
               });
             } else {
-              router.visit(route('master-data.paket-soal.index'), {
+              router.visit(route('master-data.part.index'), {
                 data: {
                   pages: currentParams.pages,
                   search: currentParams.search,

@@ -37,7 +37,7 @@ export default function FormEvent() {
     const isEdit = !!event;
 
     const breadcrumbs = [
-        { title: 'Event', href: '/master-data/event' },
+        { title: 'Paket Soal', href: '/master-data/paket' },
         { title: isEdit ? 'Edit' : 'Create', href: '#' },
     ];
 
@@ -63,12 +63,12 @@ export default function FormEvent() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (isEdit && event?.id_event) {
-            router.put(route('master-data.event.update', event.id_event), values, {
+            router.put(route('master-data.paket.update', event.id_event), values, {
                 preserveScroll: true,
                 onError: handleErrors,
             });
         } else {
-            router.post(route('master-data.event.store'), values, {
+            router.post(route('master-data.paket.store'), values, {
                 preserveScroll: true,
                 onError: handleErrors,
             });
@@ -87,13 +87,13 @@ export default function FormEvent() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isEdit ? 'Edit Paket Soal' : 'Buat Paket Soal'} />
+            <Head title={isEdit ? 'Edit Paket Soal' : 'Tambah Paket Soal'} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Buat'} Paket Soal</h1>
+                    <h1 className="text-2xl font-bold">{isEdit ? 'Edit' : 'Tambah'} Paket Soal</h1>
                     <CButton
                         type="primary"
-                        onClick={() => router.visit(route('master-data.event.getEvent'))}
+                        onClick={() => router.visit(route('master-data.paket.getEvent'))}
                     >
                         Kembali
                     </CButton>

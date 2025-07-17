@@ -61,18 +61,9 @@ interface PageProps {
     id_ujian: number;
     nama_ujian: string;
     kode_part: string;
+    id_event: number;
   };
 }
-
-/**
- * Breadcrumbs --------------------------------------------------------------
- */
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Bank Soal Check Box',
-    href: '/master-data/banksoalcheckbox',
-  },
-];
 
 /**
  * Main Component -----------------------------------------------------------
@@ -83,6 +74,19 @@ export default function BankSoalCheckbox() {
   const filters = props.filters || { search: '', order: 'asc' };
   const paketSoal = props.paketSoal;
   const totalAvailableSoal = props.totalAvailableSoal || 0;
+
+  // Dynamic breadcrumbs based on paketSoal data
+  const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Paket', href: '/master-data/paket' },
+    { 
+      title: 'part', 
+      href: paketSoal?.id_event ? `/master-data/part/${paketSoal.id_event}` : '/master-data/part'
+    },
+    {
+      title: 'Bank Soal Check Box',
+      href: '/master-data/banksoalcheckbox',
+    },
+  ];
 
   const [selectedSoalIds, setSelectedSoalIds] = useState<number[]>(
     props.matchedSoalIds || []

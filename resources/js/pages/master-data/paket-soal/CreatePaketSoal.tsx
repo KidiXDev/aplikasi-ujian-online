@@ -38,7 +38,7 @@ export default function CreatePaketSoal() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    post(route('master-data.paket-soal.store'), {
+    post(route('master-data.part.store'), {
       onSuccess: () => {
         setSuccess(true);
         reset();
