@@ -407,7 +407,7 @@ function EventTable({
                 };
             case 'toggle':
                 return {
-                    title: 'Ubah Status Event',
+                    title: 'Ubah Status Paket Soal',
                     description: 'Apakah Anda yakin ingin mengubah status event ini?'
                 };
             default:
