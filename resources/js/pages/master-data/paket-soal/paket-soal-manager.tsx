@@ -228,17 +228,17 @@ export default function PaketSoalManager() {
     { label: 'Nama Part', className: 'w-[300px]', render: (d: typeof sortedDataWithNumbers[0]) => d.nama },
     {
       label: 'Jumlah Soal',
-      className: 'text-center w-[150px]',
+      className: 'text-center w-[100px]',
       render: (d: typeof sortedDataWithNumbers[0]) => <div className="text-center">{d.jumlah}</div>,
     },
     {
       label: 'Action',
-      className: 'text-center w-[200px]',
+      className: 'text-center w-[100px]',
       render: (d: typeof sortedDataWithNumbers[0]) => (
         <div className="flex justify-center gap-2">
           <CButtonIcon
             icon={Plus}
-            className="bg-green-600"
+            className="bg-green-600 hover:bg-green-800"
             onClick={() => router.visit(`/master-data/bank-soal-checkbox/${d.id}/edit`)}
           />
           <CButtonIcon
@@ -379,7 +379,7 @@ export default function PaketSoalManager() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Data Paket Soal" />
+      <Head title="Part Soal" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         {/* Tombol Kembali */}
         <div className="flex justify-end py-1 ">

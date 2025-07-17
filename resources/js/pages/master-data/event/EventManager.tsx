@@ -379,7 +379,7 @@ function EventTable({
         },
         {
             label: 'Action',
-            className: 'text-center w-[120px]',
+            className: 'text-center w-[200px]',
             render: (event: EventType) => (
                 <div className="flex justify-center gap-1">
                     <CButtonIcon

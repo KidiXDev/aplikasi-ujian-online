@@ -117,7 +117,7 @@ export default function CreatePaketSoal() {
       <div className="flex h-full flex-1 flex-col gap-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bolsd">
+          <h1 className="text-2xl font-bold">
             {edit ? "Edit Paket Soal" : "Tambah Part dari Paket Soal"} {selectedEvent?.nama_event}
           </h1>
           <CButton type="primary" onClick={handleBack} className="px-8 py-2">
