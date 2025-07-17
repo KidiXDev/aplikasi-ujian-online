@@ -218,7 +218,12 @@ public function getEvent(Request $request)
         });
         
         return Inertia::render('master-data/event/EventManager', [
-            'events' => $data
+            'events' => $data,
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $request->input('status', ''),
+                'sort' => $request->input('sort', 'asc'),
+            ]
         ]);
     }
 }

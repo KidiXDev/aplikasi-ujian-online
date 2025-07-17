@@ -76,6 +76,9 @@ class PaketSoalController extends Controller
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
             'event' => $event, // Kirim data event ke frontend
+            'filters' => [
+                'search' => $request->input('search', ''),
+            ]
         ]);
     }
 
@@ -121,6 +124,9 @@ class PaketSoalController extends Controller
             'jadwalUjian' => $jadwalUjian,
             'jadwalUjianSoal' => $jadwalUjianSoal,
             // Tidak ada event untuk index all
+            'filters' => [
+                'search' => $request->input('search', ''),
+            ]
         ]);
     }
 
