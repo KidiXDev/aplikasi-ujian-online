@@ -715,7 +715,7 @@ class PenjadwalanController extends Controller
                 // Tambahkan ke batch hanya jika belum ada dalam batch
                 $jadwalUjianBatch[$duplicateKey] = [
                     'nama_ujian' => $template->nama_ujian,
-                    'kode_kelas' => null, // Set untuk penjadwalan baru
+                    'kode_kelas' => $template->kode_kelas, // Ikuti nilai dari template
                     'id_event' => $template->id_event, // Dari template
                     'kode_part' => $template->kode_part, // Dari template
                     'id_penjadwalan' => $penjadwalan->id_penjadwalan, // Assign ke penjadwalan
