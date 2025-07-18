@@ -177,7 +177,7 @@ export default function PenjadwalanForm() {
                                                         <SelectValue placeholder="Pilih Paket Ujian" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent>
+                                                <SelectContent style={{ maxHeight: 250, overflowY: 'auto' }}>
                                                     {events.map((event) => (
                                                         <SelectItem key={event.id_event} value={event.id_event.toString()}>
                                                             {event.nama_event}
@@ -223,7 +223,7 @@ export default function PenjadwalanForm() {
                                                         <SelectValue placeholder="Pilih Tipe Ujian" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent>
+                                                <SelectContent style={{ maxHeight: 250, overflowY: 'auto' }}>
                                                     {kategoriSoal.map((kategori) => (
                                                         <SelectItem key={kategori.id} value={kategori.id.toString()}>
                                                             {kategori.kategori}
