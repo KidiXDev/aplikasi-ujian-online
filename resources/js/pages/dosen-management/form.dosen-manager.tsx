@@ -38,7 +38,7 @@ export default function FormDosenManager() {
         defaultValues: {
             nip: dosen?.nip ?? '',
             nama: dosen?.nama ?? '',
-            password: '',
+            password: dosen ? '' : 'Password123',
             aktif: !!dosen?.aktif,
         },
     });

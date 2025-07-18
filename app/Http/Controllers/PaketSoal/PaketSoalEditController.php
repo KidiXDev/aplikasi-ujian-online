@@ -50,7 +50,7 @@ class PaketSoalEditController extends Controller
         $paket->kode_part = $request->input('kode_part');
         $paket->save();
 
-        return redirect()->route('master-data.paket-soal.index')->with('success', 'Paket soal berhasil diupdate!');
+        return redirect()->route('master-data.part.index')->with('success', 'Paket soal berhasil diupdate!');
     }
 
     // PaketSoalEditController.php
@@ -86,7 +86,7 @@ class PaketSoalEditController extends Controller
             'ujian_soal' => 0
         ]);
 
-        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $request->input('id_event')])->with('success', 'Paket soal berhasil dibuat!');
+        return redirect()->route('master-data.part.show-by-event', ['id_event' => $request->input('id_event')])->with('success', 'Paket soal berhasil dibuat!');
     }
 
     // Method untuk create dengan event ID yang sudah ditentukan
@@ -156,7 +156,7 @@ class PaketSoalEditController extends Controller
             'ujian_soal' => ''
         ]);
 
-        return redirect()->route('master-data.paket-soal.show-by-event', ['id_event' => $event_id]);
+        return redirect()->route('master-data.part.show-by-event', ['id_event' => $event_id]);
     }
 
     

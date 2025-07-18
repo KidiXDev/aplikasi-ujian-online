@@ -31,10 +31,14 @@ interface EventsData {
 
 interface EventsPageProps {
     events: EventsData;
+    flash?: {
+        success?: string;
+        error?: string;
+    };
     [key: string]: unknown;
 }
 
-const breadcrumbs = [{ title: 'Event', href: '/master-data/event' }];
+const breadcrumbs = [{ title: 'Paket Soal', href: '/master-data/paket' }];
 
 export default function EventManager() {
     const { props, url } = usePage<EventsPageProps>();
@@ -42,14 +46,24 @@ export default function EventManager() {
     const data = events.data;
     const params = new URLSearchParams(url.split('?')[1] || '');
 
+    // Handle flash messages
+    useEffect(() => {
+        if (props.flash?.success) {
+            toast.success(props.flash.success);
+        }
+        if (props.flash?.error) {
+            toast.error(props.flash.error);
+        }
+    }, [props.flash]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Data Event" />
+            <Head title="Data Paket Soal" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <ContentTitle
                     title="Paket Soal"
                     showButton
-                    onButtonClick={() => router.visit(route('master-data.event.create'))}
+                    onButtonClick={() => router.visit(route('master-data.paket.create'))}
                 />
                 
                 <div className="mt-4 flex items-center justify-between gap-4">
@@ -57,7 +71,7 @@ export default function EventManager() {
                         <EntriesSelector
                             currentValue={events.per_page}
                             options={[10, 25, 50, 100]}
-                            routeName="master-data.event.getEvent"
+                            routeName="master-data.paket.getEvent"
                             paramName="pages"
                             routeParams={{
                                 search: params.get('search') || '',
@@ -65,7 +79,9 @@ export default function EventManager() {
                                 sort: params.get('sort') || 'asc',
                             }}
                         />
-                        
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
                         <StatusFilter 
                             currentValue={params.get('status') || ''}
                             routeParams={{
@@ -83,18 +99,18 @@ export default function EventManager() {
                                 status: params.get('status') || '',
                             }}
                         />
+                        
+                        <SearchInputMenu
+                            defaultValue={params.get('search') || ''}
+                            routeName="master-data.paket.getEvent"
+                            paramName="search"
+                            routeParams={{
+                                pages: params.get('pages') || events.per_page.toString(),
+                                status: params.get('status') || '',
+                                sort: params.get('sort') || 'asc',
+                            }}
+                        />
                     </div>
-                    
-                    <SearchInputMenu
-                        defaultValue={params.get('search') || ''}
-                        routeName="master-data.event.getEvent"
-                        paramName="search"
-                        routeParams={{
-                            pages: params.get('pages') || events.per_page.toString(),
-                            status: params.get('status') || '',
-                            sort: params.get('sort') || 'asc',
-                        }}
-                    />
                 </div>
 
                 <EventTable data={data} events={events} queryParams={params} />
@@ -112,7 +128,7 @@ function StatusFilter({
     routeParams: { [key: string]: string };
 }) {
     const handleStatusChange = (status: string) => {
-        router.visit(route('master-data.event.getEvent'), {
+        router.visit(route('master-data.paket.getEvent'), {
             data: {
                 ...routeParams,
                 status: status,
@@ -123,7 +139,7 @@ function StatusFilter({
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-gray-700">Status:</label>
             <select
                 value={currentValue}
@@ -132,7 +148,7 @@ function StatusFilter({
             >
                 <option value="">Semua Status</option>
                 <option value="1">Aktif</option>
-                <option value="0">Tidak Aktif</option>
+                <option value="0">Non Aktif</option>
             </select>
         </div>
     );
@@ -147,7 +163,7 @@ function SortFilter({
     routeParams: { [key: string]: string };
 }) {
     const handleSortChange = (sort: string) => {
-        router.visit(route('master-data.event.getEvent'), {
+        router.visit(route('master-data.paket.getEvent'), {
             data: {
                 ...routeParams,
                 sort: sort,
@@ -158,15 +174,15 @@ function SortFilter({
     };
 
     return (
-        <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Urutkan ID:</label>
+        <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">Urutkan:</label>
             <select
                 value={currentValue}
                 onChange={(e) => handleSortChange(e.target.value)}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-                <option value="asc">Terkecil ke Terbesar</option>
-                <option value="desc">Terbesar ke Terkecil</option>
+                <option value="asc">Terlama</option>
+                <option value="desc">Terbaru</option>
             </select>
         </div>
     );
@@ -228,26 +244,26 @@ function EventTable({
         };
         
         if (actionType === 'delete') {
-            router.delete(route('master-data.event.destroy', targetId), {
+            router.delete(route('master-data.paket.destroy', targetId), {
                 data: currentParams,
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Event berhasil dihapus');
+                    toast.success('Paket soal berhasil dihapus');
                     // Remove from local state
                     setTableData(prev => prev.filter(ev => ev.id_event !== targetId));
                 },
                 onError: () => {
-                    toast.error('Gagal menghapus event');
+                    toast.error('Gagal menghapus paket soal');
                 },
             });
         } else {
             // Toggle status
-            router.put(route('master-data.event.updateStatus', targetId), currentParams, {
+            router.put(route('master-data.paket.updateStatus', targetId), currentParams, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Status event berhasil diubah');
+                    toast.success('Status paket soal berhasil diubah');
                     // Update local state
                     setTableData(prev =>
                         prev.map(ev => {
@@ -258,13 +274,13 @@ function EventTable({
                         })
                     );
                     // Refresh halaman dengan parameter yang sama untuk mempertahankan filter
-                    router.visit(route('master-data.event.getEvent'), {
+                    router.visit(route('master-data.paket.getEvent'), {
                         data: currentParams,
                         preserveScroll: true
                     });
                 },
                 onError: () => {
-                    toast.error('Gagal mengubah status event');
+                    toast.error('Gagal mengubah status paket soal');
                 },
             });
         }
@@ -289,23 +305,23 @@ function EventTable({
         },
         {
             label: 'Nama Paket Soal',
-            className: 'text-left w-[350px]',
+            className: 'text-center w-[350px]',
             render: (event: EventType) => <div>{event.nama_event}</div>,
         },
         {
             label: 'Status',
-            className: 'text-center w-[120px]',
+            className: 'text-center w-[150px]',
             render: (event: EventType) => (
                 <div className="flex justify-center">
                     <button
-                        className={`px-2 py-1 rounded text-white font-semibold text-xs min-w-[80px] text-center transition-colors duration-200 ${
+                        className={`px-4 py-2.5 rounded text-white font-semibold text-xs w-[110px] text-center transition-colors duration-200 ${
                             event.status === 1 
                                 ? 'bg-green-600 hover:bg-green-700' 
                                 : 'bg-red-600 hover:bg-red-700'
                         }`}
                         onClick={() => handleToggleStatus(event.id_event)}
                     >
-                        {event.status === 1 ? 'Aktif' : 'Nonaktif'}
+                        {event.status === 1 ? 'Aktif' : 'Non Aktif'}
                     </button>
                 </div>
             ),
@@ -363,18 +379,18 @@ function EventTable({
         },
         {
             label: 'Action',
-            className: 'text-center w-[120px]',
+            className: 'text-center w-[200px]',
             render: (event: EventType) => (
                 <div className="flex justify-center gap-1">
                     <CButtonIcon
                         icon={List}
                         className="bg-yellow-500"
-                        onClick={() => router.visit(`/master-data/paket-soal/${event.id_event}`)}
+                        onClick={() => router.visit(`/master-data/part/${event.id_event}`)}
                     />
                     <CButtonIcon
                         icon={Pencil}
                         onClick={() =>
-                            router.visit(route('master-data.event.edit', event.id_event))
+                            router.visit(route('master-data.paket.edit', event.id_event))
                         }
                     />
                 </div>
@@ -391,7 +407,7 @@ function EventTable({
                 };
             case 'toggle':
                 return {
-                    title: 'Ubah Status Event',
+                    title: 'Ubah Status Paket Soal',
                     description: 'Apakah Anda yakin ingin mengubah status event ini?'
                 };
             default:
@@ -414,7 +430,7 @@ function EventTable({
                 total={events.total}
                 onNavigate={(page) => {
                     router.visit(
-                        route('master-data.event.getEvent', {
+                        route('master-data.paket.getEvent', {
                             pages: queryParams.get('pages') || events.per_page.toString(),
                             search: queryParams.get('search') || '',
                             status: queryParams.get('status') || '',

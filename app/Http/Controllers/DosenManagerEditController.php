@@ -26,27 +26,44 @@ class DosenManagerEditController extends Controller
     public function update(Request $request, $nip)
     {
         $data = $request->validate([
+            'nip' => 'required|string|unique:data_db.t_guru,nip,' . $nip . ',nip',
             'nama' => 'required|string',
             'password' => 'nullable|string|min:8',
-            'aktif' => 'required|boolean',
+            'aktif' => 'nullable|boolean',
         ]);
 
         $dosen = Dosen::findOrFail($nip);
 
-        $updateData = [
-            'nama' => $data['nama'],
-            'aktif' => $data['aktif'],
-        ];
+        $passwordFinal = !empty($data['password'])
+        ? bcrypt($data['password'])
+        : $dosen->password;
 
-        if (!empty($data['password'])) {
-            $updateData['password'] = bcrypt($data['password']);
+        if ($nip !== $data['nip']) {
+            // Ganti NIP → hapus & buat ulang
+            $dosen->delete();
+            Dosen::create([
+                'nip' => $data['nip'],
+                'nama' => $data['nama'],
+                'password' => $passwordFinal,
+                'aktif' => $data['aktif'],
+            ]);
+        } else {
+            // Update biasa
+            $updateData = [
+                'nama' => $data['nama'],
+                'aktif' => $data['aktif'],
+                'password' => $passwordFinal,
+            ];
+            if (array_key_exists('aktif', $data)) {
+                $updateData['aktif'] = $data['aktif'];
+            }
+
+
+            $dosen->update($updateData);
         }
-
-        $dosen->update($updateData);
 
         return redirect()->route('master-data.dosen.manager')->with('success', 'Dosen berhasil diedit');
     }
-
     public function create()
     {
         return Inertia::render('dosen-management/form.dosen-manager', [

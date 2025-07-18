@@ -39,13 +39,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // itu harus diubah jadi pake titik, contoh monitoring.ujian
     // jadi nanti di route name-nya jadi monitoring.ujian
 
-    Route::get('/paket-soal/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('paket-soal.add-soal');
+    Route::get('/part/add-soal', [AddSoalController::class, 'showAddSoalForm'])->name('part.add-soal');
 
-    Route::get('/paket-soal/list', [PaketSoalController::class, 'list']);
+    Route::get('/part/list', [PaketSoalController::class, 'list']);
 
     Route::get('/bidangs', [BidangController::class, 'index']); // dropdown bidang
 
-    Route::post('/paket-soal', [PaketSoalEditController::class, 'store'])->name('paket-soal.store');
+    Route::post('/part', [PaketSoalEditController::class, 'store'])->name('part.store');
 
     // Custom binding
     Route::bind('matakuliah', fn($value) => Matakuliah::where('id_mk', $value)->firstOrFail());
@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard/faq', [DashboardController::class, 'faq'])->name('dashboard.faq');
 
     // Monitoring Ujian
     Route::prefix('monitoring-ujian')->name('monitoring.ujian.')->group(function () {
@@ -88,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('rekap-nilai', [App\Http\Controllers\RekapNilaiController::class, 'index'])->name('rekap.nilai');
     Route::get('rekap-nilai/{id}', [App\Http\Controllers\RekapNilaiController::class, 'show'])->name('rekap.nilai.detail');
     Route::get('rekap-nilai/{id}/export', [App\Http\Controllers\RekapNilaiController::class, 'export'])->name('rekap.nilai.export');
-
+    Route::get('/rekap-nilai/{id}/preview', [App\Http\Controllers\RekapNilaiController::class, 'preview'])->name('rekap-nilai.preview');
     // MASTER DATA
     Route::prefix('master-data')->name('master-data.')->group(function () {
         Route::get('/', fn() => redirect()->route('dashboard'))->name('index');
@@ -180,7 +181,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Event
-        Route::prefix('event')->name('event.')->group(function () {
+        Route::prefix('paket')->name('paket.')->group(function () {
             Route::get('/', [MakeEventController::class, 'getEvent'])->name('getEvent');
             Route::get('/list', [MakeEventController::class, 'index'])->name('list');
             Route::get('/create', [MakeEventController::class, 'create'])->name('create');
@@ -204,7 +205,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Paket Soal
-        Route::prefix('paket-soal')->name('paket-soal.')->group(function () {
+        Route::prefix('part')->name('part.')->group(function () {
             Route::get('/', [PaketSoalController::class, 'indexAll'])->name('index');
             Route::get('/{id_event}', [PaketSoalController::class, 'index'])->name('show-by-event');
             Route::get('/create/{id_event}', [PaketSoalEditController::class, 'createWithEvent'])->name('create-with-event');

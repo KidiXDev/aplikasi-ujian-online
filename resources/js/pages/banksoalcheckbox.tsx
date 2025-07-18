@@ -11,6 +11,7 @@ import { CustomTable } from '@/components/ui/c-table';
 import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
+import { CButton } from '@/components/ui/c-button';
 
 /**
  * Types --------------------------------------------------------------------
@@ -61,18 +62,10 @@ interface PageProps {
     id_ujian: number;
     nama_ujian: string;
     kode_part: string;
+    id_event: number;
+    nama_event: string;
   };
 }
-
-/**
- * Breadcrumbs --------------------------------------------------------------
- */
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Bank Soal Check Box',
-    href: '/master-data/banksoalcheckbox',
-  },
-];
 
 /**
  * Main Component -----------------------------------------------------------
@@ -83,6 +76,19 @@ export default function BankSoalCheckbox() {
   const filters = props.filters || { search: '', order: 'asc' };
   const paketSoal = props.paketSoal;
   const totalAvailableSoal = props.totalAvailableSoal || 0;
+
+  // Dynamic breadcrumbs based on paketSoal data
+  const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Paket', href: '/master-data/paket' },
+    { 
+      title: 'part', 
+      href: paketSoal?.id_event ? `/master-data/part/${paketSoal.id_event}` : '/master-data/part'
+    },
+    {
+      title: 'Bank Soal Check Box',
+      href: '/master-data/banksoalcheckbox',
+    },
+  ];
 
   const [selectedSoalIds, setSelectedSoalIds] = useState<number[]>(
     props.matchedSoalIds || []
@@ -193,47 +199,45 @@ export default function BankSoalCheckbox() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Bank Soal Check Box" />
 
-      <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        {/* Tombol Kembali */}
-        <button
-          onClick={handleBack}
-          className="mb-4 self-start flex items-center gap-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Kembali
-        </button>
+      <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between">
+          <ContentTitleNoadd title="Bank Soal Check Box" />
+          <CButton type="primary" onClick={handleBack} className="px-6 py-2.5 text-sm font-medium">
+            Kembali
+          </CButton>
+        </div>
 
-        <ContentTitleNoadd title="Bank Soal Check Box" />
-
-        {/* Info Paket Soal dan Filter */}
+        {/* Info Paket Soal */}
         {paketSoal && (
-          <div className="mb-4 rounded border bg-gray-50 p-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Nama Paket</label>
-                <p className="mt-1 text-base font-semibold">{paketSoal.nama_ujian}</p>
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-gray-900">Informasi Part</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">Nama Part</label>
+                <p className="text-base font-semibold ">{paketSoal.nama_ujian}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Kode Bidang</label>
-                <p className="mt-1 text-base font-semibold">{paketSoal.kode_part}</p>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">Nama Paket</label>
+                <p className="text-base font-semibold ">
+                  {paketSoal.nama_event}
+                </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Soal Terpilih</label>
-                <p className="mt-1 text-base font-semibold text-green-600">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">Soal Terpilih</label>
+                <p className="text-base font-semibold ">
                   {selectedSoalIds.length} / {totalAvailableSoal} soal
                 </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Total Soal Tersedia</label>
-                <p className="mt-1 text-base font-semibold text-blue-600">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">Total Soal Tersedia</label>
+                <p className="text-base font-semibold ">
                   {totalAvailableSoal} soal
                 </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Dapat Ditambahkan</label>
-                <p className="mt-1 text-base font-semibold text-purple-600">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-600">Dapat Ditambahkan</label>
+                <p className="text-base font-semibold ">
                   {totalAvailableSoal - selectedSoalIds.length} soal
                 </p>
               </div>
@@ -243,89 +247,101 @@ export default function BankSoalCheckbox() {
 
         {/* Bulk Selection Controls */}
         {paketSoal && (
-          <div className="mb-4 rounded border bg-gray-50 p-4">
-            <h3 className="mb-3 text-lg font-semibold text-gray-800">Pilihan Cepat</h3>
-            <div className="flex flex-wrap items-center gap-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-gray-900">Pilihan Cepat</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {/* Select All Button */}
-              <button
-                onClick={handleSelectAll}
-                disabled={isProcessing}
-                className="flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                {isProcessing ? 'Memproses...' : 'Pilih Semua'}
-              </button>
+              <div className="flex flex-col space-y-2">
+                <label className="text-sm font-medium text-gray-700 text-center">Pilih Semua</label>
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleSelectAll}
+                    disabled={isProcessing}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm min-w-[200px] h-[45px]"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {isProcessing ? 'Memproses...' : 'Pilih Semua'}
+                  </button>
+                </div>
+              </div>
 
               {/* Random Selection */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Random:</label>
-                <input
-                  type="number"
-                  value={randomCount}
-                  onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
-                  min="1"
-                  max={totalAvailableSoal}
-                  className="w-20 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-                <span className="text-sm text-gray-500">dari {totalAvailableSoal}</span>
-                <button
-                  onClick={handleSelectRandom}
-                  disabled={isProcessing}
-                  className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {isProcessing ? 'Memproses...' : 'Pilih Random'}
-                </button>
+              <div className="flex flex-col space-y-2">
+                <label className="text-sm font-medium text-gray-700 text-center">Pilih Acak</label>
+                <div className="flex items-center gap-2 justify-center">
+                  <input
+                    type="number"
+                    value={randomCount}
+                    onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
+                    min="1"
+                    max={totalAvailableSoal}
+                    className="w-16 rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={handleSelectRandom}
+                    disabled={isProcessing}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm min-w-[200px] h-[45px]"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {isProcessing ? 'Memproses...' : 'Pilih'}
+                  </button>
+                </div>
+                <span className="text-xs text-gray-500 text-center">dari {totalAvailableSoal} soal</span>
               </div>
 
               {/* Add Random Section */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Tambah Random:</label>
-                <input
-                  type="number"
-                  value={randomCount}
-                  onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
-                  min="1"
-                  max={totalAvailableSoal - selectedSoalIds.length}
-                  className="w-20 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-                <span className="text-sm text-gray-500">dari {totalAvailableSoal - selectedSoalIds.length}</span>
-                
-                {/* Add Random Button */}
-                <button
-                  onClick={handleAddRandom}
-                  disabled={isProcessing || (totalAvailableSoal - selectedSoalIds.length) <= 0}
-                  className="flex items-center gap-2 rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  {isProcessing ? 'Memproses...' : 'Tambah Random'}
-                </button>
+              <div className="flex flex-col space-y-2">
+                <label className="text-sm font-medium text-gray-700 text-center">Tambah Acak</label>
+                <div className="flex items-center gap-2 justify-center">
+                  <input
+                    type="number"
+                    value={randomCount}
+                    onChange={(e) => setRandomCount(parseInt(e.target.value) || 1)}
+                    min="1"
+                    max={totalAvailableSoal - selectedSoalIds.length}
+                    className="w-16 rounded-md border border-gray-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={handleAddRandom}
+                    disabled={isProcessing || (totalAvailableSoal - selectedSoalIds.length) <= 0}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm min-w-[200px] h-[45px]"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    {isProcessing ? 'Memproses...' : 'Tambah'}
+                  </button>
+                </div>
+                <span className="text-xs text-gray-500 text-center">dari {totalAvailableSoal - selectedSoalIds.length} tersedia</span>
               </div>
 
               {/* Clear All Button */}
-              <button
-                onClick={handleClearAll}
-                disabled={isProcessing || selectedSoalIds.length === 0}
-                className="flex items-center gap-2 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                {isProcessing ? 'Memproses...' : 'Hapus Semua'}
-              </button>
+              <div className="flex flex-col space-y-2">
+                <label className="text-sm font-medium text-gray-700 text-center">Hapus Semua</label>
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleClearAll}
+                    disabled={isProcessing || selectedSoalIds.length === 0}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm min-w-[200px] h-[45px]"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    {isProcessing ? 'Memproses...' : 'Hapus Semua'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Filters */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-4">
             <EntriesSelector
               currentValue={dataSoal.per_page}
               options={[10, 15, 25, 50]}
@@ -337,18 +353,20 @@ export default function BankSoalCheckbox() {
                 order: filters?.order || 'asc',
               } : {}}
             />
-            <OrderFilter defaultValue={filters?.order ?? 'asc'} />
           </div>
-          <SearchInputMenu
-            defaultValue={filters?.search || ''}
-            routeName="master-data.bank-soal-checkbox.edit"
-            paramName="search"
-            routeParams={paketSoal ? {
-              paket_soal: paketSoal.id_ujian,
-              pages: dataSoal.per_page.toString(),
-              order: filters?.order || 'asc',
-            } : {}}
-          />
+          <div className="flex items-center gap-4">
+            <OrderFilter defaultValue={filters?.order ?? 'asc'} />
+            <SearchInputMenu
+              defaultValue={filters?.search || ''}
+              routeName="master-data.bank-soal-checkbox.edit"
+              paramName="search"
+              routeParams={paketSoal ? {
+                paket_soal: paketSoal.id_ujian,
+                pages: dataSoal.per_page.toString(),
+                order: filters?.order || 'asc',
+              } : {}}
+            />
+          </div>
         </div>
 
         {/* Table */}
@@ -493,9 +511,6 @@ function BankSoalTable({
         {
           preserveState: true,
           preserveScroll: true,
-          onSuccess: () => {
-            toast.success('Soal berhasil diperbarui');
-          },
           onError: () => {
             toast.error('Gagal menyimpan soal');
           },

@@ -267,8 +267,8 @@ function PesertaTable({
     const navigateToPage = (page: number, entries?: number) => {
         router.visit(`/penjadwalan/${penjadwalanId}/peserta`, {
             data: {
+                ...filters, // pastikan filter, search, sort, direction ikut
                 page: page,
-                search: filters.search,
                 pages: entries ?? pesertaData.per_page,
             },
             preserveState: false,

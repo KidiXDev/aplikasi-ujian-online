@@ -177,25 +177,11 @@ class PenjadwalanController extends Controller
                 ->whereNull('id_penjadwalan');
         })->get(['id_event', 'nama_event']);
 
-        // Hitung jumlah peserta terdaftar untuk penjadwalan ini
-        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
-        $existingPesertaIds = [];
-        foreach ($jadwalUjians as $jadwalUjian) {
-            if ($jadwalUjian->kode_kelas) {
-                $ids = explode(',', $jadwalUjian->kode_kelas);
-                $ids = array_filter(array_map('trim', $ids));
-                $existingPesertaIds = array_merge($existingPesertaIds, $ids);
-            }
-        }
-        $existingPesertaIds = array_unique($existingPesertaIds);
-        $jumlahTerdaftar = count($existingPesertaIds);
-
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
             'penjadwalan' => [
                 'id_penjadwalan' => $penjadwalan->id_penjadwalan,
                 'id_paket_ujian' => $penjadwalan->id_paket_ujian,
-                // Kirim id numerik asli, bukan hasil accessor
-                'tipe_ujian' => $penjadwalan->getRawOriginal('tipe_ujian'),
+                'tipe_ujian' => $penjadwalan->tipe_ujian,
                 'tanggal' => $penjadwalan->tanggal,
                 'waktu_mulai' => $penjadwalan->waktu_mulai,
                 'waktu_selesai' => $penjadwalan->waktu_selesai,
@@ -205,12 +191,11 @@ class PenjadwalanController extends Controller
                 'online_offline' => $penjadwalan->online_offline,
                 'status' => $penjadwalan->status,
                 'flag' => $penjadwalan->flag,
+                // Add event data with null safety
                 'event' => $penjadwalan->event ? [
                     'id_event' => $penjadwalan->event->id_event,
                     'nama_event' => $penjadwalan->event->nama_event,
                 ] : null,
-                'jumlahTerdaftar' => $jumlahTerdaftar,
-                // 'kategori_soal' dihapus sesuai permintaan
             ],
             'kategoriSoal' => $kategoriSoal,
             'events' => $events,
@@ -270,15 +255,13 @@ class PenjadwalanController extends Controller
             // Handle case where event might be null
             $namaEvent = $penjadwalan->event ? $penjadwalan->event->nama_event : 'Event tidak ditemukan';
 
-            // Hapus semua JadwalUjianSoal yang diduplikat (bukan template) untuk penjadwalan ini
+            // Hapus JadwalUjianSoal yang terkait dengan JadwalUjian dari penjadwalan ini
             $jadwalUjianIds = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->pluck('id_ujian');
             if ($jadwalUjianIds->isNotEmpty()) {
-                JadwalUjianSoal::whereIn('id_ujian', $jadwalUjianIds)
-                    ->where('id_penjadwalan', $penjadwalan->id_penjadwalan)
-                    ->delete();
+                JadwalUjianSoal::whereIn('id_ujian', $jadwalUjianIds)->delete();
             }
 
-            // Hapus semua JadwalUjian yang terkait dengan penjadwalan ini
+            // Hapus JadwalUjian yang terkait dengan penjadwalan ini
             JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->delete();
 
             // Hapus penjadwalan
@@ -516,7 +499,8 @@ class PenjadwalanController extends Controller
 
         if (($jumlahTerdaftar + $pesertaBaru) > $penjadwalan->kuota) {
             return redirect()->back()->with(
-                'error', 'Kuota tidak mencukupi.'
+                'error',
+                'Kuota tidak mencukupi.'
             );
         }
 
@@ -535,7 +519,8 @@ class PenjadwalanController extends Controller
         $kategoriNama = $kategoriSoal ? $kategoriSoal->kategori : 'Kategori';
 
         return redirect()->route('penjadwalan.peserta', $id)->with(
-            'success', 'Peserta berhasil ditambahkan.'
+            'success',
+            'Peserta berhasil ditambahkan.'
         );
     }
 
@@ -578,7 +563,8 @@ class PenjadwalanController extends Controller
         $namaPeserta = $peserta ? $peserta->nama : 'Peserta';
 
         return redirect()->back()->with(
-            'success', 'Peserta berhasil dihapus.'
+            'success',
+            'Peserta berhasil dihapus.'
         );
     }
 
@@ -598,7 +584,8 @@ class PenjadwalanController extends Controller
         $jadwalUjian->update(['kode_kelas' => null]);
 
         return redirect()->back()->with(
-            'success', 'Semua peserta berhasil dihapus.'
+            'success',
+            'Semua peserta berhasil dihapus.'
         );
     }
 
@@ -639,7 +626,8 @@ class PenjadwalanController extends Controller
         $jumlahDihapus = count($pesertaIdsToRemove);
 
         return redirect()->back()->with(
-            'success', 'Peserta berhasil dihapus.'
+            'success',
+            'Peserta berhasil dihapus.'
         );
     }
 
@@ -693,10 +681,7 @@ class PenjadwalanController extends Controller
     private function createJadwalUjian($penjadwalan)
     {
         // Ambil SEMUA template yang tersedia (tanpa filter id_event)
-        $templateJadwalUjian = JadwalUjian::where(function ($q) {
-            $q->where('kode_kelas', null)
-                ->orWhere('kode_kelas', 1);
-        })
+        $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
             ->whereNull('id_penjadwalan') // Template yang belum pernah digunakan
             ->where('id_event', $penjadwalan->id_paket_ujian) // Hanya ambil template untuk event ini
             ->get();
@@ -712,7 +697,7 @@ class PenjadwalanController extends Controller
                 // Tambahkan ke batch hanya jika belum ada dalam batch
                 $jadwalUjianBatch[$duplicateKey] = [
                     'nama_ujian' => $template->nama_ujian,
-                    'kode_kelas' => $template->kode_kelas, // Set untuk penjadwalan baru
+                    'kode_kelas' => null, // Set untuk penjadwalan baru
                     'id_event' => $template->id_event, // Dari template
                     'kode_part' => $template->kode_part, // Dari template
                     'id_penjadwalan' => $penjadwalan->id_penjadwalan, // Assign ke penjadwalan
@@ -775,10 +760,7 @@ class PenjadwalanController extends Controller
             }
 
             // Cari template JadwalUjian yang sesuai untuk mendapatkan id_ujian template
-            $templateJadwalUjian = JadwalUjian::where(function ($q) {
-                $q->where('kode_kelas', null)
-                    ->orWhere('kode_kelas', 1);
-            })
+            $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
                 ->whereNull('id_penjadwalan')
                 ->where('id_event', $jadwalUjian->id_event)
                 ->where('nama_ujian', $jadwalUjian->nama_ujian)

@@ -128,11 +128,8 @@ export default function AddPeserta() {
                 preserveState: false,
                 preserveScroll: false,
                 onSuccess: () => {
-                    // Force navigation to peserta page without preserving state
-                    router.visit(`/penjadwalan/${penjadwalan.id_penjadwalan}/peserta`, {
-                        preserveState: false,
-                        preserveScroll: false,
-                    });
+                    // Tidak perlu pindah halaman, cukup refresh data atau tampilkan notifikasi
+                    toast.success('Peserta berhasil ditambahkan!');
                 },
             },
         );
@@ -277,8 +274,8 @@ function AddPesertaTable({
     const navigateToPage = (page: number) => {
         router.visit(`/penjadwalan/${penjadwalanId}/peserta/add`, {
             data: {
+                ...filters, // Kirim semua filter, search, sort, direction
                 page: page,
-                search: filters.search,
                 per_page: pesertaData.per_page,
             },
             preserveState: true,
