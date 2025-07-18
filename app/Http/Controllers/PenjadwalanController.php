@@ -216,24 +216,8 @@ class PenjadwalanController extends Controller
             'jenis_ujian' => 'required|integer',
         ]);
 
-        // Hitung jumlah peserta yang sudah terdaftar
-        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
-        $existingPesertaIds = [];
-        foreach ($jadwalUjians as $jadwalUjian) {
-            if ($jadwalUjian->kode_kelas) {
-                $ids = explode(',', $jadwalUjian->kode_kelas);
-                $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
-            }
-        }
-        $existingPesertaIds = array_unique($existingPesertaIds);
-        $jumlahTerdaftar = count($existingPesertaIds);
-
-        // Validasi: Tidak boleh mengurangi kuota di bawah jumlah peserta yang sudah terdaftar
-        if ($validated['kuota'] < $jumlahTerdaftar) {
-            return redirect()->back()->with('error', 'Kuota tidak boleh kurang dari jumlah peserta terdaftar.');
-        }
-
-        // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
+        // Hanya update di t_penjadwalan saja, tidak update relasi lain
+        // Regenerate kode_jadwal jika tipe_ujian atau id_paket_ujian berubah
         if ($penjadwalan->tipe_ujian != $validated['tipe_ujian'] || $penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
             $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
         }
