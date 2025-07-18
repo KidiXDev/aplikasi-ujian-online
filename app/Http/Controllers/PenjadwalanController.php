@@ -543,69 +543,33 @@ class PenjadwalanController extends Controller
      * Hapus peserta dari jadwal ujian
      * Peserta dihapus dengan cara menghapus ID peserta dari kode_kelas di tabel jadwal_ujian
      */
-    public function removePeserta(Request $request, $id)
-    {
-        $request->validate([
-            'peserta_id' => 'required|exists:data_db.t_peserta,id',
-        ]);
-
-        $penjadwalan = Penjadwalan::findOrFail($id);
-        $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
-
-        if (!$jadwalUjian) {
-            return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
-        }
-
-        // Parse peserta yang sudah terdaftar dari kode_kelas
-        $existingPesertaIds = [];
-        if ($jadwalUjian->kode_kelas) {
-            $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
-            $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
-        }
-
-        // Hapus peserta dari daftar
-        $pesertaIdToRemove = (string)$request->peserta_id;
-        $updatedPesertaIds = array_filter($existingPesertaIds, function ($id) use ($pesertaIdToRemove) {
-            return $id !== $pesertaIdToRemove;
-        });
-
-        // Update kode_kelas
-        $kodeKelas = empty($updatedPesertaIds) ? null : implode(',', $updatedPesertaIds);
-        $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
-
-        // Ambil nama peserta untuk pesan sukses
-        $peserta = Peserta::find($request->peserta_id);
-        $namaPeserta = $peserta ? $peserta->nama : 'Peserta';
-
-        return redirect()->back()->with(
-            'success',
-            'Peserta berhasil dihapus.'
-        );
-    }
-
     /**
-     * Clear all participants from an exam schedule
+     * Clear all participants from all exam schedules with the same id_penjadwalan
      */
     public function clearAllPeserta($id)
     {
         $penjadwalan = Penjadwalan::findOrFail($id);
-        $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
 
-        if (!$jadwalUjian) {
+        // Ambil semua jadwal ujian yang terkait dengan id_penjadwalan ini
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+
+        if ($jadwalUjians->isEmpty()) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
 
-        // Clear all participants
-        $jadwalUjian->update(['kode_kelas' => null]);
+        // Clear all participants in all related jadwal ujian
+        foreach ($jadwalUjians as $jadwalUjian) {
+            $jadwalUjian->update(['kode_kelas' => null]);
+        }
 
         return redirect()->back()->with(
             'success',
-            'Semua peserta berhasil dihapus.'
+            'Semua peserta berhasil dihapus dari semua jadwal ujian terkait.'
         );
     }
 
     /**
-     * Remove selected participants from an exam schedule
+     * Remove selected participants from all exam schedules with the same id_penjadwalan
      */
     public function removeSelectedPeserta(Request $request, $id)
     {
@@ -615,34 +579,77 @@ class PenjadwalanController extends Controller
         ]);
 
         $penjadwalan = Penjadwalan::findOrFail($id);
-        $jadwalUjian = JadwalUjian::where('id_penjadwalan', $id)->first();
 
-        if (!$jadwalUjian) {
+        // Ambil semua jadwal ujian yang terkait dengan id_penjadwalan ini
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+
+        if ($jadwalUjians->isEmpty()) {
             return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
         }
 
-        // Parse peserta yang sudah terdaftar dari kode_kelas
-        $existingPesertaIds = [];
-        if ($jadwalUjian->kode_kelas) {
-            $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
-            $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
-        }
-
-        // Remove selected participants
         $pesertaIdsToRemove = array_map('strval', $request->peserta_ids);
-        $updatedPesertaIds = array_filter($existingPesertaIds, function ($id) use ($pesertaIdsToRemove) {
-            return !in_array($id, $pesertaIdsToRemove);
-        });
 
-        // Update kode_kelas
-        $kodeKelas = empty($updatedPesertaIds) ? null : implode(',', $updatedPesertaIds);
-        $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
+        foreach ($jadwalUjians as $jadwalUjian) {
+            $existingPesertaIds = [];
+            if ($jadwalUjian->kode_kelas) {
+                $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
+                $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
+            }
 
-        $jumlahDihapus = count($pesertaIdsToRemove);
+            // Remove selected participants
+            $updatedPesertaIds = array_filter($existingPesertaIds, function ($id) use ($pesertaIdsToRemove) {
+                return !in_array($id, $pesertaIdsToRemove);
+            });
+
+            // Update kode_kelas
+            $kodeKelas = empty($updatedPesertaIds) ? null : implode(',', $updatedPesertaIds);
+            $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
+        }
 
         return redirect()->back()->with(
             'success',
-            'Peserta berhasil dihapus.'
+            'Peserta berhasil dihapus dari semua jadwal ujian terkait.'
+        );
+    }
+
+    /**
+     * Remove a single participant from all exam schedules with the same id_penjadwalan
+     */
+    public function removePeserta(Request $request, $id)
+    {
+        $request->validate([
+            'peserta_id' => 'required|exists:data_db.t_peserta,id',
+        ]);
+
+        $penjadwalan = Penjadwalan::findOrFail($id);
+
+        // Ambil semua jadwal ujian yang terkait dengan id_penjadwalan ini
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+
+        if ($jadwalUjians->isEmpty()) {
+            return redirect()->back()->with('error', 'Jadwal ujian tidak ditemukan.');
+        }
+
+        $pesertaIdToRemove = (string)$request->peserta_id;
+
+        foreach ($jadwalUjians as $jadwalUjian) {
+            $existingPesertaIds = [];
+            if ($jadwalUjian->kode_kelas) {
+                $existingPesertaIds = explode(',', $jadwalUjian->kode_kelas);
+                $existingPesertaIds = array_filter(array_map('trim', $existingPesertaIds));
+            }
+
+            $updatedPesertaIds = array_filter($existingPesertaIds, function ($id) use ($pesertaIdToRemove) {
+                return $id !== $pesertaIdToRemove;
+            });
+
+            $kodeKelas = empty($updatedPesertaIds) ? null : implode(',', $updatedPesertaIds);
+            $jadwalUjian->update(['kode_kelas' => $kodeKelas]);
+        }
+
+        return redirect()->back()->with(
+            'success',
+            'Peserta berhasil dihapus dari semua jadwal ujian terkait.'
         );
     }
 
