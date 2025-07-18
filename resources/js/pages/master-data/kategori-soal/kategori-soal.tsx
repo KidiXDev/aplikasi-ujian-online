@@ -286,7 +286,11 @@ export default function KategoriUjianManager() {
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={processing}>
+                            <Button 
+                                type="submit" 
+                                disabled={processing}
+                                className="bg-button-primary hover:bg-[#475873] text-white"
+                            >
                                 {processing 
                                     ? (editData ? 'Menyimpan...' : 'Menambahkan...') 
                                     : (editData ? 'Simpan' : 'Tambah')
