@@ -5,7 +5,7 @@ import { PageProps, type BreadcrumbItem } from '@/types';
 type PageFilterWithTipeUjian = {
     search?: string;
     tipe_ujian?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 };
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Trash2, Users } from 'lucide-react';
