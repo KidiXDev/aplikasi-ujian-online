@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Trash2, Plus, Copy } from 'lucide-react';
+import { Trash2, Plus, Copy} from 'lucide-react';
 
 import { CAlertDialog } from '@/components/c-alert-dialog';
 import { CButtonIcon, CButton } from '@/components/ui/c-button';
@@ -42,8 +42,6 @@ export default function PaketSoalManager() {
   const [eventListForCopy, setEventListForCopy] = useState<EventType[]>([]);
   const [loadingEventList, setLoadingEventList] = useState(false);
   const [searchEventCopy, setSearchEventCopy] = useState('');
-  const [sortOrder] = useState<'asc' | 'desc'>('asc');
-  const [idSortOrder, setIdSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Ambil data dari props inertia
   const { 
@@ -68,7 +66,8 @@ export default function PaketSoalManager() {
   const currentParams = {
     pages: params.get('pages') || jadwalUjian.per_page.toString(),
     search: params.get('search') || '',
-    page: params.get('page') || '1'
+    page: params.get('page') || '1',
+    sortBy: params.get('sortBy') || 'asc'
   };
 
   // Fetch event list untuk copy part menggunakan API yang sudah ada
@@ -118,32 +117,10 @@ export default function PaketSoalManager() {
     };
   });
 
-  // Sorting data berdasarkan ID dan jumlah soal
-  const sortedData = [...data].sort((a, b) => {
-    // Primary sort: ID (default terkecil ke terbesar)
-    let idComparison = 0;
-    if (idSortOrder === 'desc') {
-      idComparison = b.id - a.id; // Terbesar ke terkecil
-    } else {
-      idComparison = a.id - b.id; // Terkecil ke terbesar
-    }
-    
-    // Secondary sort: Jumlah Soal (jika ID sama)
-    if (idComparison === 0) {
-      if (sortOrder === 'desc') {
-        return b.jumlah - a.jumlah; // Terbesar ke terkecil
-      } else {
-        return a.jumlah - b.jumlah; // Terkecil ke terbesar
-      }
-    }
-    
-    return idComparison;
-  });
-
-  // Tambahkan nomor urut berdasarkan urutan yang sudah diurutkan
-  const sortedDataWithNumbers = sortedData.map((item, index) => ({
+  // Tambahkan nomor urut berdasarkan data yang sudah diurutkan dari backend
+  const sortedDataWithNumbers = data.map((item, index) => ({
     ...item,
-    nomor: index + 1,
+    nomor: (jadwalUjian.current_page - 1) * jadwalUjian.per_page + index + 1,
   }));
 
   const handleDelete = (id: number) => {
@@ -173,7 +150,10 @@ export default function PaketSoalManager() {
         // Refresh halaman dengan parameter yang sama
         if (event?.id_event) {
           router.visit(route('master-data.part.show-by-event', event.id_event), {
-            data: currentParams,
+            data: {
+              ...currentParams,
+              sortBy: currentParams.sortBy
+            },
             preserveScroll: true
           });
         }
@@ -212,7 +192,10 @@ export default function PaketSoalManager() {
         // Refresh halaman dengan parameter yang sama
         if (event?.id_event) {
           router.visit(route('master-data.part.show-by-event', event.id_event), {
-            data: currentParams,
+            data: {
+              ...currentParams,
+              sortBy: currentParams.sortBy
+            },
             preserveScroll: true
           });
         }
@@ -245,17 +228,17 @@ export default function PaketSoalManager() {
     { label: 'Nama Part', className: 'w-[300px]', render: (d: typeof sortedDataWithNumbers[0]) => d.nama },
     {
       label: 'Jumlah Soal',
-      className: 'text-center w-[150px]',
+      className: 'text-center w-[100px]',
       render: (d: typeof sortedDataWithNumbers[0]) => <div className="text-center">{d.jumlah}</div>,
     },
     {
       label: 'Action',
-      className: 'text-center w-[200px]',
+      className: 'text-center w-[100px]',
       render: (d: typeof sortedDataWithNumbers[0]) => (
         <div className="flex justify-center gap-2">
           <CButtonIcon
             icon={Plus}
-            className="bg-green-600"
+            className="bg-green-600 hover:bg-green-800"
             onClick={() => router.visit(`/master-data/bank-soal-checkbox/${d.id}/edit`)}
           />
           <CButtonIcon
@@ -272,11 +255,8 @@ export default function PaketSoalManager() {
   const CopyPartDialog = () => {
     if (!copyDialogOpen) return null;
 
-    // Handle keyboard shortcuts
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && selectedEventAsal && !loadingEventList) {
-        confirmCopyPart();
-      } else if (e.key === 'Escape') {
+    const handleBackdropClick = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
         setCopyDialogOpen(false);
         setSelectedEventAsal(null);
         setEventListForCopy([]);
@@ -285,11 +265,12 @@ export default function PaketSoalManager() {
     };
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div 
+        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        onClick={handleBackdropClick}
+      >
         <div 
           className="bg-white rounded-lg p-8 max-w-xl w-full mx-4 shadow-xl"
-          onKeyDown={handleKeyDown}
-          tabIndex={-1}
         >
           <h2 className="text-xl font-semibold mb-6 text-gray-800">Copy Part dari Paket Lain ke {event?.nama_event}</h2>
           
@@ -368,14 +349,6 @@ export default function PaketSoalManager() {
                 </div>
               </div>
             )}
-
-            {/* Keyboard shortcuts info */}
-            <div className="text-xs text-gray-400 border-t pt-4">
-              <div className="flex items-center gap-6">
-                <span>Tekan <kbd className="px-2 py-1 bg-gray-100 border rounded text-gray-600 font-mono">Enter</kbd> untuk copy</span>
-                <span><kbd className="px-2 py-1 bg-gray-100 border rounded text-gray-600 font-mono">Esc</kbd> untuk batal</span>
-              </div>
-            </div>
           </div>
 
           <div className="flex justify-end gap-3 mt-8">
@@ -406,18 +379,14 @@ export default function PaketSoalManager() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Data Paket Soal" />
+      <Head title="Part Soal" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         {/* Tombol Kembali */}
-        <button
-          onClick={handleBack}
-          className="mb-4 self-start flex items-center gap-2 rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-700 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Kembali
-        </button>
+        <div className="flex justify-end py-1 ">
+          <CButton type="primary" onClick={handleBack} className="px-8 py-3 ">
+            Kembali
+          </CButton>
+        </div>
 
         {/* Content Title dengan tombol Add dan Copy */}
         <div className="flex items-center justify-between">
@@ -440,7 +409,7 @@ export default function PaketSoalManager() {
                   router.visit(`/master-data/part/create-event/${event?.id_event}`);
                 }
               }}
-              className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+              className="bg-green-600 hover:bg-green-700 flex items-center gap-1 py-2 px-4"
             >
               <Plus className="h-4 w-4" />
               Add
@@ -457,37 +426,65 @@ export default function PaketSoalManager() {
               paramName="pages"
               routeParams={event ? { 
                 id_event: event.id_event,
-                search: currentParams.search
+                search: currentParams.search,
+                sortBy: currentParams.sortBy
               } : {
-                search: currentParams.search
+                search: currentParams.search,
+                sortBy: currentParams.sortBy
               }}
             />
-            
-            {/* Sort by ID */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Urutkan ID:</label>
-              <select
-                value={idSortOrder}
-                onChange={(e) => setIdSortOrder(e.target.value as 'asc' | 'desc')}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="asc">Terkecil ke Terbesar</option>
-                <option value="desc">Terbesar ke Terkecil</option>
-              </select>
-            </div>
           </div>
           
-          <SearchInputMenu
-            defaultValue={currentParams.search}
-            routeName={event ? "master-data.part.show-by-event" : "master-data.part.index"}
-            paramName="search"
-            routeParams={event ? { 
-              id_event: event.id_event,
-              pages: currentParams.pages
-            } : {
-              pages: currentParams.pages
-            }}
-          />
+          <div className="flex items-center gap-4">
+            {/* Sort by ID */}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">Urutkan:</label>
+              <select
+                value={currentParams.sortBy}
+                onChange={(e) => {
+                  if (event && event.id_event) {
+                    router.visit(route('master-data.part.show-by-event', event.id_event), {
+                      data: {
+                        pages: currentParams.pages,
+                        search: currentParams.search,
+                        page: currentParams.page,
+                        sortBy: e.target.value
+                      },
+                      preserveScroll: true
+                    });
+                  } else {
+                    router.visit(route('master-data.part.index'), {
+                      data: {
+                        pages: currentParams.pages,
+                        search: currentParams.search,
+                        page: currentParams.page,
+                        sortBy: e.target.value
+                      },
+                      preserveScroll: true
+                    });
+                  }
+                }}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="asc">Terlama</option>
+                <option value="desc">Terbaru</option>
+              </select>
+            </div>
+            
+            <SearchInputMenu
+              defaultValue={currentParams.search}
+              routeName={event ? "master-data.part.show-by-event" : "master-data.part.index"}
+              paramName="search"
+              routeParams={event ? { 
+                id_event: event.id_event,
+                pages: currentParams.pages,
+                sortBy: currentParams.sortBy
+              } : {
+                pages: currentParams.pages,
+                sortBy: currentParams.sortBy
+              }}
+            />
+          </div>
         </div>
 
         <CustomTable columns={columns} data={sortedDataWithNumbers} />
@@ -503,6 +500,7 @@ export default function PaketSoalManager() {
                 data: {
                   pages: currentParams.pages,
                   search: currentParams.search,
+                  sortBy: currentParams.sortBy,
                   page
                 },
                 preserveScroll: true
@@ -512,6 +510,7 @@ export default function PaketSoalManager() {
                 data: {
                   pages: currentParams.pages,
                   search: currentParams.search,
+                  sortBy: currentParams.sortBy,
                   page
                 },
                 preserveScroll: true

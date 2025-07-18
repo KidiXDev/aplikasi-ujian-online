@@ -50,6 +50,7 @@ class PaketSoalController extends Controller
     {
         $pages = $request->input('pages', 10);
         $search = $request->input('search', null);
+        $sortBy = $request->input('sortBy', 'asc');
 
         // Ambil data event
         $event = Event::findOrFail($id_event);
@@ -62,6 +63,13 @@ class PaketSoalController extends Controller
 
         if ($search) {
             $jadwalUjianQuery->where('nama_ujian', 'like', '%' . $search . '%');
+        }
+
+        // Sort berdasarkan ID ujian
+        if($sortBy === 'desc') {
+            $jadwalUjianQuery->orderBy('id_ujian', 'desc');
+        } else {
+            $jadwalUjianQuery->orderBy('id_ujian', 'asc');
         }
 
         // Handle pagination with different page sizes

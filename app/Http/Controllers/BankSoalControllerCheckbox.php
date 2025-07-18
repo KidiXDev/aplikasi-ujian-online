@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\JadwalUjian;
 use App\Models\JadwalUjianSoal;
+use App\Models\Event;
 
 class BankSoalControllerCheckbox extends Controller
 {
@@ -60,6 +61,9 @@ class BankSoalControllerCheckbox extends Controller
         // Ambil data paket soal dan jadwal ujian
         $paket_soal = JadwalUjianSoal::findOrFail($paket_soal->id_ujian);
         $jadwalUjian = JadwalUjian::findOrFail($paket_soal->id_ujian);
+        
+        // Ambil data event
+        $event = Event::findOrFail($jadwalUjian->id_event);
 
         // Ambil kode_part dari jadwal ujian untuk filter soal
         $kodePart = $jadwalUjian->kode_part;
@@ -129,6 +133,7 @@ class BankSoalControllerCheckbox extends Controller
                 'nama_ujian' => $jadwalUjian->nama_ujian,
                 'kode_part' => $jadwalUjian->kode_part,
                 'id_event' => $jadwalUjian->id_event,
+                'nama_event' => $event->nama_event,
             ],
             'matchedSoalIds' => $ujianSoalIds,
             'totalAvailableSoal' => $totalAvailableSoal,
@@ -161,8 +166,7 @@ class BankSoalControllerCheckbox extends Controller
 
         return redirect()
             ->route('master-data.bank-soal-checkbox.edit', $paket_soal->id_ujian)
-            ->with($params)
-            ->with('success', 'Soal berhasil diperbarui');
+            ->with($params);
     }
 
     public function selectAll(Request $request, JadwalUjianSoal $paket_soal)

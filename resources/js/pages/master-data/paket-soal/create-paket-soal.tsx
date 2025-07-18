@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import {
@@ -118,11 +117,10 @@ export default function CreatePaketSoal() {
       <div className="flex h-full flex-1 flex-col gap-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold">
             {edit ? "Edit Paket Soal" : "Tambah Part dari Paket Soal"} {selectedEvent?.nama_event}
           </h1>
-          <CButton type="primary" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+          <CButton type="primary" onClick={handleBack} className="px-8 py-2">
             Kembali
           </CButton>
         </div>
@@ -210,7 +208,7 @@ export default function CreatePaketSoal() {
               <div className="flex gap-3">
                 <CButton 
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-2"
                 >
                   {edit ? "Update" : "Simpan"}
                 </CButton>
