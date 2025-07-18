@@ -18,29 +18,39 @@ class PenjadwalanController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $tipeUjian = $request->input('tipe_ujian');
+        $sort = $request->input('sort', 'desc'); // 'desc' (baru) default, 'asc' (lama)
 
         $query = Penjadwalan::with([
-            'event',           // Relasi ke Event untuk mendapatkan nama_event
+            'event',
             'event.jadwalUjian',
-            'jenis_ujian'      // Relasi ke KategoriSoal untuk nama kategori
+            'jenis_ujian'
         ]);
 
         if ($search) {
-            $query->where('kode_jadwal', 'like', "%{$search}%")
-                ->orWhere('tipe_ujian', 'like', "%{$search}%")
-                ->orWhereHas('event', function ($q) use ($search) {
-                    $q->where('nama_event', 'like', "%{$search}%");
-                })
-                ->orWhereHas('event.jadwalUjian', function ($q) use ($search) {
-                    $q->where('nama_ujian', 'like', "%{$search}%");
-                });
+            $query->where(function($q) use ($search) {
+                $q->where('kode_jadwal', 'like', "%{$search}%")
+                  ->orWhere('tipe_ujian', 'like', "%{$search}%")
+                  ->orWhereHas('event', function ($q2) use ($search) {
+                      $q2->where('nama_event', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('event.jadwalUjian', function ($q2) use ($search) {
+                      $q2->where('nama_ujian', 'like', "%{$search}%");
+                  });
+            });
         }
 
-        $data = $query->orderBy('id_penjadwalan', 'desc')
-            ->paginate($request->input('pages', 10)) // Ganti dari per_page ke pages
+        if ($tipeUjian) {
+            $query->where('tipe_ujian', $tipeUjian);
+        }
+
+        // Sorting: 'desc' = data baru, 'asc' = data lama
+        $query->orderBy('id_penjadwalan', $sort === 'asc' ? 'asc' : 'desc');
+
+        $data = $query
+            ->paginate($request->input('pages', 10))
             ->withQueryString();
 
-        // Transform data untuk menambahkan informasi dari JadwalUjian
         $data->getCollection()->transform(function ($penjadwalan) {
             return [
                 'id_penjadwalan' => $penjadwalan->id_penjadwalan,
@@ -49,32 +59,30 @@ class PenjadwalanController extends Controller
                 'waktu_selesai' => $penjadwalan->waktu_selesai,
                 'kuota' => $penjadwalan->kuota,
                 'status' => $penjadwalan->status,
-                'tipe_ujian' => $penjadwalan->tipe_ujian, // Akan menggunakan accessor dari model
+                'tipe_ujian' => $penjadwalan->tipe_ujian,
                 'id_paket_ujian' => $penjadwalan->id_paket_ujian,
                 'jenis_ujian' => $penjadwalan->jenis_ujian,
                 'kode_jadwal' => $penjadwalan->kode_jadwal,
                 'online_offline' => $penjadwalan->online_offline,
                 'flag' => $penjadwalan->flag,
-
-                // Data dari relasi Event
                 'event' => [
                     'id_event' => $penjadwalan->event?->id_event,
                     'nama_event' => $penjadwalan->event?->nama_event,
                     'mulai_event' => $penjadwalan->event?->mulai_event,
                     'akhir_event' => $penjadwalan->event?->akhir_event,
                 ],
-
-
                 'paket_ujian' => $penjadwalan->event?->nama_event ?? 'paket tidak ditemukan',
-
-                // Data tambahan dari JadwalUjian
                 'jadwal_ujian_count' => $penjadwalan->event?->jadwalUjian?->count() ?? 0,
             ];
         });
 
+        // Get all exam categories for dropdown
+        $examCategories = \App\Models\KategoriSoal::all(['id', 'kategori']);
+
         return Inertia::render('penjadwalan/penjadwalan-manager', [
             'data' => $data,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'tipe_ujian', 'sort']),
+            'examCategories' => $examCategories,
         ]);
     }
 

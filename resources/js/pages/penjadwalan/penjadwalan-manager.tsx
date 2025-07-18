@@ -1,6 +1,12 @@
 // Penjadwalan Manager Page (migrated from exam-schedule/exam-manager.tsx)
 import AppLayout from '@/layouts/app-layout';
-import { PageFilter, PageProps, type BreadcrumbItem } from '@/types';
+import { PageProps, type BreadcrumbItem } from '@/types';
+
+type PageFilterWithTipeUjian = {
+    search?: string;
+    tipe_ujian?: string;
+    [key: string]: any;
+};
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -13,6 +19,10 @@ import { CustomTable } from '@/components/ui/c-table';
 import { EntriesSelector } from '@/components/ui/entries-selector';
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper';
 import { SearchInputMenu } from '@/components/ui/search-input-menu';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { SortDropdown } from '@/components/ui/sort-dropdown';
+
+type ExamCategory = { id: number; kategori: string };
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -50,7 +60,7 @@ type PaginatedResponse<T> = {
 };
 
 export default function PenjadwalanManager() {
-    const { data: examData, filters, flash } = usePage<PageProps<JadwalUjian>>().props;
+    const { data: examData, filters, flash, examCategories } = usePage<PageProps<JadwalUjian> & { filters: PageFilterWithTipeUjian & { sort?: string }; examCategories: ExamCategory[] }>().props;
 
     useEffect(() => {
         if (flash.success) toast.success(flash.success);
@@ -63,9 +73,37 @@ export default function PenjadwalanManager() {
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <ContentTitle title="Jadwal Ujian" showButton onButtonClick={() => router.visit(route('penjadwalan.create'))} />
-                <div className="mt-4 flex items-center justify-between">
-                    <EntriesSelector currentValue={examData.per_page} options={[10, 25, 50, 100]} routeName="penjadwalan.index" />
-                    <SearchInputMenu defaultValue={filters.search} routeName="penjadwalan.index" />
+                <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <EntriesSelector
+                        currentValue={examData.per_page}
+                        options={[10, 25, 50, 100]}
+                        routeName="penjadwalan.index"
+                    />
+                    <div className="flex gap-4">
+                        <FilterDropdown
+                            label="Tipe Ujian"
+                            currentValue={filters.tipe_ujian}
+                            options={examCategories.map((cat: ExamCategory) => ({ value: cat.id.toString(), label: cat.kategori }))}
+                            routeName="penjadwalan.index"
+                            paramName="tipe_ujian"
+                            placeholder="Pilih Tipe"
+                            className="w-36"
+                        />
+                        <SortDropdown
+                            currentValue={filters.sort}
+                            options={[
+                                { value: 'desc', label: 'Newest | Older' },
+                                { value: 'asc', label: 'Oldest First' },
+                            ]}
+                            routeName="penjadwalan.index"
+                            className="w-44"
+                        />
+                        <SearchInputMenu
+                            defaultValue={filters.search}
+                            routeName="penjadwalan.index"
+                            placeholder="Cari jadwal ujian..."
+                        />
+                    </div>
                 </div>
                 <PenjadwalanTable data={examData} pageFilters={filters} />
             </div>
@@ -73,7 +111,7 @@ export default function PenjadwalanManager() {
     );
 }
 
-function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: PaginatedResponse<JadwalUjian>; pageFilters: PageFilter }) {
+function PenjadwalanTable({ data: examData, pageFilters: filters }: { data: PaginatedResponse<JadwalUjian>; pageFilters: PageFilterWithTipeUjian }) {
     const [open, setOpen] = useState(false);
     const [targetId, setTargetId] = useState<number | null>(null);
 
