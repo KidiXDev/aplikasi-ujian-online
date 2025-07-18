@@ -747,7 +747,10 @@ class PenjadwalanController extends Controller
             }
 
             // Cari template JadwalUjian yang sesuai untuk mendapatkan id_ujian template
-            $templateJadwalUjian = JadwalUjian::where('kode_kelas', null)
+            $templateJadwalUjian = JadwalUjian::where(function ($q) {
+                    $q->where('kode_kelas', null)
+                      ->orWhere('kode_kelas', 1);
+                })
                 ->whereNull('id_penjadwalan')
                 ->where('id_event', $jadwalUjian->id_event)
                 ->where('nama_ujian', $jadwalUjian->nama_ujian)
