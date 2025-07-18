@@ -162,7 +162,7 @@ class PenjadwalanController extends Controller
         });
     }
 
-    public function edit($id)
+        public function edit($id)
     {
         $penjadwalan = Penjadwalan::findOrFail($id);
 
@@ -177,11 +177,25 @@ class PenjadwalanController extends Controller
                 ->whereNull('id_penjadwalan');
         })->get(['id_event', 'nama_event']);
 
+        // Hitung jumlah peserta terdaftar untuk penjadwalan ini
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+        $existingPesertaIds = [];
+        foreach ($jadwalUjians as $jadwalUjian) {
+            if ($jadwalUjian->kode_kelas) {
+                $ids = explode(',', $jadwalUjian->kode_kelas);
+                $ids = array_filter(array_map('trim', $ids));
+                $existingPesertaIds = array_merge($existingPesertaIds, $ids);
+            }
+        }
+        $existingPesertaIds = array_unique($existingPesertaIds);
+        $jumlahTerdaftar = count($existingPesertaIds);
+
         return Inertia::render('penjadwalan/form.penjadwalan-manager', [
             'penjadwalan' => [
                 'id_penjadwalan' => $penjadwalan->id_penjadwalan,
                 'id_paket_ujian' => $penjadwalan->id_paket_ujian,
-                'tipe_ujian' => $penjadwalan->tipe_ujian,
+                // Kirim id numerik asli, bukan hasil accessor
+                'tipe_ujian' => $penjadwalan->getRawOriginal('tipe_ujian'),
                 'tanggal' => $penjadwalan->tanggal,
                 'waktu_mulai' => $penjadwalan->waktu_mulai,
                 'waktu_selesai' => $penjadwalan->waktu_selesai,
@@ -191,11 +205,12 @@ class PenjadwalanController extends Controller
                 'online_offline' => $penjadwalan->online_offline,
                 'status' => $penjadwalan->status,
                 'flag' => $penjadwalan->flag,
-                // Add event data with null safety
                 'event' => $penjadwalan->event ? [
                     'id_event' => $penjadwalan->event->id_event,
                     'nama_event' => $penjadwalan->event->nama_event,
                 ] : null,
+                'jumlahTerdaftar' => $jumlahTerdaftar,
+                // 'kategori_soal' dihapus sesuai permintaan
             ],
             'kategoriSoal' => $kategoriSoal,
             'events' => $events,
@@ -216,8 +231,24 @@ class PenjadwalanController extends Controller
             'jenis_ujian' => 'required|integer',
         ]);
 
-        // Hanya update di t_penjadwalan saja, tidak update relasi lain
-        // Regenerate kode_jadwal jika tipe_ujian atau id_paket_ujian berubah
+        // Hitung jumlah peserta yang sudah terdaftar
+        $jadwalUjians = JadwalUjian::where('id_penjadwalan', $penjadwalan->id_penjadwalan)->get();
+        $existingPesertaIds = [];
+        foreach ($jadwalUjians as $jadwalUjian) {
+            if ($jadwalUjian->kode_kelas) {
+                $ids = explode(',', $jadwalUjian->kode_kelas);
+                $existingPesertaIds = array_merge($existingPesertaIds, array_filter(array_map('trim', $ids)));
+            }
+        }
+        $existingPesertaIds = array_unique($existingPesertaIds);
+        $jumlahTerdaftar = count($existingPesertaIds);
+
+        // Validasi: Tidak boleh mengurangi kuota di bawah jumlah peserta yang sudah terdaftar
+        if ($validated['kuota'] < $jumlahTerdaftar) {
+            return redirect()->back()->with('error', 'Kuota tidak boleh kurang dari jumlah peserta terdaftar.');
+        }
+
+        // Regenerate kode_jadwal if tipe_ujian or id_paket_ujian changes
         if ($penjadwalan->tipe_ujian != $validated['tipe_ujian'] || $penjadwalan->id_paket_ujian != $validated['id_paket_ujian']) {
             $validated['kode_jadwal'] = $this->generateKodeJadwal($validated['id_paket_ujian'], $validated['tipe_ujian']);
         }
